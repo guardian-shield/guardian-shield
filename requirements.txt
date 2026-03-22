@@ -5,3 +5,4 @@ mercadopago
 requests
 python-jose
 passlib
+psycopg2-binary
