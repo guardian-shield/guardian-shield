@@ -46,3 +46,16 @@ class MessageLog(Base):
     sent_at    = Column(DateTime, default=func.now())
     status     = Column(String)   # 'sent' | 'failed'
     error      = Column(Text, nullable=True)
+
+
+class Garantia(Base):
+    """Garantias de blindagem — uma linha por aparelho por usuário."""
+    __tablename__ = "garantias"
+
+    id          = Column(Integer, primary_key=True)
+    user_email  = Column(String, index=True)   # dono do registro
+    device_id   = Column(String, index=True)   # IMEI / serial do aparelho
+    data_inicio = Column(String)
+    data_fim    = Column(String)
+    prazo       = Column(Integer)
+    updated_at  = Column(DateTime, default=func.now(), onupdate=func.now())

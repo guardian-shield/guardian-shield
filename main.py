@@ -35,6 +35,16 @@ def migrar_banco():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_code_expires TIMESTAMP;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS pre_liberado BOOLEAN DEFAULT FALSE;",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();",
+        # tabela garantias criada via Base.metadata mas garante coluna updated_at
+        """CREATE TABLE IF NOT EXISTS garantias (
+            id SERIAL PRIMARY KEY,
+            user_email VARCHAR,
+            device_id VARCHAR,
+            data_inicio VARCHAR,
+            data_fim VARCHAR,
+            prazo INTEGER,
+            updated_at TIMESTAMP DEFAULT NOW()
+        );""",
     ]
     with engine.connect() as conn:
         for sql in novos_campos:
@@ -58,3 +68,6 @@ def home():
 
 from routes import admin
 app.include_router(admin.router)
+
+from routes import garantias
+app.include_router(garantias.router)
