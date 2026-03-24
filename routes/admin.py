@@ -127,6 +127,24 @@ def desativar_usuario(
 
 
 # =============================================================
+# POST /admin/forcar-verificacao
+# =============================================================
+@router.post("/admin/forcar-verificacao")
+def forcar_verificacao(
+    email: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+    user.email_verified    = True
+    user.whatsapp_verified = True
+    db.commit()
+    return {"status": "verificado", "email": email}
+
+
+# =============================================================
 # POST /admin/reset-hwid
 # =============================================================
 @router.post("/admin/reset-hwid")
