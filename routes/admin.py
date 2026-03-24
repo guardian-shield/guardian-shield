@@ -272,8 +272,8 @@ def save_config(payload: dict, db: Session = Depends(get_db), admin=Depends(veri
         "mp_token",
     }
     for key, value in payload.items():
-        if key in allowed and value is not None:
-            _cfg_set(db, key, str(value))
+        if key in allowed and value is not None and str(value).strip() != "":
+            _cfg_set(db, key, str(value).strip())
 
     db.commit()
     return {"status": "salvo", "token_atualizado": token_atualizado}
