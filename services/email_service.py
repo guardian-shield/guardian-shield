@@ -44,7 +44,10 @@ def _send_gmail(to_email: str, subject: str, html_body: str, db):
     msg["From"]    = gmail_user
     msg["To"]      = to_email
     msg.attach(MIMEText(html_body, "html"))
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
         server.login(gmail_user, gmail_pass)
         server.sendmail(gmail_user, to_email, msg.as_string())
 
