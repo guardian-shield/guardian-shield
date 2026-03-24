@@ -422,6 +422,7 @@ function renderTabela(data) {
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
           <button class="btn btn-sm btn-blue" onclick="abrirModalMsg('${u.email}','${esc(u.nome||u.email)}','${esc(u.whatsapp||'')}')">💬</button>
+          <button class="btn btn-sm" style="background:rgba(180,30,30,0.2);border:1px solid rgba(220,50,50,0.4);color:#ff5555;" onclick="deletarUsuario('${u.email}')">🗑 Excluir</button>
         </div>
       </td>
     </tr>`;
@@ -462,6 +463,15 @@ async function resetHwid(email) {
   await api('POST', `/admin/reset-hwid?email=${encodeURIComponent(email)}`);
   showLoading(false);
   toast('HWIDs resetados!');
+  carregarUsuarios();
+}
+
+async function deletarUsuario(email) {
+  if (!confirm(`⚠️ Excluir permanentemente o usuário ${email}?\n\nEsta ação não pode ser desfeita.`)) return;
+  showLoading(true);
+  await api('DELETE', `/admin/deletar?email=${encodeURIComponent(email)}`);
+  showLoading(false);
+  toast('Usuário excluído!');
   carregarUsuarios();
 }
 

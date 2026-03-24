@@ -164,6 +164,23 @@ def reset_hwid(
 
 
 # =============================================================
+# DELETE /admin/deletar
+# =============================================================
+@router.delete("/admin/deletar")
+def deletar_usuario(
+    email: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+    db.delete(user)
+    db.commit()
+    return {"status": "deletado", "email": email}
+
+
+# =============================================================
 # POST /admin/cadastrar  →  admin cria usuário direto
 # =============================================================
 @router.post("/admin/cadastrar")
