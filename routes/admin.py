@@ -24,11 +24,16 @@ def get_db():
 
 
 def _get_admin_token(db: Session) -> str:
-    row = db.query(AppConfig).filter(AppConfig.key == "admin_token").first()
-    return row.value if row and row.value else DEFAULT_ADMIN_TOKEN
+    try:
+        row = db.query(AppConfig).filter(AppConfig.key == "admin_token").first()
+        return row.value if row and row.value else DEFAULT_ADMIN_TOKEN
+    except Exception:
+        return DEFAULT_ADMIN_TOKEN
 
 
 def verificar_admin(x_admin_token: str = Header(None), db: Session = Depends(get_db)):
+    if not x_admin_token:
+        raise HTTPException(status_code=401, detail="Acesso negado")
     token_valido = _get_admin_token(db)
     if x_admin_token != token_valido:
         raise HTTPException(status_code=401, detail="Acesso negado")

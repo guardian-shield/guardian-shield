@@ -2,7 +2,7 @@ import random
 import traceback
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
@@ -248,8 +248,7 @@ def create_payment(email: str, plano: str, db: Session = Depends(get_db)):
 # WEBHOOK MERCADO PAGO
 # =============================================================
 @router.post("/webhook")
-async def webhook(request, db: Session = Depends(get_db)):
-    from fastapi import Request
+async def webhook(request: Request, db: Session = Depends(get_db)):
     data = await request.json()
     try:
         if data.get("type") == "payment":
