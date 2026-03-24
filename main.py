@@ -4,12 +4,19 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import traceback
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from database import engine
 from models import Base
 from routes import login
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Cria tabelas novas (app_config, message_logs)
 Base.metadata.create_all(bind=engine)

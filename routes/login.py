@@ -1,8 +1,13 @@
+import os
+import hmac
+import hashlib
 import random
 import traceback
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Request, HTTPException
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
@@ -13,6 +18,7 @@ from services.email_service import send_verification_email
 from services.whatsapp_service import send_verification_whatsapp
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 def get_db():
@@ -31,7 +37,9 @@ def _gerar_codigo() -> str:
 # REGISTER
 # =============================================================
 @router.post("/register")
+@limiter.limit("5/minute")
 def register(
+    request: Request,
     email: str,
     password: str,
     nome: str = "",
@@ -106,7 +114,8 @@ def verify_email(email: str, code: str, db: Session = Depends(get_db)):
 # REENVIAR CÓDIGO DE EMAIL
 # =============================================================
 @router.post("/resend-code")
-def resend_code(email: str, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def resend_code(request: Request, email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"error": "Usuário não encontrado"}
@@ -125,7 +134,8 @@ def resend_code(email: str, db: Session = Depends(get_db)):
 # LOGIN
 # =============================================================
 @router.post("/login")
-def login(email: str, password: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, email: str, password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"error": "Usuário não encontrado"}
@@ -247,9 +257,47 @@ def create_payment(email: str, plano: str, db: Session = Depends(get_db)):
 # =============================================================
 # WEBHOOK MERCADO PAGO
 # =============================================================
+def _verificar_assinatura_mp(request_body: bytes, x_signature: str | None, x_request_id: str | None, query_data_id: str | None) -> bool:
+    """Valida a assinatura HMAC-SHA256 enviada pelo Mercado Pago."""
+    secret = os.getenv("MP_WEBHOOK_SECRET")
+    if not secret:
+        # Se não configurou o secret, aceita (compatibilidade retroativa)
+        return True
+    if not x_signature:
+        return False
+    # Monta o manifest: ts + request_id + data.id
+    parts = {}
+    for part in x_signature.split(","):
+        if "=" in part:
+            k, v = part.strip().split("=", 1)
+            parts[k] = v
+    ts  = parts.get("ts", "")
+    v1  = parts.get("v1", "")
+    manifest = f"id:{query_data_id};request-id:{x_request_id};ts:{ts};"
+    expected = hmac.new(secret.encode(), manifest.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, v1)
+
+
 @router.post("/webhook")
-async def webhook(request: Request, db: Session = Depends(get_db)):
-    data = await request.json()
+async def webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+    x_signature: str = Header(None),
+    x_request_id: str = Header(None),
+):
+    body = await request.body()
+    try:
+        data = __import__("json").loads(body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Body inválido")
+
+    query_data_id = request.query_params.get("data.id") or (
+        str(data.get("data", {}).get("id", "")) if isinstance(data.get("data"), dict) else ""
+    )
+
+    if not _verificar_assinatura_mp(body, x_signature, x_request_id, query_data_id):
+        raise HTTPException(status_code=401, detail="Assinatura inválida")
+
     try:
         if data.get("type") == "payment":
             payment_id = data["data"]["id"]

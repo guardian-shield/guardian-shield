@@ -1,7 +1,7 @@
+import os
 import mercadopago
 
-# 🔥 TOKEN NOVO (PRODUÇÃO)
-ACCESS_TOKEN = "APP_USR-6644356966079457-031920-75879cd45456dcd58daf5d10ae8382d5-1506024750"
+ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN", "")
 
 sdk = mercadopago.SDK(ACCESS_TOKEN)
 

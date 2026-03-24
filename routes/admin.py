@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -12,7 +13,7 @@ from services.whatsapp_service import send_whatsapp_message
 
 router = APIRouter()
 
-DEFAULT_ADMIN_TOKEN = "Manu1016+"
+DEFAULT_ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "Manu1016+")
 
 
 def get_db():
