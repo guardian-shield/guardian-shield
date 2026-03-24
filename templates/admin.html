@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Shield — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#060f25;color:#e0e6f0;min-height:100vh}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:#060f25;display:flex;align-items:center;justify-content:center;z-index:999}
+#loginScreen::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(44,123,229,.45) 0%,transparent 70%);pointer-events:none}
+#loginBox{position:relative;z-index:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:44px;width:380px;display:flex;flex-direction:column;align-items:center}
+#loginBox h1{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:1.5px;margin-bottom:4px}
+#loginBox h1 span{color:#d4a017}
+#loginBox p{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:28px}
+.lf{width:100%;margin-bottom:14px}
+.lf label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.lf input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 14px;color:white;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.lf input:focus{border-color:rgba(100,160,255,.5)}
+#btnEntrar{width:100%;padding:12px;background:linear-gradient(135deg,#1e6fd9,#1558b0);box-shadow:0 4px 20px rgba(30,111,217,.4);border:none;border-radius:10px;color:white;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;cursor:pointer;margin-top:6px;transition:filter .15s}
+#btnEntrar:hover{filter:brightness(1.1)}
+.login-err{display:none;margin-top:12px;background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:9px 14px;font-size:13px;color:#ff7070;text-align:center;width:100%}
+
+/* ── TOPBAR ── */
+#topbar{background:rgba(5,15,40,.9);border-bottom:1px solid rgba(255,255,255,.07);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(8px);position:sticky;top:0;z-index:100}
+.tb-brand{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px}
+.tb-brand span{color:#d4a017}
+.tb-right{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,.5)}
+#btnSair{background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.3);border-radius:6px;color:#ff7070;padding:4px 12px;font-size:12px;cursor:pointer;transition:background .2s}
+#btnSair:hover{background:rgba(255,80,80,.25)}
+
+/* ── TABS ── */
+#tabBar{display:flex;gap:4px;padding:18px 28px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.tab{padding:9px 20px;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.45);border:1px solid transparent;border-bottom:none;transition:all .2s}
+.tab.active{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:white}
+.tab-content{display:none;padding:24px 28px}
+.tab-content.active{display:block}
+
+/* ── CARDS / SECTIONS ── */
+.section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px 24px;margin-bottom:20px}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar input[type=text]{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;color:white;font-size:13px;font-family:'Inter',sans-serif;outline:none;width:240px}
+.toolbar input[type=text]::placeholder{color:rgba(255,255,255,.3)}
+.toolbar input[type=text]:focus{border-color:rgba(100,160,255,.4)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:filter .15s,transform .1s;white-space:nowrap}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:linear-gradient(135deg,#1e6fd9,#1558b0);color:white}
+.btn-green{background:linear-gradient(135deg,#1faa55,#158a42);color:white}
+.btn-orange{background:linear-gradient(135deg,#e07b10,#c06008);color:white}
+.btn-red{background:rgba(220,50,50,.15);border:1px solid rgba(220,50,50,.3)!important;color:#ff7070}
+.btn-ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.75)}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:6px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid rgba(255,255,255,.08)}
+td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.025)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(76,222,138,.12);border:1px solid rgba(76,222,138,.3);color:#4cde8a}
+.badge-red{background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.3);color:#ff7070}
+.badge-yellow{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);color:#d4a017}
+.badge-gray{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5)}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.dias-input{width:58px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;color:white;font-size:12px;text-align:center}
+
+/* ── FORM CONFIG ── */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.cfg-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.8px}
+.field input,.field select,.field textarea{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;color:white;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(100,160,255,.4)}
+.field select option{background:#0d1e3f}
+.field textarea{resize:vertical;min-height:70px}
+.provider-toggle{display:flex;gap:8px;margin-bottom:16px}
+.provider-btn{flex:1;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
+.provider-btn.active{background:rgba(30,111,217,.15);border-color:rgba(30,111,217,.4);color:#7db8ff}
+
+/* ── MODAL ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-box{background:#0d1e3f;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px 32px;width:480px;max-width:95vw}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;color:white}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:40px;color:rgba(255,255,255,.25);font-size:14px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1faa55;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.err{background:#c03333}
+#loadingOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center}
+#loadingOverlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#1e6fd9;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div id="loginBox">
+    <h1>Guardian <span>Shield</span></h1>
+    <p>Painel Administrativo</p>
+    <div class="lf">
+      <label>Token de Acesso</label>
+      <input type="password" id="loginToken" placeholder="••••••••" autocomplete="off">
+    </div>
+    <button class="btn btn-blue" id="btnEntrar" style="width:100%;padding:12px;font-size:16px" onclick="entrar()">Entrar</button>
+    <div class="login-err" id="loginErr">Token inválido</div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel" style="display:none">
+  <div id="topbar">
+    <div class="tb-brand">Guardian <span>Shield</span> <span style="color:rgba(255,255,255,.3);font-size:13px;font-weight:400;margin-left:8px">Admin</span></div>
+    <div class="tb-right">
+      <span id="tbStatus"></span>
+      <button id="btnSair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+
+  <div id="tabBar">
+    <div class="tab active" onclick="switchTab('usuarios')">👥 Usuários</div>
+    <div class="tab" onclick="switchTab('config')">⚙️ Configurações</div>
+    <div class="tab" onclick="switchTab('mensagens')">💬 Mensagens</div>
+  </div>
+
+  <!-- TAB USUÁRIOS -->
+  <div id="tab-usuarios" class="tab-content active">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Buscar por nome, email ou WhatsApp..." oninput="filtrarTabela()">
+      <button class="btn btn-blue" onclick="abrirModalCadastrar()">+ Cadastrar Usuário</button>
+      <button class="btn btn-ghost" onclick="carregarUsuarios()">↻ Atualizar</button>
+      <span id="totalUsers" style="font-size:12px;color:rgba(255,255,255,.35);margin-left:auto"></span>
+    </div>
+    <div class="section" style="padding:0">
+      <div class="tbl-wrap">
+        <table id="tabelaUsuarios">
+          <thead>
+            <tr>
+              <th>Nome</th><th>Email</th><th>WhatsApp</th><th>Status</th>
+              <th>Plano</th><th>Expira em</th><th>HWID</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyUsuarios"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB CONFIG -->
+  <div id="tab-config" class="tab-content">
+    <form onsubmit="salvarConfig(event)">
+
+      <div class="section">
+        <div class="section-title">📧 E-mail</div>
+        <div class="provider-toggle">
+          <div class="provider-btn active" id="provBtn-resend" onclick="setProvider('resend')">Resend</div>
+          <div class="provider-btn" id="provBtn-gmail" onclick="setProvider('gmail')">Gmail</div>
+        </div>
+        <div id="cfg-resend">
+          <div class="cfg-grid">
+            <div class="field"><label>API Key do Resend</label><input type="text" id="cfg_resend_api_key" placeholder="re_xxxxxxxxxxxxx"></div>
+            <div class="field"><label>From (remetente)</label><input type="text" id="cfg_resend_from" placeholder="Guardian Shield &lt;noreply@seudominio.com&gt;"></div>
+          </div>
+        </div>
+        <div id="cfg-gmail" style="display:none">
+          <div class="cfg-grid">
+            <div class="field"><label>Email Gmail</label><input type="email" id="cfg_gmail_email" placeholder="seuemail@gmail.com"></div>
+            <div class="field"><label>Senha de App Gmail</label><input type="password" id="cfg_gmail_password" placeholder="xxxx xxxx xxxx xxxx"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">💬 WhatsApp — Evolution API</div>
+        <div class="cfg-grid">
+          <div class="field"><label>URL da API</label><input type="text" id="cfg_evolution_api_url" placeholder="https://sua-evolution.com"></div>
+          <div class="field"><label>API Key</label><input type="text" id="cfg_evolution_api_key" placeholder="sua-api-key"></div>
+          <div class="field"><label>Nome da Instância</label><input type="text" id="cfg_evolution_instance" placeholder="guardian"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">🔐 Segurança do Admin</div>
+        <div class="cfg-grid">
+          <div class="field"><label>Token Admin (senha atual)</label><input type="password" id="cfg_admin_token_atual" placeholder="Token atual para confirmar"></div>
+          <div class="field"><label>Novo Token Admin</label><input type="password" id="cfg_admin_token_novo" placeholder="Deixe em branco para não alterar"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">💳 Mercado Pago</div>
+        <div class="cfg-grid">
+          <div class="field"><label>Access Token</label><input type="text" id="cfg_mp_token" placeholder="APP_USR-..."></div>
+        </div>
+      </div>
+
+      <div style="text-align:right">
+        <button type="submit" class="btn btn-green" style="padding:10px 28px;font-size:15px">💾 Salvar Configurações</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TAB MENSAGENS -->
+  <div id="tab-mensagens" class="tab-content">
+    <div class="section">
+      <div class="section-title">📤 Enviar Mensagem</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="field">
+          <label>Destinatário</label>
+          <select id="msgDestinatario">
+            <option value="todos">— Todos os usuários ativos —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Canal</label>
+          <select id="msgCanal">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="email">E-mail</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Mensagem</label>
+        <textarea id="msgTexto" placeholder="Digite sua mensagem..."></textarea>
+      </div>
+      <button class="btn btn-blue" onclick="enviarMensagem()">Enviar Mensagem</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📋 Histórico de Mensagens</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Para</th><th>Canal</th><th>Mensagem</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tbodyMensagens"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CADASTRAR USUÁRIO -->
+<div class="modal" id="modalCadastrar">
+  <div class="modal-box">
+    <div class="modal-title">+ Cadastrar Usuário</div>
+    <div style="display:grid;gap:12px">
+      <div class="field"><label>Nome</label><input type="text" id="cad_nome" placeholder="Nome do responsável"></div>
+      <div class="field"><label>Email</label><input type="email" id="cad_email" placeholder="email@exemplo.com"></div>
+      <div class="field"><label>Senha</label><input type="password" id="cad_senha" placeholder="Senha inicial"></div>
+      <div class="field"><label>WhatsApp</label><input type="text" id="cad_whatsapp" placeholder="(11) 99999-9999"></div>
+      <div class="field">
+        <label>Ativar licença por</label>
+        <select id="cad_dias">
+          <option value="0">Sem licença (aguarda pagamento)</option>
+          <option value="30">30 dias</option>
+          <option value="90">90 dias</option>
+          <option value="180">180 dias</option>
+          <option value="365">365 dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('modalCadastrar')">Cancelar</button>
+      <button class="btn btn-green" onclick="cadastrarUsuario()">Cadastrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENVIAR MENSAGEM RÁPIDA -->
+<div class="modal" id="modalMsg">
+  <div class="modal-box">
+    <div class="modal-title">💬 Enviar Mensagem</div>
+    <input type="hidden" id="msgEmail">
+    <div style="display:grid;gap:12px">
+      <div class="field"><label>Destinatário</label><input type="text" id="msgPara" readonly style="color:rgba(255,255,255,.5)"></div>
+      <div class="field">
+        <label>Canal</label>
+        <select id="msgCanalModal">
+          <option value="whatsapp">WhatsApp</option>
+          <option value="email">E-mail</option>
+        </select>
+      </div>
+      <div class="field"><label>Mensagem</label><textarea id="msgTextoModal" placeholder="Digite sua mensagem..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('modalMsg')">Cancelar</button>
+      <button class="btn btn-blue" onclick="enviarMensagemModal()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<div id="loadingOverlay"><div class="spinner"></div></div>
+
+<script>
+const BASE = '';  // mesma origem
+let TOKEN = '';
+let usuarios = [];
+
+// ── AUTH ──────────────────────────────────────
+async function entrar() {
+  const t = document.getElementById('loginToken').value.trim();
+  if (!t) return;
+  showLoading(true);
+  try {
+    const r = await api('GET', '/admin/users', null, t);
+    if (r === null) { showLoginErr(); return; }
+    TOKEN = t;
+    sessionStorage.setItem('gs_admin_token', t);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('painel').style.display = 'block';
+    carregarTudo();
+  } catch(e) { showLoginErr(); }
+  finally { showLoading(false); }
+}
+
+function sair() {
+  if (!confirm('Sair do painel?')) return;
+  sessionStorage.removeItem('gs_admin_token');
+  TOKEN = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('painel').style.display = 'none';
+  document.getElementById('loginToken').value = '';
+}
+
+function showLoginErr() {
+  const e = document.getElementById('loginErr');
+  e.style.display = 'block';
+  setTimeout(() => e.style.display = 'none', 3000);
+}
+
+document.getElementById('loginToken').addEventListener('keydown', e => {
+  if (e.key === 'Enter') entrar();
+});
+
+// Auto-login se token salvo
+window.addEventListener('load', () => {
+  const t = sessionStorage.getItem('gs_admin_token');
+  if (t) { document.getElementById('loginToken').value = t; entrar(); }
+});
+
+// ── API HELPER ────────────────────────────────
+async function api(method, path, body = null, token = TOKEN) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': token }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE + path, opts);
+  if (r.status === 401) return null;
+  return r.json();
+}
+
+// ── TABS ──────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['usuarios','config','mensagens'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'config') carregarConfig();
+  if (name === 'mensagens') carregarMensagens();
+}
+
+// ── CARREGAR TUDO ─────────────────────────────
+function carregarTudo() {
+  carregarUsuarios();
+  popularSelectDestinatario();
+}
+
+// ── USUÁRIOS ──────────────────────────────────
+async function carregarUsuarios() {
+  const data = await api('GET', '/admin/users');
+  if (!data) return;
+  usuarios = data;
+  renderTabela(data);
+  document.getElementById('totalUsers').textContent = `${data.length} usuário(s)`;
+}
+
+function renderTabela(data) {
+  const tbody = document.getElementById('tbodyUsuarios');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum usuário cadastrado</td></tr>'; return; }
+  tbody.innerHTML = data.map(u => {
+    const ativo = u.ativo;
+    const statusBadge = ativo
+      ? '<span class="badge badge-green">● Ativo</span>'
+      : u.expira_em
+        ? '<span class="badge badge-red">● Inativo</span>'
+        : '<span class="badge badge-gray">Sem licença</span>';
+    const expira = u.expira_em ? new Date(u.expira_em).toLocaleDateString('pt-BR') : '—';
+    const hwids = [u.hwid_1, u.hwid_2].filter(Boolean).length;
+    const hwidBadge = hwids ? `<span class="badge badge-yellow">${hwids} HWID</span>` : '<span style="color:rgba(255,255,255,.25)">—</span>';
+    const emailVerif = u.email_verified ? '✅' : '⚠️';
+    const waVerif    = u.whatsapp_verified ? '✅' : '⚠️';
+    return `<tr>
+      <td><b style="color:white">${esc(u.nome||'—')}</b></td>
+      <td style="color:rgba(255,255,255,.7)">${esc(u.email)} ${emailVerif}</td>
+      <td style="color:rgba(255,255,255,.7)">${esc(u.whatsapp||'—')} ${u.whatsapp ? waVerif : ''}</td>
+      <td>${statusBadge}</td>
+      <td><span style="color:rgba(255,255,255,.55)">${u.plano||'—'}</span></td>
+      <td style="color:rgba(255,255,255,.55)">${expira}</td>
+      <td>${hwidBadge}</td>
+      <td>
+        <div class="actions">
+          <input type="number" class="dias-input" id="dias_${u.email}" value="30" min="1" max="3650">
+          <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')">Ativar</button>
+          <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
+          <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
+          <button class="btn btn-sm btn-blue" onclick="abrirModalMsg('${u.email}','${esc(u.nome||u.email)}','${esc(u.whatsapp||'')}')">💬</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filtrarTabela() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtrado = q ? usuarios.filter(u =>
+    (u.nome||'').toLowerCase().includes(q) ||
+    (u.email||'').toLowerCase().includes(q) ||
+    (u.whatsapp||'').toLowerCase().includes(q)
+  ) : usuarios;
+  renderTabela(filtrado);
+}
+
+async function ativar(email) {
+  const dias = parseInt(document.getElementById('dias_' + email)?.value || 30);
+  showLoading(true);
+  await api('POST', `/admin/ativar?email=${encodeURIComponent(email)}&dias=${dias}`);
+  showLoading(false);
+  toast('Licença ativada!');
+  carregarUsuarios();
+}
+
+async function desativar(email) {
+  if (!confirm(`Desativar licença de ${email}?`)) return;
+  showLoading(true);
+  await api('POST', `/admin/desativar?email=${encodeURIComponent(email)}`);
+  showLoading(false);
+  toast('Usuário desativado.');
+  carregarUsuarios();
+}
+
+async function resetHwid(email) {
+  if (!confirm(`Resetar HWIDs de ${email}?`)) return;
+  showLoading(true);
+  await api('POST', `/admin/reset-hwid?email=${encodeURIComponent(email)}`);
+  showLoading(false);
+  toast('HWIDs resetados!');
+  carregarUsuarios();
+}
+
+// ── CADASTRAR USUÁRIO ─────────────────────────
+function abrirModalCadastrar() {
+  ['cad_nome','cad_email','cad_senha','cad_whatsapp'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cad_dias').value = '0';
+  abrirModal('modalCadastrar');
+}
+
+async function cadastrarUsuario() {
+  const nome     = document.getElementById('cad_nome').value.trim();
+  const email    = document.getElementById('cad_email').value.trim();
+  const senha    = document.getElementById('cad_senha').value.trim();
+  const whatsapp = document.getElementById('cad_whatsapp').value.trim();
+  const dias     = parseInt(document.getElementById('cad_dias').value);
+  if (!email || !senha) { toast('Email e senha são obrigatórios.', true); return; }
+  showLoading(true);
+  const r = await api('POST', `/admin/cadastrar?email=${encodeURIComponent(email)}&password=${encodeURIComponent(senha)}&nome=${encodeURIComponent(nome)}&whatsapp=${encodeURIComponent(whatsapp)}&dias=${dias}`);
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast('Usuário cadastrado!');
+  fecharModal('modalCadastrar');
+  carregarUsuarios();
+  popularSelectDestinatario();
+}
+
+// ── CONFIG ────────────────────────────────────
+let currentProvider = 'resend';
+
+function setProvider(p) {
+  currentProvider = p;
+  document.getElementById('provBtn-resend').classList.toggle('active', p === 'resend');
+  document.getElementById('provBtn-gmail').classList.toggle('active',  p === 'gmail');
+  document.getElementById('cfg-resend').style.display = p === 'resend' ? 'block' : 'none';
+  document.getElementById('cfg-gmail').style.display  = p === 'gmail'  ? 'block' : 'none';
+}
+
+async function carregarConfig() {
+  const data = await api('GET', '/admin/config');
+  if (!data) return;
+  setProvider(data.email_provider || 'resend');
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('cfg_resend_api_key',   data.resend_api_key);
+  set('cfg_resend_from',      data.resend_from);
+  set('cfg_gmail_email',      data.gmail_email);
+  set('cfg_gmail_password',   data.gmail_password);
+  set('cfg_evolution_api_url', data.evolution_api_url);
+  set('cfg_evolution_api_key', data.evolution_api_key);
+  set('cfg_evolution_instance',data.evolution_instance);
+  set('cfg_mp_token',         data.mp_token);
+}
+
+async function salvarConfig(e) {
+  e.preventDefault();
+  const tokenAtual = document.getElementById('cfg_admin_token_atual').value.trim();
+  const tokenNovo  = document.getElementById('cfg_admin_token_novo').value.trim();
+
+  const payload = {
+    email_provider:      currentProvider,
+    resend_api_key:      document.getElementById('cfg_resend_api_key').value.trim(),
+    resend_from:         document.getElementById('cfg_resend_from').value.trim(),
+    gmail_email:         document.getElementById('cfg_gmail_email').value.trim(),
+    gmail_password:      document.getElementById('cfg_gmail_password').value.trim(),
+    evolution_api_url:   document.getElementById('cfg_evolution_api_url').value.trim(),
+    evolution_api_key:   document.getElementById('cfg_evolution_api_key').value.trim(),
+    evolution_instance:  document.getElementById('cfg_evolution_instance').value.trim(),
+    mp_token:            document.getElementById('cfg_mp_token').value.trim(),
+  };
+  if (tokenNovo) {
+    if (!tokenAtual) { toast('Informe o token atual para alterá-lo.', true); return; }
+    payload.admin_token_atual = tokenAtual;
+    payload.admin_token_novo  = tokenNovo;
+  }
+  showLoading(true);
+  const r = await api('POST', '/admin/config', payload);
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  // se token foi alterado, atualiza sessão
+  if (tokenNovo && r?.token_atualizado) {
+    TOKEN = tokenNovo;
+    sessionStorage.setItem('gs_admin_token', tokenNovo);
+    document.getElementById('cfg_admin_token_atual').value = '';
+    document.getElementById('cfg_admin_token_novo').value  = '';
+  }
+  toast('Configurações salvas!');
+}
+
+// ── MENSAGENS ─────────────────────────────────
+async function popularSelectDestinatario() {
+  const data = await api('GET', '/admin/users');
+  if (!data) return;
+  const sel = document.getElementById('msgDestinatario');
+  const current = sel.value;
+  sel.innerHTML = '<option value="todos">— Todos os usuários ativos —</option>';
+  data.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.email;
+    opt.textContent = `${u.nome || u.email} (${u.email})`;
+    sel.appendChild(opt);
+  });
+  sel.value = current || 'todos';
+}
+
+async function carregarMensagens() {
+  popularSelectDestinatario();
+  const data = await api('GET', '/admin/messages');
+  const tbody = document.getElementById('tbodyMensagens');
+  if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma mensagem enviada ainda</td></tr>'; return; }
+  tbody.innerHTML = data.slice().reverse().map(m => `
+    <tr>
+      <td style="color:rgba(255,255,255,.5);white-space:nowrap">${new Date(m.sent_at).toLocaleString('pt-BR')}</td>
+      <td>${esc(m.user_nome || m.user_email)}<br><span style="font-size:11px;color:rgba(255,255,255,.35)">${esc(m.user_email)}</span></td>
+      <td><span class="badge ${m.channel==='whatsapp' ? 'badge-green' : 'badge-yellow'}">${m.channel}</span></td>
+      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.7)">${esc(m.message)}</td>
+      <td><span class="badge ${m.status==='sent' ? 'badge-green' : 'badge-red'}">${m.status === 'sent' ? 'Enviado' : 'Falhou'}</span></td>
+    </tr>
+  `).join('');
+}
+
+async function enviarMensagem() {
+  const dest   = document.getElementById('msgDestinatario').value;
+  const canal  = document.getElementById('msgCanal').value;
+  const texto  = document.getElementById('msgTexto').value.trim();
+  if (!texto) { toast('Digite uma mensagem.', true); return; }
+  showLoading(true);
+  const r = await api('POST', '/admin/send-message', { email: dest, canal, mensagem: texto });
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast(`Mensagem enviada para ${r.enviados || 1} destinatário(s)!`);
+  document.getElementById('msgTexto').value = '';
+  carregarMensagens();
+}
+
+function abrirModalMsg(email, nome, whatsapp) {
+  document.getElementById('msgEmail').value = email;
+  document.getElementById('msgPara').value  = `${nome} <${email}>`;
+  document.getElementById('msgTextoModal').value = '';
+  abrirModal('modalMsg');
+}
+
+async function enviarMensagemModal() {
+  const email = document.getElementById('msgEmail').value;
+  const canal = document.getElementById('msgCanalModal').value;
+  const texto = document.getElementById('msgTextoModal').value.trim();
+  if (!texto) { toast('Digite uma mensagem.', true); return; }
+  showLoading(true);
+  const r = await api('POST', '/admin/send-message', { email, canal, mensagem: texto });
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast('Mensagem enviada!');
+  fecharModal('modalMsg');
+  carregarMensagens();
+}
+
+// ── UTILS ─────────────────────────────────────
+function abrirModal(id)  { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showLoading(v) {
+  document.getElementById('loadingOverlay').classList.toggle('show', v);
+}
+
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Fechar modais clicando fora
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
