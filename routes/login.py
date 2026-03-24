@@ -163,9 +163,9 @@ def protected_route(
     if not user_db:
         return {"acesso": False, "motivo": "Usuário não encontrado"}
     if not user_db.expires_at:
-        return {"acesso": False, "motivo": "Sem licença"}
+        return {"acesso": False, "motivo": "Sem licença", "plan_type": user_db.plan_type}
     if user_db.expires_at < datetime.utcnow():
-        return {"acesso": False, "motivo": "Licença expirada"}
+        return {"acesso": False, "motivo": "Licença expirada", "plan_type": user_db.plan_type}
     if not x_hwid:
         return {"acesso": False, "motivo": "HWID não enviado"}
 
@@ -204,10 +204,11 @@ def protected_route(
         }
 
     return {
-        "acesso":    True,
-        "email":     user_db.email,
-        "nome":      user_db.nome,
-        "expira_em": user_db.expires_at,
+        "acesso":     True,
+        "email":      user_db.email,
+        "nome":       user_db.nome,
+        "expira_em":  user_db.expires_at,
+        "plan_type":  user_db.plan_type,
     }
 
 
