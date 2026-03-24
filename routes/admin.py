@@ -164,23 +164,25 @@ def cadastrar_usuario(
     expires = datetime.utcnow() + timedelta(days=dias) if dias > 0 else None
 
     if user and user.pre_liberado:
-        user.nome             = nome or user.nome
-        user.password         = hash_password(password)
-        user.whatsapp         = whatsapp or user.whatsapp
-        user.email_verified   = True   # admin já valida
-        user.pre_liberado     = False
+        user.nome               = nome or user.nome
+        user.password           = hash_password(password)
+        user.whatsapp           = whatsapp or user.whatsapp
+        user.email_verified     = True   # admin já valida
+        user.whatsapp_verified  = True   # admin já valida
+        user.pre_liberado       = False
         if expires:
-            user.expires_at   = expires
-            user.plan_type    = "manual"
+            user.expires_at     = expires
+            user.plan_type      = "manual"
     else:
         user = User(
-            nome           = nome,
-            email          = email,
-            password       = hash_password(password),
-            whatsapp       = whatsapp,
-            email_verified = True,   # admin já valida
-            expires_at     = expires,
-            plan_type      = "manual" if expires else None,
+            nome               = nome,
+            email              = email,
+            password           = hash_password(password),
+            whatsapp           = whatsapp,
+            email_verified     = True,   # admin já valida
+            whatsapp_verified  = True,   # admin já valida
+            expires_at         = expires,
+            plan_type          = "manual" if expires else None,
         )
         db.add(user)
 
