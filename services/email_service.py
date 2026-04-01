@@ -20,7 +20,7 @@ def send_email(to_email: str, subject: str, html_body: str, db):
 
 def _send_resend(to_email: str, subject: str, html_body: str, db):
     api_key  = get_cfg(db, "resend_api_key")
-    from_addr = get_cfg(db, "resend_from", "Guardian Shield <noreply@guardianshield.com.br>")
+    from_addr = get_cfg(db, "resend_from", "Guardian Shield <noreply@guardianshield.grupomayconsantos.com.br>")
     if not api_key:
         raise Exception("Resend API key não configurada no painel admin.")
     resp = requests.post(
