@@ -14,7 +14,10 @@ def criar_pagamento(email, valor, plano):
         preference_data = {
             "items": [
                 {
-                    "title": f"Plano {plano} - Guardian Shield",
+                    "id": f"guardian-shield-{plano}",
+                    "title": f"Guardian Shield — Plano {plano.capitalize()}",
+                    "description": f"Licença {plano} de proteção digital Guardian Shield",
+                    "category_id": "services",
                     "quantity": 1,
                     "currency_id": "BRL",
                     "unit_price": float(valor)
@@ -38,7 +41,7 @@ def criar_pagamento(email, valor, plano):
             "payment_methods": {
                 "excluded_payment_types": [],
                 "excluded_payment_methods": [],
-                "installments": 1
+                "installments": 12
             },
 
             "statement_descriptor": "GUARDIAN",
@@ -46,16 +49,14 @@ def criar_pagamento(email, valor, plano):
         }
 
         response = sdk.preference().create(preference_data)
-
-        print("\n=== RESPOSTA MP ===")
-        print(response)
-        print("===================\n")
-
-        return response["response"]["init_point"]
+        data = response.get("response", {})
+        if "init_point" not in data:
+            raise Exception(f"MP erro {response.get('status')}: {data}")
+        return data["init_point"]
 
     except Exception as e:
         print("ERRO PAGAMENTO:", e)
-        return None
+        raise
 
 
 # =========================
@@ -73,11 +74,6 @@ def criar_pix(email, valor, plano):
         }
 
         payment = sdk.payment().create(payment_data)
-
-        print("\n=== PIX CRIADO ===")
-        print(payment)
-        print("==================\n")
-
         return payment["response"]
 
     except Exception as e:
@@ -91,11 +87,6 @@ def criar_pix(email, valor, plano):
 def buscar_pagamento(payment_id):
     try:
         payment = sdk.payment().get(payment_id)
-
-        print("\n=== PAGAMENTO DETALHES ===")
-        print(payment)
-        print("==========================\n")
-
         return payment.get("response", {})
 
     except Exception as e:

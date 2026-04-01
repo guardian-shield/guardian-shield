@@ -36,7 +36,6 @@ def _send_resend(to_email: str, subject: str, html_body: str, db):
 def _send_gmail(to_email: str, subject: str, html_body: str, db):
     gmail_user = get_cfg(db, "gmail_email")
     gmail_pass = get_cfg(db, "gmail_password")
-    print(f"[GMAIL] user={repr(gmail_user)} pass_len={len(gmail_pass) if gmail_pass else 0}")
     if not gmail_user or not gmail_pass:
         raise Exception("Gmail não configurado no painel admin.")
     msg = MIMEMultipart("alternative")

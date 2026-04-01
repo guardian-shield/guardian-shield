@@ -239,6 +239,17 @@ def verify_whatsapp(
 
 
 # =============================================================
+# USER PLAN — retorna plan_type do usuário (para ocultar mensal já usado)
+# =============================================================
+@router.get("/user-plan")
+def user_plan(email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"plan_type": None}
+    return {"plan_type": user.plan_type}
+
+
+# =============================================================
 # CREATE PAYMENT
 # =============================================================
 @router.post("/create-payment")
@@ -251,7 +262,10 @@ def create_payment(email: str, plano: str, db: Session = Depends(get_db)):
     valor = 69.90 if plano == "mensal" else 397.90 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
-    link = criar_pagamento(email, valor, plano)
+    try:
+        link = criar_pagamento(email, valor, plano)
+    except Exception as e:
+        return {"error": f"Falha ao gerar pagamento: {e}"}
     return {"payment_url": link}
 
 

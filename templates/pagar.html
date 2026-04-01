@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Shield — Pagamento</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a2a5e;
+    color: white;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed; top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(44,123,229,0.5) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(135deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px);
+    pointer-events: none;
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px; padding: 40px 44px;
+    width: 100%; max-width: 420px;
+    backdrop-filter: blur(16px);
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  .logo-img { width: 56px; margin-bottom: 8px; filter: drop-shadow(0 0 14px rgba(100,180,255,0.5)); }
+  .logo { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .logo span { color: #d4a017; }
+  .subtitulo { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 28px; }
+
+  /* ── ETAPAS ── */
+  .etapa { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .etapa.ativa { display: flex; }
+
+  .etapa-titulo { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); margin-bottom: 18px; text-align: center; }
+
+  .field { width: 100%; margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .field input {
+    width: 100%; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+    padding: 11px 14px; color: white; font-size: 14px;
+    font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: rgba(100,160,255,0.5); }
+  .field input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .btn-principal {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg,#1e6fd9,#1558b0);
+    box-shadow: 0 4px 20px rgba(30,111,217,0.4);
+    border: none; border-radius: 10px; color: white;
+    font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700;
+    letter-spacing: 0.5px; cursor: pointer; transition: filter 0.15s, transform 0.12s;
+    margin-top: 4px;
+  }
+  .btn-principal:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-principal:active { transform: scale(0.98); }
+  .btn-principal:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  /* ── PLANOS ── */
+  .planos { display: flex; gap: 12px; width: 100%; margin-bottom: 4px; }
+  .plano-card {
+    flex: 1; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+    padding: 18px 12px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; background: rgba(255,255,255,0.04);
+  }
+  .plano-card:hover { border-color: #5ba3ff; background: rgba(91,163,255,0.08); }
+  .plano-card.destaque { border-color: #d4a017; background: rgba(212,160,23,0.06); }
+  .plano-nome { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; }
+  .plano-preco { font-size: 22px; font-weight: 700; color: #d4a017; margin: 6px 0 2px; }
+  .plano-detalhe { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .aviso-mensal {
+    display: none; width: 100%;
+    background: rgba(212,160,23,0.1); border: 1px solid rgba(212,160,23,0.3);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: #d4a017; text-align: center; margin-bottom: 12px;
+  }
+
+  /* ── ESCOLHA PAGAMENTO ── */
+  .metodos { display: flex; gap: 12px; width: 100%; margin-bottom: 4px; }
+  .metodo-card {
+    flex: 1; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+    padding: 20px 12px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; background: rgba(255,255,255,0.04);
+  }
+  .metodo-card:hover { border-color: #5ba3ff; background: rgba(91,163,255,0.08); }
+  .metodo-icone { font-size: 28px; margin-bottom: 8px; }
+  .metodo-nome { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; }
+  .metodo-sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+  /* ── PIX ── */
+  .pix-valor { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; color: #4cde8a; margin-bottom: 16px; }
+  .pix-qr {
+    background: white; border-radius: 12px; padding: 12px;
+    width: 200px; height: 200px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pix-qr img { width: 100%; height: 100%; object-fit: contain; }
+  .pix-copia-label { font-size: 11px; color: rgba(255,255,255,0.45); margin-bottom: 6px; text-align: center; }
+  .pix-copia-wrap { display: flex; gap: 8px; width: 100%; margin-bottom: 16px; }
+  .pix-copia-input {
+    flex: 1; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    padding: 8px 12px; color: rgba(255,255,255,0.7); font-size: 11px;
+    font-family: 'Inter', sans-serif; outline: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .btn-copiar {
+    background: rgba(76,222,138,0.15); border: 1px solid rgba(76,222,138,0.3);
+    border-radius: 8px; color: #4cde8a; padding: 8px 14px;
+    font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .btn-copiar:hover { background: rgba(76,222,138,0.25); }
+  .pix-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05); border-radius: 8px;
+    padding: 10px 14px; width: 100%; margin-bottom: 4px;
+  }
+  .pix-status .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: #d4a017; animation: pulsar 1.2s infinite;
+  }
+  .pix-status.aprovado .dot { background: #4cde8a; animation: none; }
+  .pix-status.aprovado { color: #4cde8a; }
+  @keyframes pulsar { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── ERROS / INFO ── */
+  .erro {
+    display: none; width: 100%; margin-top: 12px;
+    background: rgba(255,80,80,0.12); border: 1px solid rgba(255,80,80,0.3);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: #ff7070; text-align: center;
+  }
+  .carregando {
+    display: none; margin-top: 12px;
+    font-size: 13px; color: rgba(255,255,255,0.45); text-align: center;
+  }
+  .voltar {
+    margin-top: 16px; font-size: 12px; color: rgba(255,255,255,0.4);
+    cursor: pointer; text-align: center;
+  }
+  .voltar a { color: #5ba3ff; cursor: pointer; text-decoration: underline; }
+
+  .plano-resumo {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    margin-bottom: 16px; text-align: center;
+  }
+  .plano-resumo b { color: rgba(255,255,255,0.75); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img src="/static/logo.png" class="logo-img" onerror="this.style.display='none'">
+  <div class="logo">Guardian <span>Shield</span></div>
+  <div class="subtitulo">Proteção Digital</div>
+
+  <!-- ETAPA 1: E-MAIL -->
+  <div class="etapa ativa" id="etapa1">
+    <div class="etapa-titulo">Digite seu e-mail para continuar</div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="inputEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <button class="btn-principal" onclick="confirmarEmail()">Continuar</button>
+    <div class="erro" id="erro1"></div>
+    <div class="carregando" id="load1">Verificando...</div>
+  </div>
+
+  <!-- ETAPA 2: ESCOLHA DO PLANO -->
+  <div class="etapa" id="etapa2">
+    <div class="etapa-titulo">Escolha seu plano</div>
+    <div class="aviso-mensal" id="avisoMensal">
+      O plano mensal é um teste único e já foi utilizado.<br>
+      Para continuar, renove com o plano anual.
+    </div>
+    <div class="planos">
+      <div class="plano-card" id="cardMensal" onclick="escolherPlano('mensal')">
+        <div class="plano-nome">Mensal</div>
+        <div class="plano-preco">R$ 69,90</div>
+        <div class="plano-detalhe">Teste · 30 dias</div>
+      </div>
+      <div class="plano-card destaque" onclick="escolherPlano('anual')">
+        <div class="plano-nome">Anual</div>
+        <div class="plano-preco">R$ 397,90</div>
+        <div class="plano-detalhe">365 dias · mais econômico</div>
+      </div>
+    </div>
+    <div class="voltar"><a onclick="irEtapa(1)">← Voltar</a></div>
+    <div class="erro" id="erro2"></div>
+  </div>
+
+  <!-- ETAPA 3: FORMA DE PAGAMENTO -->
+  <div class="etapa" id="etapa3">
+    <div class="etapa-titulo">Como deseja pagar?</div>
+    <div class="plano-resumo" id="resumoPlano"></div>
+    <div class="metodos">
+      <div class="metodo-card" onclick="pagarPix()">
+        <div class="metodo-icone">⚡</div>
+        <div class="metodo-nome">PIX</div>
+        <div class="metodo-sub">Instantâneo</div>
+      </div>
+      <div class="metodo-card" onclick="pagarCartao()">
+        <div class="metodo-icone">💳</div>
+        <div class="metodo-nome">Cartão</div>
+        <div class="metodo-sub">Até 12x</div>
+      </div>
+    </div>
+    <div class="voltar"><a onclick="irEtapa(2)">← Voltar</a></div>
+    <div class="erro" id="erro3"></div>
+    <div class="carregando" id="load3">Gerando pagamento...</div>
+  </div>
+
+  <!-- ETAPA 4: PIX QR CODE -->
+  <div class="etapa" id="etapa4">
+    <div class="etapa-titulo">Pague com PIX</div>
+    <div class="pix-valor" id="pixValor">R$ --</div>
+    <div class="pix-qr">
+      <img id="pixQrImg" src="" alt="QR Code PIX">
+    </div>
+    <div class="pix-copia-label">Ou copie o código:</div>
+    <div class="pix-copia-wrap">
+      <input class="pix-copia-input" id="pixCopiaCola" readonly>
+      <button class="btn-copiar" onclick="copiarPix()">Copiar</button>
+    </div>
+    <div class="pix-status" id="pixStatusBox">
+      <div class="dot"></div>
+      <span id="pixStatusTxt">Aguardando pagamento...</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = '';  // mesma origem
+
+let emailAtual = '';
+let planoAtual = '';
+let pixPaymentId = null;
+let pixInterval  = null;
+
+// ── lê email da URL se vier ──
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const email  = params.get('email');
+  if (email) {
+    document.getElementById('inputEmail').value = email;
+  }
+  document.getElementById('inputEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmarEmail();
+  });
+});
+
+function irEtapa(n) {
+  document.querySelectorAll('.etapa').forEach(e => e.classList.remove('ativa'));
+  document.getElementById('etapa' + n).classList.add('ativa');
+}
+
+function mostrarErro(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function limparErro(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function mostrarLoad(id, txt) {
+  const el = document.getElementById(id);
+  if (txt) el.textContent = txt;
+  el.style.display = 'block';
+}
+
+function esconderLoad(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ── ETAPA 1: confirma email ──
+async function confirmarEmail() {
+  const email = document.getElementById('inputEmail').value.trim();
+  if (!email || !email.includes('@')) { mostrarErro('erro1', 'Digite um e-mail válido.'); return; }
+
+  limparErro('erro1');
+  mostrarLoad('load1', 'Verificando...');
+
+  try {
+    // verifica se o email existe no sistema
+    const res  = await fetch(`${API}/resend-code?email=${encodeURIComponent(email)}`, { method: 'POST' });
+    const data = await res.json();
+
+    esconderLoad('load1');
+
+    // aceita tanto "usuário não encontrado" (nunca cadastrou) quanto emails existentes
+    // o importante é que o email seja válido para o pagamento
+    if (data.error && data.error.includes('não encontrado')) {
+      // email novo — pode pagar e depois se cadastrar
+      emailAtual = email;
+      irEtapa(2);
+      return;
+    }
+
+    emailAtual = email;
+
+    // verifica se já tem plano mensal
+    const resPlan = await fetch(`${API}/user-plan?email=${encodeURIComponent(email)}`);
+    if (resPlan.ok) {
+      const planData = await resPlan.json();
+      const usouMensal = planData.plan_type && planData.plan_type !== '';
+      document.getElementById('cardMensal').style.display = usouMensal ? 'none' : '';
+      document.getElementById('avisoMensal').style.display = usouMensal ? 'block' : 'none';
+    }
+
+    irEtapa(2);
+  } catch(e) {
+    esconderLoad('load1');
+    // mesmo com erro de conexão, deixa prosseguir
+    emailAtual = email;
+    irEtapa(2);
+  }
+}
+
+// ── ETAPA 2: escolhe plano ──
+function escolherPlano(plano) {
+  planoAtual = plano;
+  const valor = plano === 'mensal' ? 'R$ 69,90 · 30 dias' : 'R$ 397,90 · 365 dias';
+  document.getElementById('resumoPlano').innerHTML =
+    `Plano: <b>${plano.charAt(0).toUpperCase() + plano.slice(1)}</b> — ${valor}`;
+  irEtapa(3);
+}
+
+// ── ETAPA 3a: PIX ──
+async function pagarPix() {
+  limparErro('erro3');
+  mostrarLoad('load3', 'Gerando PIX...');
+
+  try {
+    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`, { method: 'POST' });
+    const data = await res.json();
+    esconderLoad('load3');
+
+    if (data.error) { mostrarErro('erro3', data.error); return; }
+
+    // preenche etapa 4
+    document.getElementById('pixValor').textContent =
+      planoAtual === 'mensal' ? 'R$ 69,90' : 'R$ 397,90';
+    document.getElementById('pixQrImg').src =
+      `data:image/png;base64,${data.qr_code_base64}`;
+    document.getElementById('pixCopiaCola').value = data.qr_code || '';
+    pixPaymentId = data.payment_id;
+
+    irEtapa(4);
+    iniciarPollingPix();
+  } catch(e) {
+    esconderLoad('load3');
+    mostrarErro('erro3', 'Erro ao gerar PIX. Tente novamente.');
+  }
+}
+
+// ── ETAPA 3b: Cartão ──
+async function pagarCartao() {
+  limparErro('erro3');
+  mostrarLoad('load3', 'Gerando link de pagamento...');
+
+  try {
+    const res  = await fetch(`${API}/create-payment?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`, { method: 'POST' });
+    const data = await res.json();
+    esconderLoad('load3');
+
+    if (data.error) { mostrarErro('erro3', data.error); return; }
+    if (data.payment_url) window.location.href = data.payment_url;
+  } catch(e) {
+    esconderLoad('load3');
+    mostrarErro('erro3', 'Erro ao gerar pagamento. Tente novamente.');
+  }
+}
+
+// ── Polling PIX ──
+function iniciarPollingPix() {
+  if (pixInterval) clearInterval(pixInterval);
+  pixInterval = setInterval(verificarStatusPix, 5000);
+}
+
+async function verificarStatusPix() {
+  if (!pixPaymentId) return;
+  try {
+    const res  = await fetch(`${API}/pix-status/${pixPaymentId}`);
+    const data = await res.json();
+
+    if (data.status === 'approved') {
+      clearInterval(pixInterval);
+      const box = document.getElementById('pixStatusBox');
+      box.classList.add('aprovado');
+      document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
+      setTimeout(() => {
+        window.location.href = `/download?email=${encodeURIComponent(emailAtual)}`;
+      }, 1500);
+    } else if (data.status === 'cancelled' || data.status === 'rejected') {
+      clearInterval(pixInterval);
+      irEtapa(3);
+      mostrarErro('erro3', 'Pagamento cancelado ou rejeitado. Tente novamente.');
+    }
+  } catch(e) {
+    // silencioso — continua tentando
+  }
+}
+
+function copiarPix() {
+  const val = document.getElementById('pixCopiaCola').value;
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.querySelector('.btn-copiar');
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>

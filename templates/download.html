@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Shield — Download</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a2a5e;
+    color: white;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed; top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(44,123,229,0.5) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(135deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px);
+    pointer-events: none;
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px; padding: 44px 44px 40px;
+    width: 100%; max-width: 420px;
+    backdrop-filter: blur(16px);
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+
+  .logo-img { width: 56px; margin-bottom: 8px; filter: drop-shadow(0 0 14px rgba(100,180,255,0.5)); }
+  .logo { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .logo span { color: #d4a017; }
+  .subtitulo { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 32px; }
+
+  .check-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(37,162,68,0.15);
+    border: 2px solid rgba(37,162,68,0.5);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(37,162,68,0.3); }
+    50% { box-shadow: 0 0 0 12px rgba(37,162,68,0); }
+  }
+  .check-circle svg { color: #25a244; }
+
+  h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .msg {
+    font-size: 13px; color: rgba(255,255,255,0.55);
+    line-height: 1.6; margin-bottom: 28px;
+  }
+  .msg b { color: rgba(255,255,255,0.85); }
+
+  .btn-download {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #2c7be5, #1a5bbf);
+    border: none; border-radius: 10px;
+    color: white; font-family: 'Rajdhani', sans-serif;
+    font-size: 18px; font-weight: 700; letter-spacing: 0.5px;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity .2s, transform .1s;
+    margin-bottom: 12px;
+  }
+  .btn-download:hover { opacity: 0.9; }
+  .btn-download:active { transform: scale(0.98); }
+
+  .btn-wa {
+    width: 100%; padding: 12px;
+    background: rgba(37,162,68,0.12);
+    border: 1px solid rgba(37,162,68,0.3);
+    border-radius: 10px;
+    color: #25a244; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .2s;
+  }
+  .btn-wa:hover { background: rgba(37,162,68,0.2); }
+
+  .instrucoes {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .instrucoes p {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    margin-bottom: 6px;
+  }
+  .instrucoes p:last-child { margin-bottom: 0; }
+  .instrucoes p::before { content: '→ '; color: #2c7be5; }
+
+  .sep {
+    width: 100%; height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <img src="/static/logo.png" class="logo-img" onerror="this.style.display='none'">
+  <div class="logo">Guardian <span>Shield</span></div>
+  <div class="subtitulo">PROTEÇÃO DIGITAL INTELIGENTE</div>
+
+  <div class="check-circle">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+
+  <h2>Pagamento Confirmado!</h2>
+  <p class="msg">
+    Obrigado pela confiança. Sua licença foi ativada com sucesso para<br>
+    <b id="emailDisplay"></b>
+  </p>
+
+  <div class="instrucoes">
+    <p>Instale o Guardian Shield no seu computador</p>
+    <p>Faça login com seu e-mail e senha</p>
+    <p>Conecte seu celular Android via USB e clique em <b style="color:rgba(255,255,255,0.7)">Detectar</b></p>
+    <p>Inicie a blindagem com um clique</p>
+  </div>
+
+  <a id="btnDownload" href="#" class="btn-download" download>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Baixar Guardian Shield
+  </a>
+
+  <div class="sep"></div>
+
+  <a id="btnWhatsApp" href="#" target="_blank" class="btn-wa">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+    </svg>
+    Falar com Suporte no WhatsApp
+  </a>
+</div>
+
+<script>
+  const params   = new URLSearchParams(location.search);
+  const email    = params.get('email') || '';
+  const emailEl  = document.getElementById('emailDisplay');
+  const dlBtn    = document.getElementById('btnDownload');
+  const waBtn    = document.getElementById('btnWhatsApp');
+
+  // Exibe o email
+  if (email) emailEl.textContent = email;
+  else emailEl.textContent = 'sua conta';
+
+  // Link de download — troque pela URL real do instalador quando disponível
+  const DOWNLOAD_URL = 'https://guardian-shield.app/download/GuardianShield-Setup.exe';
+  dlBtn.href = DOWNLOAD_URL;
+
+  // Link do WhatsApp — troque pelo número real de suporte
+  const WA_NUMBER = '5511999999999'; // ex: 55 11 99999-9999
+  const WA_MSG = encodeURIComponent(`Olá! Acabei de adquirir o Guardian Shield (${email}) e preciso de ajuda.`);
+  waBtn.href = `https://wa.me/${WA_NUMBER}?text=${WA_MSG}`;
+</script>
+</body>
+</html>
