@@ -24,9 +24,7 @@ def get_db():
 @router.post("/create-pix")
 def create_pix(email: str, plano: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return {"error": "Usuário não encontrado"}
-    if plano == "mensal" and user.plan_type == "mensal":
+    if user and plano == "mensal" and user.plan_type == "mensal":
         return {"error": "Plano mensal já utilizado"}
 
     valor = 69.90 if plano == "mensal" else 397.90 if plano == "anual" else None

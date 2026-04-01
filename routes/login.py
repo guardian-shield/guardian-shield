@@ -139,6 +139,8 @@ def login(request: Request, email: str, password: str, db: Session = Depends(get
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"error": "Usuário não encontrado"}
+    if user.pre_liberado:
+        return {"error": "cadastro_pendente", "plan_type": user.plan_type}
     if not user.password or not verify_password(password, user.password):
         return {"error": "Senha incorreta"}
     if not user.email_verified:
@@ -255,9 +257,7 @@ def user_plan(email: str, db: Session = Depends(get_db)):
 @router.post("/create-payment")
 def create_payment(email: str, plano: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return {"error": "Usuário não encontrado"}
-    if plano == "mensal" and user.plan_type == "mensal":
+    if user and plano == "mensal" and user.plan_type == "mensal":
         return {"error": "Plano mensal já utilizado"}
     valor = 69.90 if plano == "mensal" else 397.90 if plano == "anual" else None
     if valor is None:
