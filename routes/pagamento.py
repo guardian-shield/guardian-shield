@@ -27,7 +27,7 @@ def create_pix(email: str, plano: str, db: Session = Depends(get_db)):
     if user and plano == "mensal" and user.plan_type == "mensal":
         return {"error": "Plano mensal já utilizado"}
 
-    valor = 69.90 if plano == "mensal" else 397.90 if plano == "anual" else None
+    valor = 99.00 if plano == "mensal" else 399.00 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
 
@@ -89,7 +89,7 @@ async def process_card(request: Request):
     if not token or not payment_method_id:
         return {"error": "Dados de cartão inválidos"}
 
-    valor = 69.90 if plano == "mensal" else 397.90
+    valor = 99.00 if plano == "mensal" else 399.00
     try:
         resultado = processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id)
         return {"status": resultado.get("status"), "payment_id": resultado.get("id")}

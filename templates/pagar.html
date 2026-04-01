@@ -200,12 +200,12 @@
     <div class="planos">
       <div class="plano-card" id="cardMensal" onclick="escolherPlano('mensal')">
         <div class="plano-nome">Mensal</div>
-        <div class="plano-preco">R$ 69,90</div>
+        <div class="plano-preco">R$ 99,00</div>
         <div class="plano-detalhe">Teste · 30 dias</div>
       </div>
       <div class="plano-card destaque" onclick="escolherPlano('anual')">
         <div class="plano-nome">Anual</div>
-        <div class="plano-preco">R$ 397,90</div>
+        <div class="plano-preco">R$ 399,00</div>
         <div class="plano-detalhe">365 dias · mais econômico</div>
       </div>
     </div>
@@ -363,7 +363,7 @@ async function confirmarEmail() {
 // ── ETAPA 2: escolhe plano ──
 function escolherPlano(plano) {
   planoAtual = plano;
-  const valor = plano === 'mensal' ? 'R$ 69,90 · 30 dias' : 'R$ 397,90 · 365 dias';
+  const valor = plano === 'mensal' ? 'R$ 99,00 · 30 dias' : 'R$ 399,00 · 365 dias';
   document.getElementById('resumoPlano').innerHTML =
     `Plano: <b>${plano.charAt(0).toUpperCase() + plano.slice(1)}</b> — ${valor}`;
   irEtapa(3);
@@ -383,7 +383,7 @@ async function pagarPix() {
 
     // preenche etapa 4
     document.getElementById('pixValor').textContent =
-      planoAtual === 'mensal' ? 'R$ 69,90' : 'R$ 397,90';
+      planoAtual === 'mensal' ? 'R$ 99,00' : 'R$ 399,00';
     document.getElementById('pixQrImg').src =
       `data:image/png;base64,${data.qr_code_base64}`;
     document.getElementById('pixCopiaCola').value = data.qr_code || '';
@@ -414,7 +414,7 @@ async function pagarCartao() {
       return;
     }
 
-    const valor = planoAtual === 'mensal' ? 69.90 : 397.90;
+    const valor = planoAtual === 'mensal' ? 99.00 : 399.00;
     document.getElementById('cardResumoBrick').innerHTML =
       `Plano <b>${planoAtual}</b> — R$ ${valor.toFixed(2).replace('.',',')}`;
     document.getElementById('cardBrickStatus').style.display = 'none';
