@@ -419,6 +419,10 @@ async function pagarCartao() {
 
     if (mpCardController) { mpCardController.unmount(); mpCardController = null; }
 
+    if (typeof MercadoPago === 'undefined') {
+      throw new Error('SDK do MP não carregou. Recarregue a página.');
+    }
+
     const mp = new MercadoPago(public_key, { locale: 'pt-BR' });
 
     mpCardController = await mp.bricks().create('cardPayment', 'cardPaymentBrick_container', {
