@@ -423,7 +423,7 @@ async function pagarCartao() {
     if (typeof MercadoPago === 'undefined') {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = 'https://sdk.mercadopago.com/v2/mercadopago.js';
+        s.src = 'https://sdk.mercadopago.com/js/v2';
         s.onload = resolve;
         s.onerror = () => reject(new Error('Falha ao carregar SDK do Mercado Pago'));
         document.head.appendChild(s);
