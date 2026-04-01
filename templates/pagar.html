@@ -234,6 +234,18 @@
     <div class="carregando" id="load3">Gerando pagamento...</div>
   </div>
 
+  <!-- ETAPA 5: CARTÃO (Checkout Bricks) -->
+  <div class="etapa" id="etapa5">
+    <div class="etapa-titulo">💳 Pague com Cartão</div>
+    <div class="plano-resumo" id="cardResumoBrick"></div>
+    <div id="cardBrickLoading" style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:12px;">Carregando formulário...</div>
+    <div id="cardPaymentBrick_container" style="width:100%;"></div>
+    <div id="cardBrickStatus" style="display:none;width:100%;margin-top:12px;
+      background:rgba(76,222,138,0.12);border:1px solid rgba(76,222,138,0.3);
+      border-radius:8px;padding:12px 14px;font-size:13px;color:#4cde8a;text-align:center;"></div>
+    <div class="voltar"><a onclick="voltarDoCartao()">← Voltar</a></div>
+  </div>
+
   <!-- ETAPA 4: PIX QR CODE -->
   <div class="etapa" id="etapa4">
     <div class="etapa-titulo">Pague com PIX</div>
@@ -380,22 +392,81 @@ async function pagarPix() {
   }
 }
 
-// ── ETAPA 3b: Cartão ──
+// ── ETAPA 3b: Cartão (Checkout Bricks) ──
+let mpCardController = null;
+
 async function pagarCartao() {
   limparErro('erro3');
-  mostrarLoad('load3', 'Gerando link de pagamento...');
+  mostrarLoad('load3', 'Carregando formulário...');
 
   try {
-    const res  = await fetch(`${API}/create-payment?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`, { method: 'POST' });
-    const data = await res.json();
+    const res = await fetch(`${API}/mp-public-key`);
+    const { public_key } = await res.json();
     esconderLoad('load3');
 
-    if (data.error) { mostrarErro('erro3', data.error); return; }
-    if (data.payment_url) window.location.href = data.payment_url;
+    if (!public_key) {
+      mostrarErro('erro3', 'Pagamento por cartão indisponível no momento.');
+      return;
+    }
+
+    const valor = planoAtual === 'mensal' ? 69.90 : 397.90;
+    document.getElementById('cardResumoBrick').innerHTML =
+      `Plano <b>${planoAtual}</b> — R$ ${valor.toFixed(2).replace('.',',')}`;
+    document.getElementById('cardBrickStatus').style.display = 'none';
+    document.getElementById('cardBrickLoading').style.display = 'block';
+    document.getElementById('cardPaymentBrick_container').innerHTML = '';
+    irEtapa(5);
+
+    if (mpCardController) { mpCardController.unmount(); mpCardController = null; }
+
+    const mp = new MercadoPago(public_key, { locale: 'pt-BR' });
+
+    mpCardController = await mp.bricks().create('cardPayment', 'cardPaymentBrick_container', {
+      initialization: { amount: valor, payer: { email: emailAtual } },
+      customization: {
+        visual: { style: { theme: 'dark' } },
+        paymentMethods: { minInstallments: 1, maxInstallments: 12 }
+      },
+      callbacks: {
+        onReady: () => {
+          document.getElementById('cardBrickLoading').style.display = 'none';
+        },
+        onSubmit: async (formData) => {
+          const payload = { ...formData, email: emailAtual, plano: planoAtual };
+          const r = await fetch(`${API}/process-card`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const d = await r.json();
+          if (d.error) throw new Error(d.error);
+          if (d.status === 'approved' || d.status === 'in_process') {
+            const el = document.getElementById('cardBrickStatus');
+            el.style.display = 'block';
+            el.textContent = d.status === 'approved'
+              ? '✓ Pagamento aprovado! Redirecionando...'
+              : '⏳ Pagamento em análise. Redirecionando...';
+            setTimeout(() => {
+              window.location.href = `/download?email=${encodeURIComponent(emailAtual)}`;
+            }, 2000);
+          } else {
+            throw new Error('Pagamento recusado. Verifique os dados do cartão.');
+          }
+        },
+        onError: (err) => { console.error('[CardBrick]', err); }
+      }
+    });
   } catch(e) {
     esconderLoad('load3');
-    mostrarErro('erro3', 'Erro ao gerar pagamento. Tente novamente.');
+    mostrarErro('erro3', 'Erro ao carregar formulário. Tente novamente.');
+    irEtapa(3);
   }
+}
+
+function voltarDoCartao() {
+  if (mpCardController) { mpCardController.unmount(); mpCardController = null; }
+  document.getElementById('cardPaymentBrick_container').innerHTML = '';
+  irEtapa(3);
 }
 
 // ── Polling PIX ──
@@ -437,5 +508,6 @@ function copiarPix() {
   });
 }
 </script>
+<script src="https://sdk.mercadopago.com/v2/mercadopago.js"></script>
 </body>
 </html>

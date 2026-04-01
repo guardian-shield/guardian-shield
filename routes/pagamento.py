@@ -1,11 +1,11 @@
 import os
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
 from models import User
-from payment import criar_pix, criar_pagamento, buscar_pagamento
+from payment import criar_pix, criar_pagamento, buscar_pagamento, processar_cartao
 
 router = APIRouter()
 
@@ -63,6 +63,38 @@ def pix_status(payment_id: str):
         return {"status": "unknown"}
 
     return {"status": pagamento.get("status", "unknown")}
+
+
+# =============================================================
+# GET /mp-public-key  →  retorna chave pública do Mercado Pago
+# =============================================================
+@router.get("/mp-public-key")
+def mp_public_key():
+    return {"public_key": os.getenv("MP_PUBLIC_KEY", "")}
+
+
+# =============================================================
+# POST /process-card  →  processa pagamento com cartão (Bricks)
+# =============================================================
+@router.post("/process-card")
+async def process_card(request: Request):
+    data = await request.json()
+    email              = data.get("payer", {}).get("email") or data.get("email", "")
+    plano              = data.get("plano", "mensal")
+    token              = data.get("token")
+    installments       = data.get("installments", 1)
+    payment_method_id  = data.get("payment_method_id")
+    issuer_id          = data.get("issuer_id")
+
+    if not token or not payment_method_id:
+        return {"error": "Dados de cartão inválidos"}
+
+    valor = 69.90 if plano == "mensal" else 397.90
+    try:
+        resultado = processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id)
+        return {"status": resultado.get("status"), "payment_id": resultado.get("id")}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # =============================================================

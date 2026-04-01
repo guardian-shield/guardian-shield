@@ -31,9 +31,9 @@ def criar_pagamento(email, valor, plano):
             },
 
             "back_urls": {
-                "success": "https://google.com",
-                "failure": "https://google.com",
-                "pending": "https://google.com"
+                "success": f"https://guardian.grupomayconsantos.com.br/download?email={email}",
+                "failure": f"https://guardian.grupomayconsantos.com.br/pagar?email={email}",
+                "pending": f"https://guardian.grupomayconsantos.com.br/download?email={email}"
             },
 
             "auto_return": "approved",
@@ -79,6 +79,25 @@ def criar_pix(email, valor, plano):
     except Exception as e:
         print("ERRO PIX:", e)
         return None
+
+
+# =========================
+# CARTÃO (Checkout Bricks)
+# =========================
+def processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id=None):
+    payment_data = {
+        "transaction_amount": float(valor),
+        "token": token,
+        "description": f"Plano {plano.capitalize()} - Guardian Shield",
+        "installments": int(installments),
+        "payment_method_id": payment_method_id,
+        "payer": {"email": email},
+        "external_reference": f"{email}-{plano}"
+    }
+    if issuer_id:
+        payment_data["issuer_id"] = int(issuer_id)
+    payment = sdk.payment().create(payment_data)
+    return payment["response"]
 
 
 # =========================
