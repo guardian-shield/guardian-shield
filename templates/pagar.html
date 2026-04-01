@@ -457,8 +457,9 @@ async function pagarCartao() {
       }
     });
   } catch(e) {
+    console.error('[CartaoBrick]', e);
     esconderLoad('load3');
-    mostrarErro('erro3', 'Erro ao carregar formulário. Tente novamente.');
+    mostrarErro('erro3', 'Erro: ' + (e.message || e));
     irEtapa(3);
   }
 }
