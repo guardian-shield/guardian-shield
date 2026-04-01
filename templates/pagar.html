@@ -419,8 +419,15 @@ async function pagarCartao() {
 
     if (mpCardController) { mpCardController.unmount(); mpCardController = null; }
 
+    // Carrega SDK dinamicamente se ainda não estiver disponível
     if (typeof MercadoPago === 'undefined') {
-      throw new Error('SDK do MP não carregou. Recarregue a página.');
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://sdk.mercadopago.com/v2/mercadopago.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Falha ao carregar SDK do Mercado Pago'));
+        document.head.appendChild(s);
+      });
     }
 
     const mp = new MercadoPago(public_key, { locale: 'pt-BR' });
@@ -513,6 +520,5 @@ function copiarPix() {
   });
 }
 </script>
-<script src="https://sdk.mercadopago.com/v2/mercadopago.js"></script>
 </body>
 </html>
