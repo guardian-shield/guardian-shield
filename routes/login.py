@@ -14,7 +14,6 @@ from database import SessionLocal
 from models import User
 from auth import hash_password, verify_password, create_access_token, verify_token
 from payment import criar_pagamento, buscar_pagamento
-from services.email_service import send_verification_email
 from services.whatsapp_service import send_verification_whatsapp
 from services.meta_events import send_purchase as meta_send_purchase
 
@@ -48,46 +47,31 @@ def register(
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.email == email).first()
-    code = _gerar_codigo()
-    expires = datetime.utcnow() + timedelta(minutes=15)
 
     if user:
         # Usuário pré-liberado (pagou antes de cadastrar) — completa o registro
         if user.pre_liberado:
-            user.nome               = nome or user.nome
-            user.password           = hash_password(password)
-            user.whatsapp           = whatsapp or user.whatsapp
-            user.email_code         = code
-            user.email_code_expires = expires
-            user.email_verified     = False
-            user.pre_liberado       = False
+            user.nome           = nome or user.nome
+            user.password       = hash_password(password)
+            user.whatsapp       = whatsapp or user.whatsapp
+            user.email_verified = True
+            user.pre_liberado   = False
             db.commit()
-            _tentar_enviar_email(email, nome, code, db)
-            return {"message": "Cadastro completado! Verifique seu e-mail."}
+            return {"message": "Cadastro completado!"}
 
         return {"error": "E-mail já cadastrado"}
 
     new_user = User(
-        nome               = nome,
-        email              = email,
-        password           = hash_password(password),
-        whatsapp           = whatsapp,
-        email_verified     = False,
-        whatsapp_verified  = False,
-        email_code         = code,
-        email_code_expires = expires,
+        nome              = nome,
+        email             = email,
+        password          = hash_password(password),
+        whatsapp          = whatsapp,
+        email_verified    = True,
+        whatsapp_verified = False,
     )
     db.add(new_user)
     db.commit()
-    _tentar_enviar_email(email, nome, code, db)
-    return {"message": "Cadastro realizado! Verifique seu e-mail para ativar a conta."}
-
-
-def _tentar_enviar_email(email, nome, code, db):
-    try:
-        send_verification_email(email, nome or email, code, db)
-    except Exception as e:
-        print(f"[EMAIL] Falha ao enviar verificação para {email}: {e}")
+    return {"message": "Cadastro realizado!"}
 
 
 # =============================================================
@@ -144,8 +128,6 @@ def login(request: Request, email: str, password: str, db: Session = Depends(get
         return {"error": "cadastro_pendente", "plan_type": user.plan_type}
     if not user.password or not verify_password(password, user.password):
         return {"error": "Senha incorreta"}
-    if not user.email_verified:
-        return {"error": "E-mail não verificado. Cheque sua caixa de entrada."}
 
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
