@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guardian Shield — Download</title>
+<script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '2079654962888572');
+  fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=2079654962888572&ev=PageView&noscript=1"/></noscript>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-H4JRM00ZBV"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -186,6 +197,16 @@
   // Exibe o email
   if (email) emailEl.textContent = email;
   else emailEl.textContent = 'sua conta';
+
+  // Evento de compra — Meta Pixel + Google Analytics
+  const plano = params.get('plano') || 'mensal';
+  const valor = plano === 'anual' ? 399.00 : 99.00;
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+  }
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'purchase', { currency: 'BRL', value: valor });
+  }
 
   // Link de download — troque pela URL real do instalador quando disponível
   const DOWNLOAD_URL = 'https://guardian-shield.app/download/GuardianShield-Setup.exe';
