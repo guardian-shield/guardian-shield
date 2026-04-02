@@ -500,11 +500,119 @@ h2 .green { color: var(--green); }
 .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .fade-up.visible { opacity: 1; transform: translateY(0); }
 
+/* ── APP MOCKUP ── */
+.mockup-window {
+  background: #0a1628;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  max-width: 520px; margin: 32px auto 0;
+}
+.mockup-titlebar {
+  background: rgba(255,255,255,0.05);
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.mockup-dots { display: flex; gap: 6px; }
+.mockup-dots span { width: 11px; height: 11px; border-radius: 50%; }
+.mockup-dot-r { background: #ff5f57; }
+.mockup-dot-y { background: #ffbd2e; }
+.mockup-dot-g { background: #28c840; }
+.mockup-title-txt { font-size: 12px; color: rgba(255,255,255,0.4); margin-left: 8px; }
+.mockup-body { padding: 24px; }
+.mockup-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mockup-logo-row { display: flex; align-items: center; gap: 8px; }
+.mockup-shield { font-size: 24px; }
+.mockup-brand { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; }
+.mockup-brand span { color: var(--gold); }
+.mockup-badge-ok { background: rgba(37,196,102,0.15); border: 1px solid rgba(37,196,102,0.3); color: var(--green); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+.mockup-device-box {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.mockup-device-icon { font-size: 28px; }
+.mockup-device-info { flex: 1; }
+.mockup-device-name { font-size: 13px; font-weight: 600; }
+.mockup-device-sub { font-size: 11px; color: var(--muted); }
+.mockup-connected { color: var(--green); font-size: 11px; font-weight: 600; }
+.mockup-scan-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.mockup-bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; margin-bottom: 16px; }
+.mockup-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #1e6fd9, #25c466); animation: scanbar 2.5s ease-in-out infinite alternate; }
+@keyframes scanbar { from { width: 30%; } to { width: 92%; } }
+.mockup-threats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; margin-bottom: 16px;
+}
+.mockup-threat-box { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px; text-align: center; }
+.mockup-threat-num { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; }
+.mockup-threat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.mockup-btn-scan {
+  width: 100%; padding: 12px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #25c466, #1aa554);
+  color: white; font-family: 'Rajdhani', sans-serif;
+  font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.mockup-layers {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
+}
+.mockup-layer {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 14px;
+  font-size: 12px;
+}
+.mockup-layer-icon { font-size: 16px; }
+.mockup-layer-name { flex: 1; }
+.mockup-layer-status { font-size: 11px; font-weight: 700; }
+.mockup-layer-status.ok { color: var(--green); }
+.mockup-layer-status.on { color: var(--blue2); }
+
+/* ── CERTIFICATE MOCKUP ── */
+.cert-mockup {
+  max-width: 500px; margin: 32px auto 0;
+  background: linear-gradient(135deg, #fff9ee, #fffdf5);
+  border: 2px solid #c8a227;
+  border-radius: 14px; padding: 36px 40px;
+  color: #1a1a1a; position: relative; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.cert-mockup::before {
+  content: '';
+  position: absolute; inset: 8px;
+  border: 1px solid rgba(200,162,39,0.4);
+  border-radius: 8px; pointer-events: none;
+}
+.cert-header { text-align: center; margin-bottom: 20px; }
+.cert-brand { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #0a2a5e; letter-spacing: 1px; }
+.cert-brand span { color: #c8a227; }
+.cert-title { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.cert-divider { height: 2px; background: linear-gradient(90deg, transparent, #c8a227, transparent); margin: 16px 0; }
+.cert-body { text-align: center; }
+.cert-certifica { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.cert-nome { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #0a2a5e; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; }
+.cert-desc { font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+.cert-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; }
+.cert-info strong { color: #333; display: block; font-size: 12px; }
+.cert-seal {
+  position: absolute; bottom: 24px; right: 28px;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle, #0a2a5e, #0d3a7a);
+  border: 2px solid #c8a227;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
 @media(max-width:600px){
   .step-card { flex-direction: column; }
   .step-num { font-size: 32px; }
   .diff-table { font-size: 12px; }
   .diff-table th, .diff-table td { padding: 10px 12px; }
+  .cert-mockup { padding: 24px 20px; }
 }
 </style>
 </head>
@@ -654,12 +762,61 @@ h2 .green { color: var(--green); }
       </div>
     </div>
   </div>
+
+  <!-- MOCKUP ETAPA 1: LIMPEZA -->
+  <div class="mockup-window fade-up">
+    <div class="mockup-titlebar">
+      <div class="mockup-dots"><span class="mockup-dot-r"></span><span class="mockup-dot-y"></span><span class="mockup-dot-g"></span></div>
+      <span class="mockup-title-txt">Guardian Shield — Limpeza Automática</span>
+    </div>
+    <div class="mockup-body">
+      <div class="mockup-topbar">
+        <div class="mockup-logo-row">
+          <span class="mockup-shield">🛡️</span>
+          <span class="mockup-brand">Guardian <span>Shield</span></span>
+        </div>
+        <span class="mockup-badge-ok">● ATIVO</span>
+      </div>
+      <div class="mockup-device-box">
+        <span class="mockup-device-icon">📱</span>
+        <div class="mockup-device-info">
+          <div class="mockup-device-name">Samsung Galaxy A54</div>
+          <div class="mockup-device-sub">Android 13 · Conectado via USB</div>
+        </div>
+        <span class="mockup-connected">✓ Detectado</span>
+      </div>
+      <div class="mockup-scan-label"><span>Escaneando dispositivo...</span><span style="color:var(--green);">67%</span></div>
+      <div class="mockup-bar"><div class="mockup-bar-fill"></div></div>
+      <div class="mockup-threats">
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:#ff6b6b;">14</div><div class="mockup-threat-lbl">Ameaças</div></div>
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:var(--gold2);">3</div><div class="mockup-threat-lbl">Spywares</div></div>
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:var(--green);">0</div><div class="mockup-threat-lbl">Após limpeza</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOCKUP ETAPA 2: BLINDAGEM -->
+  <div class="mockup-window fade-up" style="margin-top:20px;">
+    <div class="mockup-titlebar">
+      <div class="mockup-dots"><span class="mockup-dot-r"></span><span class="mockup-dot-y"></span><span class="mockup-dot-g"></span></div>
+      <span class="mockup-title-txt">Guardian Shield — Blindagem Digital</span>
+    </div>
+    <div class="mockup-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">4 Camadas de Proteção Ativas</p>
+      <div class="mockup-layers">
+        <div class="mockup-layer"><span class="mockup-layer-icon">🔥</span><span class="mockup-layer-name">Bloqueio de novas infecções</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">🚫</span><span class="mockup-layer-name">Anti-instalação maliciosa</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">🔒</span><span class="mockup-layer-name">Proteção de dados pessoais</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">📡</span><span class="mockup-layer-name">Monitoramento de ameaças</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+      </div>
+      <div class="mockup-btn-scan">⚡ BLINDAGEM APLICADA COM SUCESSO</div>
+    </div>
+  </div>
 </section>
 
 <!-- ═══════════════════════════════════════════ CERTIFICADO -->
 <section class="fade-up" style="text-align:center;">
   <div style="background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(212,160,23,0.03));border:2px solid rgba(212,160,23,0.3);border-radius:20px;padding:44px 32px;">
-    <div style="font-size:52px;margin-bottom:16px;">📜</div>
     <h2 style="margin-bottom:12px;">Cada blindagem gera um <span class="gold">Certificado de Garantia</span></h2>
     <p style="color:var(--muted);font-size:16px;max-width:560px;margin:0 auto 28px;line-height:1.7;">
       Ao finalizar o serviço, o Guardian Shield emite automaticamente um <strong style="color:white;">certificado profissional</strong> com o nome do cliente, data e prazo de proteção.
@@ -678,6 +835,29 @@ h2 .green { color: var(--green); }
     <p style="font-size:13px;color:var(--gold);font-weight:600;">
       👉 Nenhuma outra assistência da sua cidade oferece isso
     </p>
+
+    <!-- MOCKUP CERTIFICADO -->
+    <div class="cert-mockup fade-up">
+      <div class="cert-header">
+        <div class="cert-brand">Guardian <span>Shield</span></div>
+        <div class="cert-title">Proteção Digital Inteligente</div>
+      </div>
+      <div class="cert-divider"></div>
+      <div class="cert-body">
+        <div class="cert-certifica">Certifica que</div>
+        <div class="cert-nome">João Silva</div>
+        <div class="cert-desc">
+          Teve seu dispositivo <strong>Samsung Galaxy A54</strong> submetido ao processo completo de
+          Limpeza e Blindagem Digital Guardian Shield, com aplicação das 4 camadas de proteção avançada.
+        </div>
+        <div class="cert-info">
+          <div><strong>02/04/2025</strong>Data de emissão</div>
+          <div><strong>Mensal · 30 dias</strong>Plano de proteção</div>
+          <div><strong>02/05/2025</strong>Válido até</div>
+        </div>
+      </div>
+      <div class="cert-seal">🛡️</div>
+    </div>
   </div>
 </section>
 
