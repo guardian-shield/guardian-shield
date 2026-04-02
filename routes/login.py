@@ -16,6 +16,7 @@ from auth import hash_password, verify_password, create_access_token, verify_tok
 from payment import criar_pagamento, buscar_pagamento
 from services.email_service import send_verification_email
 from services.whatsapp_service import send_verification_whatsapp
+from services.meta_events import send_purchase as meta_send_purchase
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -348,6 +349,10 @@ async def webhook(
                     )
                     db.add(user)
                 db.commit()
+
+                # Envia evento de compra para o Meta Conversions API
+                valor = 99.00 if plano == "mensal" else 399.00
+                meta_send_purchase(email, valor, plano, event_id=str(payment_id))
 
         return {"status": "ok"}
     except Exception as e:
