@@ -71,6 +71,18 @@ def register(
     )
     db.add(new_user)
     db.commit()
+
+    # Envia código WhatsApp imediatamente após cadastro
+    if whatsapp:
+        code = _gerar_codigo()
+        new_user.whatsapp_code         = code
+        new_user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
+        db.commit()
+        try:
+            send_verification_whatsapp(whatsapp, nome or email, code, db)
+        except Exception as e:
+            print(f"[WA] Falha ao enviar código no cadastro: {e}")
+
     return {"message": "Cadastro realizado!"}
 
 
