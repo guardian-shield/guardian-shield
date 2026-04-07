@@ -60,6 +60,20 @@ def register(
             user.email_verified = True
             user.pre_liberado   = False
             db.commit()
+
+            # Envia código WA para verificação (igual ao cadastro normal)
+            wa = user.whatsapp
+            if wa:
+                code = _gerar_codigo()
+                user.whatsapp_code         = code
+                user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
+                db.commit()
+                try:
+                    logger.warning(f"[WA] Enviando código pre_liberado {code} para {wa}")
+                    send_verification_whatsapp(wa, user.nome or email, code, db)
+                except Exception as e:
+                    logger.error(f"[WA] Falha ao enviar código pre_liberado: {e}")
+
             return {"message": "Cadastro completado!"}
 
         return {"error": "E-mail já cadastrado"}
