@@ -339,7 +339,6 @@ async def webhook(
                     user.expires_at = datetime.utcnow() + timedelta(days=dias)
                     user.plan_type  = plano
                 else:
-                    # Pagou antes de se cadastrar — pré-libera o email
                     user = User(
                         email        = email,
                         pre_liberado = True,
@@ -352,6 +351,46 @@ async def webhook(
                 # Envia evento de compra para o Meta Conversions API
                 valor = 99.00 if plano == "mensal" else 399.00
                 meta_send_purchase(email, valor, plano, event_id=str(payment_id))
+
+                # Mensagem WhatsApp de confirmação de pagamento + link de download
+                if user and user.whatsapp:
+                    try:
+                        plano_nome = "Mensal" if plano == "mensal" else "Anual"
+                        msg_confirmacao = (
+                            f"✅ *Pagamento confirmado!*\n\n"
+                            f"Olá, {user.nome or email}!\n\n"
+                            f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
+                            f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
+                            f"https://guardian.grupomayconsantos.com.br/download\n\n"
+                            f"Após instalar, faça login com seu e-mail e verifique seu WhatsApp para acessar o sistema.\n\n"
+                            f"Qualquer dúvida, é só chamar! 🛡️"
+                        )
+                        from services.whatsapp_service import send_whatsapp_message
+                        send_whatsapp_message(user.whatsapp, msg_confirmacao, db)
+                    except Exception as e:
+                        logger.error(f"[WA] Falha ao enviar confirmação de pagamento: {e}")
+
+            elif status in ("refunded", "charged_back") and email:
+                # Estorno — cancela a licença imediatamente
+                user = db.query(User).filter(User.email == email).first()
+                if user:
+                    user.expires_at = datetime.utcnow()
+                    db.commit()
+                    logger.warning(f"[ESTORNO] Licença cancelada para {email} — status: {status}")
+
+                    # Avisa o usuário via WhatsApp
+                    if user.whatsapp:
+                        try:
+                            msg_estorno = (
+                                f"⚠️ *Acesso cancelado*\n\n"
+                                f"Olá, {user.nome or email}.\n\n"
+                                f"Identificamos um estorno no seu pagamento e seu acesso ao *Guardian Shield* foi cancelado.\n\n"
+                                f"Se acha que isso foi um engano, entre em contato conosco."
+                            )
+                            from services.whatsapp_service import send_whatsapp_message
+                            send_whatsapp_message(user.whatsapp, msg_estorno, db)
+                        except Exception as e:
+                            logger.error(f"[WA] Falha ao enviar aviso de estorno: {e}")
 
         return {"status": "ok"}
     except Exception as e:
