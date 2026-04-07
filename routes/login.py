@@ -3,6 +3,9 @@ import hmac
 import hashlib
 import random
 import traceback
+import logging
+
+logger = logging.getLogger("guardian")
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, Request, HTTPException
@@ -79,9 +82,11 @@ def register(
         new_user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
         db.commit()
         try:
+            logger.warning(f"[WA] Tentando enviar código {code} para {whatsapp}")
             send_verification_whatsapp(whatsapp, nome or email, code, db)
+            logger.warning(f"[WA] Código enviado com sucesso para {whatsapp}")
         except Exception as e:
-            print(f"[WA] Falha ao enviar código no cadastro: {e}")
+            logger.error(f"[WA] Falha ao enviar código no cadastro: {e}")
 
     return {"message": "Cadastro realizado!"}
 
