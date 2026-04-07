@@ -487,7 +487,12 @@ async function pagarCartao() {
             throw new Error('Pagamento recusado. Verifique os dados do cartão.');
           }
         },
-        onError: (err) => { console.error('[CardBrick]', err); }
+        onError: (err) => {
+          console.error('[CardBrick]', err);
+          const msg = err?.message || 'Erro no pagamento. Verifique os dados e tente novamente.';
+          mostrarErro('erro3', msg);
+          irEtapa(3);
+        }
       }
     });
   } catch(e) {
