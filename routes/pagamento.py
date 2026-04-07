@@ -53,7 +53,7 @@ def create_pix(email: str, plano: str, db: Session = Depends(get_db)):
 # GET /pix-status/{payment_id}  →  verifica status do PIX
 # =============================================================
 @router.get("/pix-status/{payment_id}")
-def pix_status(payment_id: str):
+def pix_status(payment_id: str, db: Session = Depends(get_db)):
     try:
         pagamento = buscar_pagamento(payment_id)
     except Exception as e:
@@ -62,7 +62,25 @@ def pix_status(payment_id: str):
     if not pagamento:
         return {"status": "unknown"}
 
-    return {"status": pagamento.get("status", "unknown")}
+    status = pagamento.get("status", "unknown")
+
+    # Se aprovado, ativa a licença automaticamente
+    if status == "approved":
+        from datetime import datetime, timedelta
+        reference = pagamento.get("external_reference", "")
+        parts = reference.split("-") if reference else []
+        email = parts[0] if parts else pagamento.get("payer", {}).get("email")
+        plano = parts[1] if len(parts) > 1 else "mensal"
+
+        if email:
+            user = db.query(User).filter(User.email == email).first()
+            if user and not user.expires_at or (user and user.expires_at and user.expires_at < datetime.utcnow()):
+                dias = 30 if plano == "mensal" else 365
+                user.expires_at = datetime.utcnow() + timedelta(days=dias)
+                user.plan_type  = plano
+                db.commit()
+
+    return {"status": status}
 
 
 # =============================================================
