@@ -323,8 +323,12 @@ async def webhook(
             status    = pagamento.get("status")
             reference = pagamento.get("external_reference")
 
-            if reference:
-                parts = reference.split("-")
+            if reference and "|" in reference:
+                parts = reference.split("|", 1)
+                email = parts[0]
+                plano = parts[1] if len(parts) > 1 else "mensal"
+            elif reference and "-" in reference:
+                parts = reference.split("-", 1)
                 email = parts[0]
                 plano = parts[1] if len(parts) > 1 else "mensal"
             else:

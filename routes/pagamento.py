@@ -68,13 +68,21 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
     if status == "approved":
         from datetime import datetime, timedelta
         reference = pagamento.get("external_reference", "")
-        parts = reference.split("-") if reference else []
+        # Suporta separador "|" (novo) e "-" (legado)
+        if reference and "|" in reference:
+            parts = reference.split("|", 1)
+        elif reference and "-" in reference:
+            parts = reference.split("-", 1)
+        else:
+            parts = []
         email = parts[0] if parts else pagamento.get("payer", {}).get("email")
         plano = parts[1] if len(parts) > 1 else "mensal"
 
         if email:
             user = db.query(User).filter(User.email == email).first()
-            if user and not user.expires_at or (user and user.expires_at and user.expires_at < datetime.utcnow()):
+            sem_licenca = not user.expires_at if user else False
+            expirada    = (user and user.expires_at and user.expires_at < datetime.utcnow())
+            if user and (sem_licenca or expirada):
                 dias = 30 if plano == "mensal" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
                 user.plan_type  = plano

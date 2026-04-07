@@ -45,7 +45,7 @@ def criar_pagamento(email, valor, plano):
             },
 
             "statement_descriptor": "GUARDIAN",
-            "external_reference": f"{email}-{plano}"
+            "external_reference": f"{email}|{plano}"
         }
 
         response = sdk.preference().create(preference_data)
@@ -68,6 +68,7 @@ def criar_pix(email, valor, plano):
             "transaction_amount": float(valor),
             "description": f"Plano {plano} - Guardian Shield",
             "payment_method_id": "pix",
+            "external_reference": f"{email}|{plano}",
             "payer": {
                 "email": email
             }
@@ -92,7 +93,7 @@ def processar_cartao(email, valor, plano, token, installments, payment_method_id
         "installments": int(installments),
         "payment_method_id": payment_method_id,
         "payer": {"email": email},
-        "external_reference": f"{email}-{plano}"
+        "external_reference": f"{email}|{plano}"
     }
     if issuer_id:
         payment_data["issuer_id"] = int(issuer_id)
