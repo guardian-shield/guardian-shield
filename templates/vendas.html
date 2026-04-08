@@ -1070,20 +1070,32 @@ h2 .green { color: var(--green); }
     </div>
 
     <div class="price-card destaque">
-      <div class="price-badge">🔥 MAIS POPULAR · MELHOR CUSTO-BENEFÍCIO</div>
+      <div class="price-badge">🔥 LANÇAMENTO · APENAS 50 LICENÇAS PROMOCIONAIS</div>
       <div class="price-nome">Anual</div>
       <div class="price-desc">Para quem quer escalar o faturamento</div>
-      <div class="price-valor"><span class="cifrao">R$</span>399<span style="font-size:22px;">,00</span></div>
-      <div class="price-periodo">pagamento único · acesso por 365 dias</div>
+
+      <!-- Contador de licenças -->
+      <div style="background:rgba(255,100,100,0.12);border:1px solid rgba(255,100,100,0.35);border-radius:10px;padding:10px 16px;margin-bottom:12px;">
+        <div style="font-size:12px;color:#ff8080;letter-spacing:1px;text-transform:uppercase;font-weight:600;">⚠️ Licenças promocionais restantes</div>
+        <div style="font-size:36px;font-weight:900;color:#ff6b6b;font-family:'Rajdhani',sans-serif;" id="licencas-contador">27</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">de 50 vagas abertas no lançamento</div>
+      </div>
+
+      <!-- Preço riscado + promo -->
+      <div style="color:rgba(255,255,255,0.35);font-size:14px;text-decoration:line-through;margin-bottom:2px;">de R$ 1.099,00</div>
+      <div class="price-valor"><span class="cifrao">R$</span>499<span style="font-size:22px;">,00</span></div>
+      <div class="price-periodo">pagamento único · acesso por 365 dias · <strong style="color:#f59e0b;">economia de R$600</strong></div>
+
       <ul class="price-features">
         <li><span class="ok">✓</span> Tudo do plano mensal</li>
-        <li><span class="ok">✓</span> <strong>Economia de R$789</strong> vs mensal</li>
+        <li><span class="ok">✓</span> <strong>Economia de R$600</strong> vs preço normal</li>
         <li><span class="ok">✓</span> 2 dispositivos simultâneos</li>
         <li><span class="ok">✓</span> Atualizações incluídas</li>
         <li><span class="ok">✓</span> Suporte prioritário</li>
         <li><span class="ok">✓</span> Novos recursos em primeira mão</li>
       </ul>
-      <a href="/pagar?plano=anual" class="btn-price gold">QUERO O PLANO ANUAL →</a>
+      <a href="/pagar?plano=anual" class="btn-price gold">GARANTIR MINHA VAGA AGORA →</a>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;">Após esgotar as 50 vagas, o preço volta a R$1.099</div>
     </div>
   </div>
 
@@ -1221,6 +1233,30 @@ document.querySelectorAll('a[href="/pagar"], .btn-sticky, .btn-hero').forEach(bt
     if (typeof gtag !== 'undefined') gtag('event', 'begin_checkout');
   });
 });
+
+// ── CONTADOR DE LICENÇAS (diminui 1 a cada 15s, mínimo 3)
+(function() {
+  const el = document.getElementById('licencas-contador');
+  if (!el) return;
+  const KEY = 'gs_licencas_v1';
+  const INICIO = 27;
+  const MIN = 3;
+
+  // Recupera do sessionStorage para não resetar ao recarregar
+  let atual = parseInt(sessionStorage.getItem(KEY)) || INICIO;
+  el.textContent = atual;
+
+  setInterval(() => {
+    if (atual > MIN) {
+      atual--;
+      sessionStorage.setItem(KEY, atual);
+      el.textContent = atual;
+      // Pulsa para chamar atenção
+      el.style.transform = 'scale(1.2)';
+      setTimeout(() => el.style.transform = 'scale(1)', 300);
+    }
+  }, 15000);
+})();
 </script>
 </body>
 </html>
