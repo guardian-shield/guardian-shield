@@ -383,7 +383,7 @@ async def webhook(
                             f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
                             f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
                             f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
-                            f"Após instalar, abra o app, clique em *Criar conta*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
+                            f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
                             f"Qualquer dúvida, é só chamar! 🛡️"
                         )
                         from services.whatsapp_service import send_whatsapp_message
