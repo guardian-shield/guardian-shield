@@ -356,6 +356,9 @@ async def webhook(
                 if user:
                     user.expires_at = datetime.utcnow() + timedelta(days=dias)
                     user.plan_type  = plano
+                    # Se não tem senha ainda, marca pre_liberado para liberar cadastro no app
+                    if not user.password:
+                        user.pre_liberado = True
                 else:
                     user = User(
                         email        = email,
@@ -380,13 +383,28 @@ async def webhook(
                             f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
                             f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
                             f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
-                            f"Após instalar, faça login com seu e-mail e verifique seu WhatsApp para acessar o sistema.\n\n"
+                            f"Após instalar, abra o app, clique em *Criar conta*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
                             f"Qualquer dúvida, é só chamar! 🛡️"
                         )
                         from services.whatsapp_service import send_whatsapp_message
                         send_whatsapp_message(user.whatsapp, msg_confirmacao, db)
                     except Exception as e:
                         logger.error(f"[WA] Falha ao enviar confirmação de pagamento: {e}")
+
+                # Notificação de venda para o dono
+                try:
+                    from services.whatsapp_service import send_whatsapp_message
+                    plano_nome = "Mensal (R$99)" if plano == "mensal" else "Anual (R$499)"
+                    msg_dono = (
+                        f"🔔 *Nova venda Guardian Shield!*\n\n"
+                        f"💰 Plano: *{plano_nome}*\n"
+                        f"📧 Cliente: {email}\n"
+                        f"📱 WhatsApp: {user.whatsapp if user and user.whatsapp else 'não informado'}\n\n"
+                        f"✅ Licença ativada automaticamente."
+                    )
+                    send_whatsapp_message("45998452596", msg_dono, db)
+                except Exception as e:
+                    logger.error(f"[WA] Falha ao notificar dono sobre venda: {e}")
 
             elif status in ("refunded", "charged_back") and email:
                 # Estorno — cancela a licença imediatamente
