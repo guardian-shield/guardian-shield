@@ -20,6 +20,14 @@
   gtag('js', new Date());
   gtag('config', 'G-H4JRM00ZBV');
 </script>
+<script>!function(i,n){i._plt=i._plt||(n&&n.timeOrigin?n.timeOrigin+n.now():Date.now())}(window,performance);</script>
+<link rel="preload" href="https://scripts.converteai.net/5569bb06-a6ad-4d23-a2c5-82737804fce8/players/69d7b261edf0d391e0a4ab6e/v4/player.js" as="script">
+<link rel="preload" href="https://scripts.converteai.net/lib/js/smartplayer-wc/v4/smartplayer.js" as="script">
+<link rel="preload" href="https://cdn.converteai.net/5569bb06-a6ad-4d23-a2c5-82737804fce8/69d7b1171d52db52d9d6385b/main.m3u8" as="fetch">
+<link rel="dns-prefetch" href="https://cdn.converteai.net">
+<link rel="dns-prefetch" href="https://scripts.converteai.net">
+<link rel="dns-prefetch" href="https://images.converteai.net">
+<link rel="dns-prefetch" href="https://api.vturb.com.br">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -619,7 +627,7 @@ h2 .green { color: var(--green); }
 <body>
 
 <!-- STICKY BAR -->
-<div id="stickyBar">
+<div id="stickyBar" data-bloqueado="1">
   <span class="sticky-texto">⚡ Nova fonte de renda para sua assistência — ative agora</span>
   <a href="/pagar" class="btn-sticky">QUERO ATIVAR AGORA →</a>
 </div>
@@ -668,19 +676,44 @@ h2 .green { color: var(--green); }
 <div class="divider"></div>
 
 <!-- ═══════════════════════════════════════════ VSL -->
-<div class="vsl-wrap" style="padding: 70px 20px;" class="fade-up">
-  <div class="vsl-box">
-    <div class="vsl-bg"></div>
-    <div class="vsl-play">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+<div class="vsl-wrap fade-up" id="vsl-section" style="padding: 70px 20px;">
+  <div style="max-width: 800px; margin: 0 auto 20px; text-align: center;">
+    <div style="
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 10px 20px;
+      font-size: 13px; color: rgba(255,255,255,0.55);
+    ">
+      <span style="font-size:16px;">🎬</span>
+      Assista ao vídeo até o final — a página será liberada automaticamente
     </div>
-    <span class="vsl-label">Como técnicos estão gerando R$3.000+ por mês com Guardian Shield</span>
+  </div>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <vturb-smartplayer id="vid-69d7b261edf0d391e0a4ab6e" style="display: block; margin: 0 auto; width: 100%;"></vturb-smartplayer>
+    <script type="text/javascript">
+      var s=document.createElement("script");
+      s.src="https://scripts.converteai.net/5569bb06-a6ad-4d23-a2c5-82737804fce8/players/69d7b261edf0d391e0a4ab6e/v4/player.js";
+      s.async=!0;
+      document.head.appendChild(s);
+    </script>
   </div>
   <div style="text-align:center;margin-top:32px;">
-    <a href="/pagar" class="btn-hero">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      ATIVAR GUARDIAN SHIELD NA MINHA ASSISTÊNCIA
-    </a>
+    <div id="vsl-btn-container">
+      <button id="btn-vsl-bloqueado" disabled style="
+        display:inline-flex;align-items:center;gap:10px;
+        padding:18px 36px;border-radius:14px;font-size:18px;font-weight:700;
+        font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+        color:rgba(255,255,255,0.35);cursor:not-allowed;
+      ">
+        ⏳ Disponível em <span id="vsl-countdown">4:10</span>
+      </button>
+      <a href="/pagar" id="btn-vsl-liberado" class="btn-hero" style="display:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        ATIVAR GUARDIAN SHIELD NA MINHA ASSISTÊNCIA
+      </a>
+    </div>
     <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;">🔒 Acesso imediato · Garantia de 7 dias</p>
   </div>
 </div>
@@ -1130,7 +1163,7 @@ h2 .green { color: var(--green); }
         Quanto tempo leva para processar um celular?
         <svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="faq-a">Em média de 15 a 30 minutos por dispositivo, dependendo do modelo e da quantidade de arquivos. Durante esse tempo você pode atender outros clientes normalmente.</div>
+      <div class="faq-a">Em média de 3 a 6 minutos por dispositivo, dependendo do modelo. Durante esse tempo você pode atender outros clientes normalmente.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
@@ -1150,7 +1183,7 @@ h2 .green { color: var(--green); }
 </section>
 
 <!-- ═══════════════════════════════════════════ FOOTER CTA -->
-<div class="footer-cta fade-up">
+<div class="footer-cta fade-up" id="footer-cta-section" style="display:none;">
   <h2>Você tem duas opções:<br><span class="gold">surfar essa onda</span> ou<br>entrar depois brigando por preço</h2>
   <p>Assistências que ativarem o Guardian Shield hoje serão as referências em proteção digital da sua cidade.</p>
 
@@ -1168,9 +1201,91 @@ h2 .green { color: var(--green); }
 </div>
 
 <script>
-// ── STICKY BAR
+// ── VSL LOCK (4:10 = 250s)
+(function() {
+  const TOTAL = 250;
+  let restando = TOTAL;
+  let desbloqueado = false;
+  let timer = null;
+  let limiteScroll = null; // posição máxima permitida
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  function atualizarCd() {
+    const m = Math.floor(restando / 60);
+    const s = restando % 60;
+    const el = document.getElementById('vsl-countdown');
+    if (el) el.textContent = m + ':' + pad(s);
+  }
+
+  function desbloquear() {
+    if (desbloqueado) return;
+    desbloqueado = true;
+    if (timer) clearInterval(timer);
+
+    const bloq = document.getElementById('btn-vsl-bloqueado');
+    const lib  = document.getElementById('btn-vsl-liberado');
+    if (bloq) bloq.style.display = 'none';
+    if (lib)  lib.style.display  = 'inline-flex';
+
+    const footer = document.getElementById('footer-cta-section');
+    if (footer) footer.style.display = '';
+
+    const bar = document.getElementById('stickyBar');
+    if (bar) bar.dataset.bloqueado = '0';
+  }
+
+  function calcularLimite() {
+    const vsl = document.getElementById('vsl-section');
+    if (!vsl) return;
+    // limite = fundo da VSL - altura da janela (para a VSL ficar visível mas não passar)
+    limiteScroll = vsl.offsetTop + vsl.offsetHeight - window.innerHeight + 40;
+    if (limiteScroll < 0) limiteScroll = 0;
+  }
+
+  function enforcarLimite() {
+    if (desbloqueado || limiteScroll === null) return;
+    if (window.scrollY > limiteScroll) {
+      window.scrollTo({ top: limiteScroll, behavior: 'instant' });
+    }
+  }
+
+  function iniciarTimer() {
+    if (timer || desbloqueado) return;
+    timer = setInterval(() => {
+      restando--;
+      atualizarCd();
+      if (restando <= 0) {
+        clearInterval(timer);
+        desbloquear();
+      }
+    }, 1000);
+  }
+
+  window.addEventListener('load', () => {
+    calcularLimite();
+    window.addEventListener('resize', calcularLimite);
+
+    // Listener de scroll: empurra de volta se passar do limite
+    window.addEventListener('scroll', () => {
+      if (desbloqueado) return;
+      const vsl = document.getElementById('vsl-section');
+      if (!vsl) return;
+      // Inicia o timer quando o usuário chega na VSL
+      if (window.scrollY + window.innerHeight >= vsl.offsetTop + 100) {
+        iniciarTimer();
+      }
+      enforcarLimite();
+    }, { passive: true });
+  });
+
+  atualizarCd();
+})();
+
+// ── STICKY BAR (só aparece após desbloqueio VSL)
 window.addEventListener('scroll', () => {
   const bar = document.getElementById('stickyBar');
+  if (bar.dataset.bloqueado === '1') return; // aguarda desbloqueio
   bar.classList.toggle('visivel', window.scrollY > 400);
 });
 

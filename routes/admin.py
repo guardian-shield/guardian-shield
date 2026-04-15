@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -355,6 +355,65 @@ def send_message(payload: dict, db: Session = Depends(get_db), admin=Depends(ver
 # =============================================================
 # GET /admin/messages
 # =============================================================
+@router.post("/admin/crm-lead")
+async def crm_lead_manual(request: Request, db: Session = Depends(get_db), admin=Depends(verificar_admin)):
+    """Cria lead no CRM e dispara primeira mensagem da Maia."""
+    from models import CrmConversation, CrmMessage
+    from services.crm_ai import get_ai_response, needs_human, clean_response
+    import time
+
+    data = await request.json()
+    phone = data.get("phone", "").replace("+","").replace(" ","").replace("-","")
+    email = data.get("email","")
+    msg_contexto = data.get("mensagem_contexto","")
+
+    if not phone:
+        return {"error": "phone obrigatório"}
+
+    # Cria usuário se não existir
+    from models import User
+    user = db.query(User).filter(User.email == email).first() if email else None
+    if email and not user:
+        user = User(email=email, whatsapp=phone)
+        db.add(user)
+        db.commit()
+
+    # Cria ou atualiza conversa
+    conv = db.query(CrmConversation).filter(CrmConversation.phone == phone).first()
+    if not conv:
+        conv = CrmConversation(phone=phone, contact_email=email, stage="initiated", ai_active=True)
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+    else:
+        conv.stage = "initiated"
+        conv.ai_active = True
+        if email and not conv.contact_email:
+            conv.contact_email = email
+        db.commit()
+
+    # Registra contexto
+    if msg_contexto:
+        db.add(CrmMessage(conversation_id=conv.id, direction="out", content=f"[Sistema] {msg_contexto}", sent_by="system"))
+        db.commit()
+
+    # Gera e envia mensagem inicial da Maia com o contexto
+    history = [{"direction": "out", "content": f"[Sistema] {msg_contexto}", "sent_at": None}]
+    user_trigger = msg_contexto  # usamos como gatilho interno
+    ai_text = get_ai_response([], user_trigger)
+    if ai_text:
+        reply = clean_response(ai_text)
+        time.sleep(2)
+        try:
+            send_whatsapp_message(phone, reply, db)
+            db.add(CrmMessage(conversation_id=conv.id, direction="out", content=reply, sent_by="ai"))
+            db.commit()
+        except Exception as e:
+            return {"status": "lead criado mas falha ao enviar mensagem", "error": str(e)}
+
+    return {"status": "ok", "conv_id": conv.id, "phone": phone}
+
+
 @router.get("/admin/messages")
 def get_messages(db: Session = Depends(get_db), admin=Depends(verificar_admin)):
     logs = db.query(MessageLog).order_by(MessageLog.sent_at.desc()).limit(200).all()

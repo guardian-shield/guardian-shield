@@ -1,9 +1,11 @@
 import sys
 import os
+import asyncio
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import traceback
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,8 +16,17 @@ from database import engine
 from models import Base
 from routes import login
 
+
+@asynccontextmanager
+async def lifespan(app):
+    from services.crm_followup import run_followup_loop
+    task = asyncio.create_task(run_followup_loop())
+    yield
+    task.cancel()
+
+
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -48,6 +59,33 @@ def migrar_banco():
             prazo INTEGER,
             updated_at TIMESTAMP DEFAULT NOW()
         );""",
+        """CREATE TABLE IF NOT EXISTS crm_conversations (
+            id SERIAL PRIMARY KEY,
+            phone VARCHAR,
+            contact_name VARCHAR,
+            contact_email VARCHAR,
+            stage VARCHAR DEFAULT 'lead',
+            ai_active BOOLEAN DEFAULT TRUE,
+            attendant VARCHAR,
+            sector VARCHAR,
+            notes TEXT,
+            unread INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        );""",
+        """CREATE TABLE IF NOT EXISTS crm_messages (
+            id SERIAL PRIMARY KEY,
+            conversation_id INTEGER REFERENCES crm_conversations(id),
+            direction VARCHAR,
+            content TEXT,
+            sent_by VARCHAR,
+            wa_message_id VARCHAR,
+            sent_at TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_crm_conv_phone ON crm_conversations(phone);",
+        "CREATE INDEX IF NOT EXISTS idx_crm_msg_conv ON crm_messages(conversation_id);",
+        "ALTER TABLE crm_conversations ADD COLUMN IF NOT EXISTS followup_count INTEGER DEFAULT 0;",
+        "ALTER TABLE crm_conversations ADD COLUMN IF NOT EXISTS last_followup_at TIMESTAMP;",
     ]
     with engine.connect() as conn:
         for sql in novos_campos:
@@ -77,3 +115,6 @@ app.include_router(garantias.router)
 
 from routes import pagamento
 app.include_router(pagamento.router)
+
+from routes import crm
+app.include_router(crm.router)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.sql import func
 from database import Base
 
@@ -46,6 +46,40 @@ class MessageLog(Base):
     sent_at    = Column(DateTime, default=func.now())
     status     = Column(String)   # 'sent' | 'failed'
     error      = Column(Text, nullable=True)
+
+
+class CrmConversation(Base):
+    """Conversa CRM — uma por contato WhatsApp."""
+    __tablename__ = "crm_conversations"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    phone         = Column(String, index=True)          # ex: 5545999999999
+    contact_name  = Column(String, nullable=True)
+    contact_email = Column(String, nullable=True)
+    # Kanban: lead | initiated | paid | active | expiring | cancelled | support
+    stage         = Column(String, default="lead")
+    ai_active     = Column(Boolean, default=True)       # IA respondendo?
+    attendant     = Column(String, nullable=True)       # nome do atendente
+    sector        = Column(String, nullable=True)       # setor
+    notes         = Column(Text, nullable=True)         # anotações internas
+    unread        = Column(Integer, default=0)          # msgs não lidas
+    followup_count = Column(Integer, default=0)         # quantos follow-ups enviados
+    last_followup_at = Column(DateTime, nullable=True)  # última vez que enviou follow-up
+    created_at    = Column(DateTime, default=func.now())
+    updated_at    = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class CrmMessage(Base):
+    """Mensagem de uma conversa CRM."""
+    __tablename__ = "crm_messages"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("crm_conversations.id"), index=True)
+    direction       = Column(String)   # 'in' | 'out'
+    content         = Column(Text)
+    sent_by         = Column(String, nullable=True)  # 'ai' | 'system' | nome do atendente
+    wa_message_id   = Column(String, nullable=True)  # ID do WhatsApp para dedup
+    sent_at         = Column(DateTime, default=func.now())
 
 
 class Garantia(Base):

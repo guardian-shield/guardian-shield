@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM — Guardian Shield</title>
+<style>
+:root {
+  --bg: #0b0d14;
+  --surface: #13161f;
+  --surface2: #1c2030;
+  --surface3: #242840;
+  --border: #2a2f4a;
+  --border2: #363d5e;
+  --primary: #5b73ff;
+  --primary-glow: rgba(91,115,255,0.15);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --yellow: #f59e0b;
+  --yellow-bg: rgba(245,158,11,0.12);
+  --purple: #a855f7;
+  --purple-bg: rgba(168,85,247,0.12);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #4b5680;
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── LOGIN ── */
+.login-overlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.login-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 32px;
+  width: 300px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.login-logo { font-size: 32px; }
+.login-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.login-sub { font-size: 12px; color: var(--text3); }
+.login-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 18px;
+  letter-spacing: 6px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.login-input:focus { border-color: var(--primary); }
+.login-btn {
+  width: 100%;
+  background: var(--primary);
+  border: none; color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.login-btn:hover { background: #4a60e0; }
+.login-error { font-size: 12px; color: var(--red); display: none; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+
+/* ── SCROLLBAR ──────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ── HEADER ─────────────────────────────────── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon { width: 28px; height: 28px; background: var(--primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.logo-text { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.logo-sub { font-size: 11px; color: var(--text3); }
+
+.header-center { display: flex; gap: 4px; }
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.tab-btn:hover { background: var(--surface2); color: var(--text); }
+.tab-btn.active { background: var(--primary-glow); border-color: var(--primary); color: var(--primary); }
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+.hdr-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+.stats-pills { display: flex; gap: 6px; }
+.stat-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.stat-pill b { color: var(--text); }
+
+/* ── VIEWS ──────────────────────────────────── */
+.view { display: none; flex: 1; overflow: hidden; }
+.view.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   CHAT VIEW
+═══════════════════════════════════════════════ */
+.chat-view { flex-direction: row; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 300px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.sidebar-header { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.search-wrap { position: relative; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+.search-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px 7px 30px;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--primary); }
+.filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.filter-tab {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.filter-tab:hover { border-color: var(--border2); color: var(--text); }
+.filter-tab.active { background: var(--primary-glow); border-color: var(--primary); color: var(--primary); }
+
+.conv-list { flex: 1; overflow-y: auto; }
+.conv-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.conv-item:hover { background: var(--surface2); }
+.conv-item.active { background: var(--surface3); border-left: 2px solid var(--primary); padding-left: 10px; }
+.conv-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  color: #fff;
+}
+.conv-body { flex: 1; min-width: 0; }
+.conv-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+.conv-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.conv-time { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.conv-preview { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.conv-badges { display: flex; gap: 4px; align-items: center; }
+.badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; line-height: 1.5; }
+.badge-ai { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple); }
+.badge-unread { background: var(--green); color: #fff; min-width: 16px; text-align: center; }
+.badge-followup { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow); }
+.stage-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* CHAT AREA */
+.chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+.chat-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.chat-contact-info { display: flex; align-items: center; gap: 10px; }
+.chat-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.chat-name { font-size: 13px; font-weight: 700; }
+.chat-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.chat-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.btn-xs {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-xs:hover { border-color: var(--border2); color: var(--text); }
+.btn-xs.green { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.btn-xs.red { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.stage-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.date-divider { text-align: center; margin: 8px 0; }
+.date-divider span { background: var(--surface2); border: 1px solid var(--border); color: var(--text3); padding: 2px 10px; border-radius: 10px; font-size: 10px; }
+
+.msg {
+  max-width: 68%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.msg.in {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px 12px 12px 12px;
+  align-self: flex-start;
+}
+.msg.out {
+  background: var(--primary);
+  border-radius: 12px 2px 12px 12px;
+  align-self: flex-end;
+  color: #fff;
+}
+.msg.out.ai { background: #5b2d8a; }
+.msg.out.followup { background: #7c5c00; }
+.msg-meta { font-size: 10px; margin-top: 4px; color: var(--text3); }
+.msg.out .msg-meta { text-align: right; color: rgba(255,255,255,0.5); }
+
+.input-area {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.msg-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  min-height: 38px;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  line-height: 1.4;
+}
+.msg-input:focus { border-color: var(--primary); }
+.btn-send {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-send:hover { background: #4a60e0; }
+
+.empty-chat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 48px; opacity: 0.4; }
+
+/* INFO PANEL */
+.info-panel {
+  width: 240px;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.info-section {}
+.info-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+.info-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.info-input:focus { border-color: var(--primary); }
+.info-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.info-textarea:focus { border-color: var(--primary); }
+.btn-save {
+  width: 100%;
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  padding: 7px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-weight: 600;
+}
+.btn-save:hover { background: #4a60e0; }
+.btn-save.saved { background: var(--green); }
+
+.toggle-ai {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.toggle-label { font-size: 12px; font-weight: 500; }
+.toggle-switch { position: relative; width: 34px; height: 18px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background: var(--border2); border-radius: 20px; transition: .25s; }
+.slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .25s; }
+input:checked + .slider { background: var(--green); }
+input:checked + .slider:before { transform: translateX(16px); }
+
+.divider { border-top: 1px solid var(--border); }
+
+/* ═══════════════════════════════════════════════
+   KANBAN VIEW
+═══════════════════════════════════════════════ */
+.kanban-view { flex-direction: column; background: var(--bg); }
+.kanban-toolbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.kanban-search {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  outline: none;
+  width: 200px;
+}
+.kanban-board {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  overflow-x: auto;
+  flex: 1;
+  align-items: flex-start;
+}
+.kanban-col {
+  min-width: 230px;
+  max-width: 230px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.kanban-col.drag-over {
+  border-color: var(--primary);
+  background: var(--surface2);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+.kanban-col-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px 12px 0 0;
+}
+.col-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+.col-dot { width: 8px; height: 8px; border-radius: 50%; }
+.col-count {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px;
+}
+.kanban-col-body {
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 60px;
+}
+.kanban-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px;
+  cursor: grab;
+  transition: all 0.15s;
+  user-select: none;
+}
+.kanban-card:hover { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,0.3); transform: translateY(-1px); }
+.kanban-card.dragging { opacity: 0.4; cursor: grabbing; }
+.kcard-top { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.kcard-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.kcard-name { font-size: 12px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kcard-preview { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; }
+.kcard-footer { display: flex; align-items: center; justify-content: space-between; }
+.kcard-time { font-size: 10px; color: var(--text3); }
+.kcard-badges { display: flex; gap: 3px; }
+.kanban-card-drop-placeholder {
+  border: 2px dashed var(--primary);
+  border-radius: 9px;
+  height: 54px;
+  background: var(--primary-glow);
+  transition: all 0.15s;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 9999;
+  transition: transform 0.25s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">Guardian Shield CRM</div>
+    <div class="login-sub">Digite a senha para acessar</div>
+    <input class="login-input" id="loginInput" type="password" maxlength="10" placeholder="••••"
+      onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Entrar</button>
+    <div class="login-error" id="loginError">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">Guardian Shield</div>
+      <div class="logo-sub">CRM</div>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <button class="tab-btn active" id="btnChat" onclick="setView('chat')">
+      <span>💬</span> Chat
+    </button>
+    <button class="tab-btn" id="btnKanban" onclick="setView('kanban')">
+      <span>📋</span> Kanban
+    </button>
+  </div>
+
+  <div class="header-right">
+    <div class="stats-pills" id="headerStats"></div>
+    <select class="hdr-select" id="attendantSelect">
+      <option value="">👤 Atendente</option>
+      <option>Maycon</option>
+      <option>Atendente 1</option>
+      <option>Atendente 2</option>
+    </select>
+    <div class="online-dot" title="Online"></div>
+  </div>
+</div>
+
+<!-- CHAT VIEW -->
+<div class="view active chat-view" id="viewChat">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="Buscar contato..." oninput="filterConvs()">
+      </div>
+      <div class="filter-tabs">
+        <span class="filter-tab active" onclick="setFilter('all',this)">Todos</span>
+        <span class="filter-tab" onclick="setFilter('lead',this)">Leads</span>
+        <span class="filter-tab" onclick="setFilter('active',this)">Ativos</span>
+        <span class="filter-tab" onclick="setFilter('support',this)">Suporte</span>
+        <span class="filter-tab" onclick="setFilter('expiring',this)">Expirando</span>
+      </div>
+    </div>
+    <div class="conv-list" id="convList"></div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area" id="chatArea">
+    <div class="empty-chat" id="emptyChat">
+      <div class="empty-icon">💬</div>
+      <span>Selecione uma conversa</span>
+    </div>
+    <div id="chatContent" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+      <div class="chat-header">
+        <div class="chat-contact-info">
+          <div class="chat-avatar" id="chatAvatar"></div>
+          <div>
+            <div class="chat-name" id="chatContactName">—</div>
+            <div class="chat-sub" id="chatContactPhone">—</div>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <select class="stage-select" id="stageSelect" onchange="updateStage()">
+            <option value="lead">🔵 Lead</option>
+            <option value="initiated">🟡 Iniciou pagamento</option>
+            <option value="paid">🟢 Pagou</option>
+            <option value="active">💎 Ativo</option>
+            <option value="expiring">🔴 Expirando</option>
+            <option value="support">🟣 Suporte</option>
+            <option value="cancelled">⚫ Cancelado</option>
+          </select>
+          <button class="btn-xs" onclick="openWhatsApp()" title="Abrir no WhatsApp">📱</button>
+          <button class="btn-xs red" onclick="deleteConv()" title="Apagar conversa">🗑️</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="input-area">
+        <textarea class="msg-input" id="msgInput" placeholder="Digite sua mensagem..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="btn-send" onclick="sendMsg()" title="Enviar (Enter)">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel" id="infoPanel" style="display:none">
+    <div class="toggle-ai">
+      <span class="toggle-label">🤖 IA Maia</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="aiToggle" onchange="toggleAi()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="info-section">
+      <div class="info-label">Nome</div>
+      <input class="info-input" id="infoName" placeholder="Nome do contato">
+    </div>
+    <div class="info-section">
+      <div class="info-label">E-mail</div>
+      <input class="info-input" id="infoEmail" type="email" placeholder="email@exemplo.com">
+    </div>
+    <div class="info-section">
+      <div class="info-label">Atendente</div>
+      <input class="info-input" id="infoAttendant" placeholder="Responsável">
+    </div>
+    <div class="info-section">
+      <div class="info-label">Setor</div>
+      <select class="info-input" id="infoSector">
+        <option value="">Selecionar</option>
+        <option>Vendas</option>
+        <option>Suporte</option>
+        <option>Financeiro</option>
+        <option>Pós-venda</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="info-section">
+      <div class="info-label">Anotações internas</div>
+      <textarea class="info-textarea" id="infoNotes" placeholder="Observações sobre o lead..."></textarea>
+    </div>
+
+    <button class="btn-save" id="btnSave" onclick="saveInfo()">Salvar</button>
+  </div>
+</div>
+
+<!-- KANBAN VIEW -->
+<div class="view kanban-view" id="viewKanban">
+  <div class="kanban-toolbar">
+    <input class="kanban-search" id="kanbanSearch" placeholder="🔍 Filtrar leads..." oninput="renderKanban()">
+    <div class="stats-pills" id="kanbanStats"></div>
+  </div>
+  <div class="kanban-board" id="kanbanBoard"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STAGES = {
+  lead:      { label: "Lead",              color: "#6366f1" },
+  initiated: { label: "Iniciou pagamento", color: "#f59e0b" },
+  paid:      { label: "Pagou",             color: "#22c55e" },
+  active:    { label: "Ativo",             color: "#0ea5e9" },
+  expiring:  { label: "Expirando",         color: "#ef4444" },
+  support:   { label: "Suporte",           color: "#a855f7" },
+  cancelled: { label: "Cancelado",         color: "#64748b" },
+};
+
+// Paleta de cores para avatares
+const AVATAR_COLORS = ["#6366f1","#f59e0b","#22c55e","#0ea5e9","#ef4444","#a855f7","#ec4899","#14b8a6"];
+
+let allConvs = [];
+let currentConvId = null;
+let currentFilter = 'all';
+let draggedConvId = null;
+
+// ── Init ─────────────────────────────────────
+async function init() {
+  await loadConvs();
+  setInterval(loadConvs, 8000);
+}
+
+async function loadConvs() {
+  try {
+    const res = await fetch('/crm/conversations');
+    allConvs = await res.json();
+    renderConvList();
+    renderHeaderStats();
+    if (document.getElementById('viewKanban').classList.contains('active')) renderKanban();
+    if (currentConvId) {
+      const conv = allConvs.find(c => c.id === currentConvId);
+      if (conv && conv.unread > 0) loadMessages(currentConvId, false);
+    }
+  } catch(e) {}
+}
+
+// ── Stats ─────────────────────────────────────
+function renderHeaderStats() {
+  const leads = allConvs.filter(c => ['lead','initiated'].includes(c.stage)).length;
+  const active = allConvs.filter(c => c.stage === 'active').length;
+  const unread = allConvs.reduce((s,c) => s + (c.unread||0), 0);
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat-pill"><b>${leads}</b> leads</div>
+    <div class="stat-pill"><b>${active}</b> ativos</div>
+    ${unread > 0 ? `<div class="stat-pill" style="border-color:var(--green);color:var(--green)"><b>${unread}</b> novas</div>` : ''}
+  `;
+}
+
+// ── Avatar ────────────────────────────────────
+function avatarColor(name) {
+  let h = 0;
+  for (let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xffff;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function avatarInitials(name) {
+  const parts = (name||'?').trim().split(/\s+/);
+  return parts.length >= 2 ? (parts[0][0]+parts[1][0]).toUpperCase() : (name||'?')[0].toUpperCase();
+}
+
+// ── Sidebar ───────────────────────────────────
+function renderConvList() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const list = document.getElementById('convList');
+  const filtered = allConvs.filter(c => {
+    const matchStage = currentFilter === 'all' || c.stage === currentFilter;
+    const matchSearch = !search ||
+      (c.contact_name||'').toLowerCase().includes(search) ||
+      (c.phone||'').includes(search);
+    return matchStage && matchSearch;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--text3);font-size:12px">Nenhuma conversa</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => {
+    const stage = STAGES[c.stage] || STAGES.lead;
+    const name = c.contact_name || c.phone;
+    const color = avatarColor(name);
+    const initials = avatarInitials(name);
+    const preview = c.last_message
+      ? (c.last_message_direction === 'out' ? '✓ ' : '') + c.last_message.slice(0,42)
+      : 'Sem mensagens';
+    const isFollowup = (c.followup_count||0) > 0 && c.stage !== 'active';
+    return `<div class="conv-item ${c.id === currentConvId ? 'active' : ''}" onclick="openConv(${c.id})">
+      <div class="conv-avatar" style="background:${color}">${initials}</div>
+      <div class="conv-body">
+        <div class="conv-top">
+          <span class="conv-name">${esc(name)}</span>
+          <span class="conv-time">${formatTime(c.updated_at)}</span>
+        </div>
+        <div class="conv-preview">${esc(preview)}</div>
+        <div class="conv-badges">
+          <span class="stage-dot" style="background:${stage.color}"></span>
+          ${c.ai_active ? '<span class="badge badge-ai">IA</span>' : ''}
+          ${isFollowup ? `<span class="badge badge-followup">follow ${c.followup_count}x</span>` : ''}
+          ${c.unread > 0 ? `<span class="badge badge-unread">${c.unread}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterConvs() { renderConvList(); }
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderConvList();
+}
+
+// ── Abrir conversa ────────────────────────────
+async function openConv(id) {
+  currentConvId = id;
+  renderConvList();
+  await loadMessages(id, true);
+  document.getElementById('emptyChat').style.display = 'none';
+  const cc = document.getElementById('chatContent');
+  cc.style.display = 'flex';
+  cc.style.flexDirection = 'column';
+  cc.style.overflow = 'hidden';
+  cc.style.flex = '1';
+  document.getElementById('infoPanel').style.display = 'flex';
+}
+
+async function loadMessages(id, scroll) {
+  try {
+    const res = await fetch(`/crm/conversations/${id}/messages`);
+    const data = await res.json();
+    if (data.error) return;
+    const conv = data.conversation;
+
+    const name = conv.contact_name || conv.phone;
+    const color = avatarColor(name);
+    document.getElementById('chatAvatar').textContent = avatarInitials(name);
+    document.getElementById('chatAvatar').style.background = color;
+    document.getElementById('chatContactName').textContent = name;
+    document.getElementById('chatContactPhone').textContent = '📱 ' + conv.phone;
+    document.getElementById('stageSelect').value = conv.stage;
+    document.getElementById('aiToggle').checked = conv.ai_active;
+    document.getElementById('infoName').value = conv.contact_name || '';
+    document.getElementById('infoEmail').value = conv.contact_email || '';
+    document.getElementById('infoAttendant').value = conv.attendant || '';
+    document.getElementById('infoSector').value = conv.sector || '';
+    document.getElementById('infoNotes').value = conv.notes || '';
+
+    const msgEl = document.getElementById('messages');
+    let lastDate = '';
+    msgEl.innerHTML = data.messages.map(m => {
+      const isAi = m.sent_by === 'ai';
+      const isFollowup = m.sent_by === 'ai_followup';
+      const cls = m.direction === 'in' ? 'in' : (isAi||isFollowup ? 'out ai' : 'out');
+      const finalCls = isFollowup ? 'out followup' : cls;
+      const by = m.direction === 'out'
+        ? (isFollowup ? '🔔 Follow-up' : isAi ? '🤖 Maia' : `👤 ${m.sent_by||'Atendente'}`)
+        : '';
+
+      const msgDate = m.sent_at ? new Date(m.sent_at).toLocaleDateString('pt-BR') : '';
+      let dateDivider = '';
+      if (msgDate && msgDate !== lastDate) {
+        lastDate = msgDate;
+        dateDivider = `<div class="date-divider"><span>${formatDateLabel(m.sent_at)}</span></div>`;
+      }
+      return `${dateDivider}<div class="msg ${finalCls}">
+        ${formatMsg(m.content)}
+        <div class="msg-meta">${formatTime(m.sent_at)}${by ? ' · ' + by : ''}</div>
+      </div>`;
+    }).join('');
+
+    if (scroll) msgEl.scrollTop = msgEl.scrollHeight;
+    loadConvs();
+  } catch(e) {}
+}
+
+function openWhatsApp() {
+  const conv = allConvs.find(c => c.id === currentConvId);
+  if (conv) window.open(`https://wa.me/${conv.phone}`, '_blank');
+}
+
+async function deleteConv() {
+  if (!currentConvId) return;
+  await deleteConvById(currentConvId);
+}
+
+async function deleteConvById(id) {
+  if (!confirm('Apagar esta conversa e todas as mensagens? Essa ação não pode ser desfeita.')) return;
+  try {
+    const res = await fetch(`/crm/conversations/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.status === 'deleted') {
+      if (currentConvId === id) {
+        currentConvId = null;
+        document.getElementById('emptyChat').style.display = 'flex';
+        document.getElementById('chatContent').style.display = 'none';
+        document.getElementById('infoPanel').style.display = 'none';
+      }
+      showToast('Conversa apagada', 'success');
+      await loadConvs();
+    }
+  } catch(e) { showToast('Erro ao apagar', 'error'); }
+}
+
+// ── Enviar ────────────────────────────────────
+async function sendMsg() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content || !currentConvId) return;
+  const attendant = document.getElementById('attendantSelect').value || 'Atendente';
+  input.value = '';
+  input.style.height = 'auto';
+  try {
+    await fetch(`/crm/conversations/${currentConvId}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, attendant }),
+    });
+    await loadMessages(currentConvId, true);
+  } catch(e) { showToast('Erro ao enviar', 'error'); }
+}
+
+// ── Stage ─────────────────────────────────────
+async function updateStage() {
+  if (!currentConvId) return;
+  const stage = document.getElementById('stageSelect').value;
+  await fetch(`/crm/conversations/${currentConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stage }),
+  });
+  await loadConvs();
+}
+
+// ── IA toggle ─────────────────────────────────
+async function toggleAi() {
+  if (!currentConvId) return;
+  const ai_active = document.getElementById('aiToggle').checked;
+  await fetch(`/crm/conversations/${currentConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ai_active }),
+  });
+  showToast(ai_active ? '🤖 IA ativada' : '🔕 IA desativada', 'success');
+  await loadConvs();
+}
+
+// ── Salvar info ───────────────────────────────
+async function saveInfo() {
+  if (!currentConvId) return;
+  await fetch(`/crm/conversations/${currentConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contact_name: document.getElementById('infoName').value,
+      contact_email: document.getElementById('infoEmail').value,
+      attendant: document.getElementById('infoAttendant').value,
+      sector: document.getElementById('infoSector').value,
+      notes: document.getElementById('infoNotes').value,
+    }),
+  });
+  const btn = document.getElementById('btnSave');
+  btn.textContent = '✓ Salvo!';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = 'Salvar'; btn.classList.remove('saved'); }, 2000);
+  await loadConvs();
+}
+
+// ═══════════════════════════════════════════════
+// KANBAN — DRAG AND DROP
+// ═══════════════════════════════════════════════
+function renderKanban() {
+  const search = (document.getElementById('kanbanSearch')?.value || '').toLowerCase();
+  const board = document.getElementById('kanbanBoard');
+
+  // Stats
+  const counts = {};
+  Object.keys(STAGES).forEach(k => counts[k] = 0);
+  allConvs.forEach(c => { if (counts[c.stage] !== undefined) counts[c.stage]++; });
+  const total = allConvs.length;
+  document.getElementById('kanbanStats').innerHTML = `
+    <div class="stat-pill"><b>${total}</b> total</div>
+    <div class="stat-pill" style="border-color:#6366f1;color:#6366f1"><b>${counts.lead||0}</b> leads</div>
+    <div class="stat-pill" style="border-color:#0ea5e9;color:#0ea5e9"><b>${counts.active||0}</b> ativos</div>
+  `;
+
+  board.innerHTML = Object.entries(STAGES).map(([key, stage]) => {
+    const cards = allConvs.filter(c => {
+      if (c.stage !== key) return false;
+      if (!search) return true;
+      return (c.contact_name||'').toLowerCase().includes(search) || (c.phone||'').includes(search);
+    });
+
+    return `<div class="kanban-col" id="kcol-${key}"
+      ondragover="onDragOver(event,'${key}')"
+      ondragleave="onDragLeave(event,'${key}')"
+      ondrop="onDrop(event,'${key}')">
+      <div class="kanban-col-header">
+        <div class="col-title">
+          <div class="col-dot" style="background:${stage.color}"></div>
+          <span>${stage.label}</span>
+        </div>
+        <div class="col-count">${cards.length}</div>
+      </div>
+      <div class="kanban-col-body" id="kbody-${key}">
+        ${cards.map(c => renderKanbanCard(c)).join('')}
+        ${cards.length === 0 ? `<div style="text-align:center;padding:16px;color:var(--text3);font-size:11px">Arraste aqui</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderKanbanCard(c) {
+  const name = c.contact_name || c.phone;
+  const color = avatarColor(name);
+  const preview = c.last_message ? c.last_message.slice(0,36) : '—';
+  const isFollowup = (c.followup_count||0) > 0;
+  return `<div class="kanban-card" id="kcard-${c.id}"
+    draggable="true"
+    ondragstart="onDragStart(event,${c.id})"
+    ondragend="onDragEnd(event)"
+    onclick="openFromKanban(${c.id})">
+    <div class="kcard-top">
+      <div class="kcard-avatar" style="background:${color}">${avatarInitials(name)}</div>
+      <span class="kcard-name">${esc(name)}</span>
+    </div>
+    <div class="kcard-preview">${esc(preview)}</div>
+    <div class="kcard-footer">
+      <span class="kcard-time">${formatTime(c.updated_at)}</span>
+      <div class="kcard-badges">
+        ${c.ai_active ? '<span class="badge badge-ai">IA</span>' : ''}
+        ${isFollowup ? `<span class="badge badge-followup">${c.followup_count}x</span>` : ''}
+        ${c.unread > 0 ? `<span class="badge badge-unread">${c.unread}</span>` : ''}
+        <span class="badge" style="cursor:pointer;background:var(--red-bg);color:var(--red);border:1px solid var(--red)"
+          onclick="event.stopPropagation();deleteConvById(${c.id})" title="Apagar">🗑️</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openFromKanban(id) {
+  setView('chat');
+  openConv(id);
+}
+
+// Drag events
+function onDragStart(e, convId) {
+  draggedConvId = convId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    const el = document.getElementById(`kcard-${convId}`);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('.kanban-card.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.kanban-col.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(e, stage) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById(`kcol-${stage}`).classList.add('drag-over');
+}
+
+function onDragLeave(e, stage) {
+  // Só remove se saiu do elemento mesmo (não para filho)
+  const col = document.getElementById(`kcol-${stage}`);
+  if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+}
+
+async function onDrop(e, newStage) {
+  e.preventDefault();
+  document.getElementById(`kcol-${newStage}`).classList.remove('drag-over');
+  if (!draggedConvId) return;
+
+  const conv = allConvs.find(c => c.id === draggedConvId);
+  if (!conv || conv.stage === newStage) return;
+
+  try {
+    await fetch(`/crm/conversations/${draggedConvId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage: newStage }),
+    });
+    showToast(`Movido para ${STAGES[newStage].label}`, 'success');
+    await loadConvs();
+  } catch(e) {
+    showToast('Erro ao mover', 'error');
+  }
+  draggedConvId = null;
+}
+
+// ── Views ─────────────────────────────────────
+function setView(v) {
+  document.getElementById('viewChat').classList.toggle('active', v === 'chat');
+  document.getElementById('viewKanban').classList.toggle('active', v === 'kanban');
+  document.getElementById('btnChat').classList.toggle('active', v === 'chat');
+  document.getElementById('btnKanban').classList.toggle('active', v === 'kanban');
+  if (v === 'kanban') renderKanban();
+}
+
+// ── Toast ─────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Helpers ───────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function formatMsg(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+}
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'agora';
+  if (diff < 3600) return Math.floor(diff/60) + 'min';
+  if (diff < 86400) return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+function formatDateLabel(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+  const now = new Date();
+  const diff = Math.floor((now - d) / 86400000);
+  if (diff === 0) return 'Hoje';
+  if (diff === 1) return 'Ontem';
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ── Login ─────────────────────────────────────
+const CRM_PASS = '8719';
+const SESSION_KEY = 'crm_auth';
+
+function checkLogin() {
+  const val = document.getElementById('loginInput').value;
+  if (val === CRM_PASS) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('loginOverlay').style.display = 'none';
+  } else {
+    const err = document.getElementById('loginError');
+    err.style.display = 'block';
+    document.getElementById('loginInput').value = '';
+    setTimeout(() => err.style.display = 'none', 2000);
+  }
+}
+
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+  document.getElementById('loginOverlay').style.display = 'none';
+} else {
+  setTimeout(() => document.getElementById('loginInput').focus(), 100);
+}
+
+init();
+</script>
+</body>
+</html>

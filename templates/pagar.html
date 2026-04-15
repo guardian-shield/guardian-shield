@@ -12,6 +12,7 @@
   document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', '2079654962888572');
   fbq('track', 'PageView');
+  fbq('track', 'InitiateCheckout');
 </script>
 <noscript><img height="1" width="1" style="display:none"
   src="https://www.facebook.com/tr?id=2079654962888572&ev=PageView&noscript=1"/></noscript>
@@ -196,12 +197,20 @@
   <div class="logo">Guardian <span>Shield</span></div>
   <div class="subtitulo">Proteção Digital</div>
 
-  <!-- ETAPA 1: E-MAIL -->
+  <!-- ETAPA 1: E-MAIL + WHATSAPP -->
   <div class="etapa ativa" id="etapa1">
-    <div class="etapa-titulo">Digite seu e-mail para continuar</div>
+    <div class="etapa-titulo">Seus dados para continuar</div>
+    <div class="field">
+      <label>Nome completo</label>
+      <input type="text" id="inputNome" placeholder="Seu nome" autocomplete="name">
+    </div>
     <div class="field">
       <label>E-mail</label>
       <input type="email" id="inputEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>WhatsApp (com DDD)</label>
+      <input type="tel" id="inputWhatsapp" placeholder="(45) 99999-9999" autocomplete="tel">
     </div>
     <button class="btn-principal" onclick="confirmarEmail()">Continuar</button>
     <div class="erro" id="erro1"></div>
@@ -293,6 +302,8 @@
 const API = '';  // mesma origem
 
 let emailAtual = '';
+let whatsappAtual = '';
+let nomeAtual = '';
 let planoAtual = '';
 let pixPaymentId = null;
 let pixInterval  = null;
@@ -305,6 +316,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inputEmail').value = email;
   }
   document.getElementById('inputEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmarEmail();
+  });
+  document.getElementById('inputWhatsapp').addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmarEmail();
   });
 });
@@ -334,10 +348,16 @@ function esconderLoad(id) {
   document.getElementById(id).style.display = 'none';
 }
 
-// ── ETAPA 1: confirma email ──
+// ── ETAPA 1: confirma email + whatsapp ──
 async function confirmarEmail() {
+  const nome  = document.getElementById('inputNome').value.trim();
   const email = document.getElementById('inputEmail').value.trim();
+  const wpp   = document.getElementById('inputWhatsapp').value.trim().replace(/\D/g,'');
+  if (!nome) { mostrarErro('erro1', 'Digite seu nome.'); return; }
   if (!email || !email.includes('@')) { mostrarErro('erro1', 'Digite um e-mail válido.'); return; }
+  if (!wpp || wpp.length < 10) { mostrarErro('erro1', 'Digite seu WhatsApp com DDD.'); return; }
+  nomeAtual = nome;
+  whatsappAtual = wpp;
 
   limparErro('erro1');
   mostrarLoad('load1', 'Verificando...');
@@ -393,7 +413,7 @@ async function pagarPix() {
   mostrarLoad('load3', 'Gerando PIX...');
 
   try {
-    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`, { method: 'POST' });
+    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}&whatsapp=${encodeURIComponent(whatsappAtual)}&nome=${encodeURIComponent(nomeAtual)}`, { method: 'POST' });
     const data = await res.json();
     esconderLoad('load3');
 
@@ -466,7 +486,7 @@ async function pagarCartao() {
           document.getElementById('cardBrickLoading').style.display = 'none';
         },
         onSubmit: async (formData) => {
-          const payload = { ...formData, email: emailAtual, plano: planoAtual };
+          const payload = { ...formData, email: emailAtual, plano: planoAtual, whatsapp: whatsappAtual, nome: nomeAtual };
           const r = await fetch(`${API}/process-card`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -480,6 +500,9 @@ async function pagarCartao() {
             el.textContent = d.status === 'approved'
               ? '✓ Pagamento aprovado! Redirecionando...'
               : '⏳ Pagamento em análise. Redirecionando...';
+            if (d.status === 'approved' && typeof fbq !== 'undefined') {
+              fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+            }
             setTimeout(() => {
               window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
             }, 2000);
@@ -526,6 +549,8 @@ async function verificarStatusPix() {
       const box = document.getElementById('pixStatusBox');
       box.classList.add('aprovado');
       document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
+      const valor = planoAtual === 'mensal' ? 99.00 : 499.00;
+      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
       setTimeout(() => {
         window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
       }, 1500);

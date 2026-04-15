@@ -201,10 +201,16 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
 
         if email:
             user = db.query(User).filter(User.email == email).first()
-            sem_licenca = not user.expires_at if user else False
-            expirada    = (user and user.expires_at and user.expires_at < datetime.utcnow())
+            # Cria usuário se não existir (ex: checkout não chamou /create-pix antes)
+            if not user:
+                user = User(email=email)
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+            sem_licenca = not user.expires_at
+            expirada    = (user.expires_at is not None and user.expires_at < datetime.utcnow())
             licenca_ativada_agora = False
-            if user and (sem_licenca or expirada):
+            if sem_licenca or expirada:
                 dias = 30 if plano == "mensal" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
                 user.plan_type  = plano
