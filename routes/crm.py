@@ -101,6 +101,23 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
     if not content:
         return {"status": "ignored"}
 
+    # ── Detecta mensagens automáticas / bots ─────────────────────────────────
+    BOT_PATTERNS = [
+        "exclusivo para o envio de informações",
+        "central de atendimento",
+        "mensagem automática",
+        "não responda este",
+        "noreply",
+        "do not reply",
+        "este é um número automático",
+        "faq.pagbank",
+        "este número não recebe mensagens",
+    ]
+    content_lower = content.lower()
+    if any(p in content_lower for p in BOT_PATTERNS):
+        logger.warning(f"[CRM] Mensagem de bot ignorada de {phone}: {content[:60]}")
+        return {"status": "bot_ignored"}
+
     push_name = msg_data.get("pushName", "")
 
     # Busca ou cria conversa
@@ -119,6 +136,17 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
     existing = db.query(CrmMessage).filter(CrmMessage.wa_message_id == wa_msg_id).first()
     if existing:
         return {"status": "duplicate"}
+
+    # ── Proteção anti-loop: mesma mensagem repetida 3x seguidas → ignora e desativa IA
+    if conv:
+        ultimas = db.query(CrmMessage)\
+            .filter(CrmMessage.conversation_id == conv.id, CrmMessage.direction == "in")\
+            .order_by(CrmMessage.sent_at.desc()).limit(3).all()
+        if len(ultimas) >= 3 and all(m.content.strip() == content.strip() for m in ultimas):
+            logger.warning(f"[CRM] Loop detectado com {phone} — desativando IA")
+            conv.ai_active = False
+            db.commit()
+            return {"status": "loop_blocked"}
 
     # Salva mensagem recebida
     msg = CrmMessage(
