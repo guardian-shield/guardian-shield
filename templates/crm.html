@@ -995,15 +995,8 @@ async function enqueueRecovery() {
   btn.disabled = true;
   btn.textContent = '⏳ Enviando...';
   try {
-    const res = await fetch('/admin/recovery-enqueue', {
+    const res = await fetch(`/crm/conversations/${currentConvId}/recovery-enqueue`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: conv.phone,
-        email: conv.contact_email || '',
-        nome: conv.contact_name || '',
-        tipo: 'abandonment',
-      }),
     });
     const data = await res.json();
     if (data.ok) {

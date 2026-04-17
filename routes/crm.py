@@ -404,3 +404,21 @@ def delete_conversation(conv_id: int, db: Session = Depends(get_db)):
     db.delete(conv)
     db.commit()
     return {"status": "deleted"}
+
+
+# ─── API: enfileirar lead na recuperação manualmente ──────────────────────────
+
+@router.post("/crm/conversations/{conv_id}/recovery-enqueue")
+async def crm_recovery_enqueue(conv_id: int, db: Session = Depends(get_db)):
+    conv = db.query(CrmConversation).filter(CrmConversation.id == conv_id).first()
+    if not conv:
+        return {"error": "Conversa não encontrada"}
+
+    phone = conv.phone.replace("+", "").replace(" ", "").replace("-", "")
+    try:
+        from services.recovery_service import criar_fila_abandono
+        criar_fila_abandono(phone=phone, email=conv.contact_email or "", nome=conv.contact_name or "", db=db)
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"[CRM] recovery-enqueue erro: {e}")
+        return {"error": str(e)}
