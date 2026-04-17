@@ -85,14 +85,20 @@ def criar_pix(email, valor, plano):
 # =========================
 # CARTÃO (Checkout Bricks)
 # =========================
-def processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id=None):
+def processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id=None, identification=None):
+    payer = {"email": email}
+    if identification and identification.get("number"):
+        payer["identification"] = {
+            "type":   identification.get("type", "CPF"),
+            "number": identification["number"],
+        }
     payment_data = {
         "transaction_amount": float(valor),
         "token": token,
         "description": f"Plano {plano.capitalize()} - Guardian Shield",
         "installments": int(installments),
         "payment_method_id": payment_method_id,
-        "payer": {"email": email},
+        "payer": payer,
         "external_reference": f"{email}|{plano}"
     }
     if issuer_id:

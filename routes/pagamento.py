@@ -306,6 +306,7 @@ async def process_card(request: Request):
     installments       = data.get("installments", 1)
     payment_method_id  = data.get("payment_method_id")
     issuer_id          = data.get("issuer_id")
+    identification     = data.get("payer", {}).get("identification") or {}
 
     if not token or not payment_method_id:
         return {"error": "Dados de cartão inválidos"}
@@ -341,7 +342,7 @@ async def process_card(request: Request):
             _db.close()
 
     try:
-        resultado = processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id)
+        resultado = processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id, identification)
         status = resultado.get("status")
         status_detail = resultado.get("status_detail", "")
         logger.warning(f"[CARTÃO] status={status} detail={status_detail} email={email} plano={plano}")
