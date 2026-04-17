@@ -1,6 +1,9 @@
 import os
 import asyncio
+import logging
 from fastapi import APIRouter, Depends, Request
+
+logger = logging.getLogger("guardian")
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -340,6 +343,8 @@ async def process_card(request: Request):
     try:
         resultado = processar_cartao(email, valor, plano, token, installments, payment_method_id, issuer_id)
         status = resultado.get("status")
+        status_detail = resultado.get("status_detail", "")
+        logger.warning(f"[CARTÃO] status={status} detail={status_detail} email={email} plano={plano}")
 
         # Cartão negado — avisa o cliente via WhatsApp
         if status in ("rejected", "cc_rejected_other_reason", "cc_rejected_insufficient_amount",
@@ -420,6 +425,21 @@ async def process_card(request: Request):
                 pass
             finally:
                 _db2.close()
+
+        REJECTION_MESSAGES = {
+            "cc_rejected_insufficient_amount":      "Saldo insuficiente no cartão.",
+            "cc_rejected_bad_filled_card_number":   "Número do cartão inválido.",
+            "cc_rejected_bad_filled_date":          "Data de vencimento inválida.",
+            "cc_rejected_bad_filled_security_code": "Código de segurança inválido.",
+            "cc_rejected_call_for_authorize":       "Cartão bloqueado. Ligue para o banco para autorizar.",
+            "cc_rejected_card_disabled":            "Cartão desativado. Contate seu banco.",
+            "cc_rejected_duplicated_payment":       "Pagamento duplicado detectado.",
+            "cc_rejected_high_risk":                "Transação recusada por segurança. Tente outro cartão.",
+            "cc_rejected_other_reason":             "Cartão recusado pelo banco. Tente outro cartão ou use o PIX.",
+        }
+        if status == "rejected":
+            msg = REJECTION_MESSAGES.get(status_detail, "Cartão recusado. Tente outro cartão ou pague via PIX.")
+            return {"status": "rejected", "error": msg, "payment_id": resultado.get("id")}
 
         return {"status": status, "payment_id": resultado.get("id")}
     except Exception as e:
