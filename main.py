@@ -86,6 +86,21 @@ def migrar_banco():
         "CREATE INDEX IF NOT EXISTS idx_crm_msg_conv ON crm_messages(conversation_id);",
         "ALTER TABLE crm_conversations ADD COLUMN IF NOT EXISTS followup_count INTEGER DEFAULT 0;",
         "ALTER TABLE crm_conversations ADD COLUMN IF NOT EXISTS last_followup_at TIMESTAMP;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_usado BOOLEAN DEFAULT FALSE;",
+        """CREATE TABLE IF NOT EXISTS recovery_queue (
+            id SERIAL PRIMARY KEY,
+            phone VARCHAR,
+            email VARCHAR,
+            nome VARCHAR,
+            tipo VARCHAR NOT NULL,
+            step INTEGER DEFAULT 0,
+            next_send_at TIMESTAMP NOT NULL,
+            status VARCHAR DEFAULT 'pending',
+            crm_stage VARCHAR,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_recovery_phone ON recovery_queue(phone);",
     ]
     with engine.connect() as conn:
         for sql in novos_campos:
