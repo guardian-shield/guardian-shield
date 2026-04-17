@@ -417,7 +417,7 @@ function renderTabela(data) {
       <td>${hwidBadge}</td>
       <td>
         <div class="actions">
-          <input type="number" class="dias-input" id="dias_${u.email}" value="365" min="1" max="3650">
+          <input type="number" class="dias-input" id="dias_${u.email}" value="" placeholder="dias" min="1" max="3650">
           <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')">Ativar</button>
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
@@ -441,7 +441,9 @@ function filtrarTabela() {
 }
 
 async function ativar(email) {
-  const dias = parseInt(document.getElementById('dias_' + email)?.value || 30);
+  const diasVal = document.getElementById('dias_' + email)?.value;
+  const dias = parseInt(diasVal);
+  if (!dias || dias < 1) { toast('Informe quantos dias de licença'); return; }
   showLoading(true);
   await api('POST', `/admin/ativar?email=${encodeURIComponent(email)}&dias=${dias}`);
   showLoading(false);
