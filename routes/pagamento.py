@@ -156,9 +156,19 @@ async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "",
     if not resultado:
         return {"error": "Falha ao gerar PIX"}
 
-    # 5 min: se não pagou, Maia entra em contato
+    # Cria fila de recuperação de abandono (substitui o task antigo)
     if whatsapp:
-        asyncio.create_task(_abandono_pix(str(resultado.get("id")), whatsapp))
+        try:
+            from services.recovery_service import criar_fila_abandono
+            criar_fila_abandono(
+                phone=whatsapp.replace("+", "").replace(" ", "").replace("-", ""),
+                email=email,
+                nome=nome,
+            )
+        except Exception as _e:
+            logger.warning(f"[PAGAMENTO] Erro ao criar fila abandono: {_e}")
+            # Fallback para o task antigo se recovery_service falhar
+            asyncio.create_task(_abandono_pix(str(resultado.get("id")), whatsapp))
 
     pix = resultado.get("point_of_interaction", {}).get("transaction_data", {})
     return {
@@ -224,6 +234,16 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             # Atualiza CRM para active
             phone = user.whatsapp if user else None
             _ativar_no_crm(phone, db)
+
+            # Cancela fila de abandono e cria suporte pós-pagamento
+            if phone and licenca_ativada_agora:
+                try:
+                    from services.recovery_service import cancelar_fila, criar_fila_suporte
+                    phone_clean = phone.replace("+", "").replace(" ", "").replace("-", "")
+                    cancelar_fila(phone_clean, tipo="abandonment")
+                    criar_fila_suporte(phone_clean, email=email, nome=user.nome or "")
+                except Exception as _e:
+                    pass
 
             # Envia notificações só uma vez (quando licença for ativada agora)
             if licenca_ativada_agora and user:
@@ -359,6 +379,16 @@ async def process_card(request: Request):
                     if not user_db.password:
                         user_db.pre_liberado = True
                     _db2.commit()
+
+                # Cancela abandono e inicia suporte pós-pagamento
+                if whatsapp:
+                    try:
+                        from services.recovery_service import cancelar_fila, criar_fila_suporte
+                        phone_clean = whatsapp.replace("+", "").replace(" ", "").replace("-", "")
+                        cancelar_fila(phone_clean, tipo="abandonment")
+                        criar_fila_suporte(phone_clean, email=email, nome=nome)
+                    except Exception:
+                        pass
 
                 # Mensagem de confirmação para o cliente
                 if whatsapp:

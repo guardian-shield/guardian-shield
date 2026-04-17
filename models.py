@@ -83,6 +83,28 @@ class CrmMessage(Base):
     sent_at         = Column(DateTime, default=func.now())
 
 
+class RecoveryQueue(Base):
+    """Fila de recuperação — abandono de pagamento e não-renovação."""
+    __tablename__ = "recovery_queue"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    phone         = Column(String, index=True)       # número do lead
+    email         = Column(String, nullable=True)
+    nome          = Column(String, nullable=True)
+    # Tipo: abandonment (PIX/cartão abandonado) | renewal (não renovou)
+    tipo          = Column(String, nullable=False)
+    # Estágio atual da fila (0=primeiro disparo, 1=segundo, etc.)
+    step          = Column(Integer, default=0)
+    # Quando enviar o próximo disparo
+    next_send_at  = Column(DateTime, nullable=False)
+    # Status: pending | paused | cancelled | completed
+    status        = Column(String, default="pending")
+    # Stage do CRM no momento da criação (para contexto)
+    crm_stage     = Column(String, nullable=True)
+    created_at    = Column(DateTime, default=func.now())
+    updated_at    = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
 class Garantia(Base):
     """Garantias de blindagem — uma linha por aparelho por usuário."""
     __tablename__ = "garantias"

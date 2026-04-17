@@ -179,9 +179,9 @@ async def process_followups():
 
 
 async def process_license_recovery():
-    """Verifica licenças expirando (7 dias) ou expiradas e inicia recuperação no CRM."""
-    from services.whatsapp_service import send_whatsapp_message
+    """Verifica licenças expirando/expiradas e cria filas de renovação no recovery_service."""
     from models import User
+    from services.recovery_service import criar_fila_renovacao
 
     if _is_quiet_hours():
         return
@@ -189,8 +189,6 @@ async def process_license_recovery():
     db = SessionLocal()
     try:
         now = datetime.utcnow()
-        # Licenças que expiram nos próximos 7 dias ou já expiraram há até 30 dias
-        soon = now + timedelta(days=7)
         cutoff = now - timedelta(days=30)
 
         users = db.query(User).filter(
@@ -211,59 +209,17 @@ async def process_license_recovery():
             if not is_expiring and not is_expired:
                 continue
 
-            # Busca ou cria conversa no CRM
-            conv = db.query(CrmConversation).filter(CrmConversation.phone == phone).first()
-            if not conv:
-                conv = CrmConversation(
-                    phone=phone,
-                    contact_email=user.email,
-                    stage="expiring",
-                    ai_active=True,
-                )
-                db.add(conv)
-                db.commit()
-                db.refresh(conv)
-            else:
-                if conv.stage == "active":
-                    conv.stage = "expiring"
-                    db.commit()
-
-            # Verifica se já mandou mensagem de recuperação hoje
-            last_msg = db.query(CrmMessage).filter(
-                CrmMessage.conversation_id == conv.id,
-                CrmMessage.sent_by == "ai_recovery",
-            ).order_by(CrmMessage.sent_at.desc()).first()
-
-            if last_msg and last_msg.sent_at:
-                hours_since = (now - last_msg.sent_at).total_seconds() / 3600
-                if hours_since < 23:
-                    continue  # já mandou hoje
-
-            # Gera mensagem de recuperação contextual
-            if is_expiring:
-                msg = _get_recovery_message(user.email, days_left, expired=False)
-            else:
-                msg = _get_recovery_message(user.email, abs(days_left), expired=True)
-
-            if not msg:
-                continue
-
-            await asyncio.sleep(3)
-            try:
-                send_whatsapp_message(phone, msg, db)
-                db.add(CrmMessage(
-                    conversation_id=conv.id,
-                    direction="out",
-                    content=msg,
-                    sent_by="ai_recovery",
-                ))
-                db.commit()
-                logger.warning(f"[RECOVERY] Enviado para {phone} — {'expirando' if is_expiring else 'expirado'} {days_left}d")
-            except Exception as e:
-                logger.error(f"[RECOVERY] Erro ao enviar para {phone}: {e}")
+            # Delega para a fila de renovação — ela controla os steps e intervalos
+            criar_fila_renovacao(
+                phone=phone,
+                email=user.email or "",
+                nome=user.nome or "",
+                dias_para_vencer=days_left,
+                db=db,
+            )
 
     except Exception as e:
-        logger.error(f"[RECOVERY] Erro geral: {e}")
+        logger.error(f"[RECOVERY] Erro geral license_recovery: {e}")
     finally:
         db.close()
 
@@ -312,6 +268,8 @@ async def run_followup_loop():
             await asyncio.sleep(60)
             await process_followups()
             await process_license_recovery()
+            from services.recovery_service import process_recovery_queue
+            await process_recovery_queue()
         except asyncio.CancelledError:
             break
         except Exception as e:

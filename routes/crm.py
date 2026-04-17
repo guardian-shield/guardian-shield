@@ -161,6 +161,19 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
     conv.updated_at = datetime.utcnow()
     db.commit()
 
+    # ── Integração com fila de recuperação ───────────────────────────────────
+    try:
+        from services.recovery_service import pausar_fila, cancelar_fila, _quer_cancelar
+        if _quer_cancelar(content):
+            cancelar_fila(phone, db=db)
+            conv.stage = "cancelled"
+            conv.ai_active = False
+            db.commit()
+        else:
+            pausar_fila(phone, db=db)
+    except Exception as _re:
+        logger.error(f"[CRM] Recovery integration error: {_re}")
+
     # Transferência manual: usuário digitou "humano"
     if content.strip().lower() == "humano":
         conv.ai_active = False
