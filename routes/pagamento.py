@@ -405,7 +405,7 @@ async def process_card(request: Request):
                     send_whatsapp_message(whatsapp, msg_cliente, _db2)
 
                 # Notificação para o dono
-                plano_label = "Mensal (R$99)" if plano == "mensal" else "Anual (R$499)"
+                plano_label = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual (R$299)"
                 msg_dono = (
                     f"🔔 *Nova venda Guardian Shield!*\n\n"
                     f"💳 Cartão — Plano: *{plano_label}*\n"

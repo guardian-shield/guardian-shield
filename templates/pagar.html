@@ -490,35 +490,50 @@ async function pagarCartao() {
           document.getElementById('cardBrickLoading').style.display = 'none';
         },
         onSubmit: async (formData) => {
-          const payload = { ...formData, email: emailAtual, plano: planoAtual, whatsapp: whatsappAtual, nome: nomeAtual };
-          const r = await fetch(`${API}/process-card`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const d = await r.json();
-          if (d.error) throw new Error(d.error);
-          if (d.status === 'approved' || d.status === 'in_process') {
-            const el = document.getElementById('cardBrickStatus');
-            el.style.display = 'block';
-            el.textContent = d.status === 'approved'
-              ? '✓ Pagamento aprovado! Redirecionando...'
-              : '⏳ Pagamento em análise. Redirecionando...';
-            if (d.status === 'approved' && typeof fbq !== 'undefined') {
-              fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+          const statusEl = document.getElementById('cardBrickStatus');
+          statusEl.style.display = 'block';
+          statusEl.style.background = 'rgba(99,102,241,0.15)';
+          statusEl.style.color = '#a5b4fc';
+          statusEl.textContent = '⏳ Processando pagamento...';
+          try {
+            const payload = { ...formData, email: emailAtual, plano: planoAtual, whatsapp: whatsappAtual, nome: nomeAtual };
+            const r = await fetch(`${API}/process-card`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const d = await r.json();
+            if (d.error) {
+              statusEl.style.background = 'rgba(239,68,68,0.15)';
+              statusEl.style.color = '#fca5a5';
+              statusEl.textContent = '❌ ' + d.error;
+              return;
             }
-            setTimeout(() => {
-              window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
-            }, 2000);
-          } else {
-            throw new Error('Pagamento recusado. Verifique os dados do cartão.');
+            if (d.status === 'approved' || d.status === 'in_process') {
+              statusEl.style.background = 'rgba(34,197,94,0.15)';
+              statusEl.style.color = '#86efac';
+              statusEl.textContent = d.status === 'approved'
+                ? '✓ Pagamento aprovado! Redirecionando...'
+                : '⏳ Pagamento em análise. Redirecionando...';
+              if (d.status === 'approved' && typeof fbq !== 'undefined') {
+                fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+              }
+              setTimeout(() => {
+                window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
+              }, 2000);
+            } else {
+              statusEl.style.background = 'rgba(239,68,68,0.15)';
+              statusEl.style.color = '#fca5a5';
+              statusEl.textContent = '❌ Pagamento recusado. Verifique os dados do cartão e tente novamente.';
+            }
+          } catch(e) {
+            statusEl.style.background = 'rgba(239,68,68,0.15)';
+            statusEl.style.color = '#fca5a5';
+            statusEl.textContent = '❌ Erro de conexão. Tente novamente.';
           }
         },
         onError: (err) => {
           console.error('[CardBrick]', err);
-          const msg = err?.message || 'Erro no pagamento. Verifique os dados e tente novamente.';
-          mostrarErro('erro3', msg);
-          irEtapa(3);
         }
       }
     });
