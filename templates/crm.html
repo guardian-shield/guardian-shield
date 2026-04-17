@@ -714,6 +714,47 @@ input:checked + .slider:before { transform: translateX(16px); }
   <div class="kanban-board" id="kanbanBoard"></div>
 </div>
 
+<!-- MODAL KANBAN CHAT -->
+<div id="kModal" onclick="if(event.target===this)closeKModal()" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#16181f;border:1px solid rgba(255,255,255,0.08);border-radius:18px;width:min(700px,96vw);height:min(82vh,700px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+      <div id="kmAvatar" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div id="kmName" style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        <div id="kmPhone" style="font-size:12px;color:rgba(255,255,255,0.4);"></div>
+      </div>
+      <select id="kmStage" onchange="kmUpdateStage()" style="background:#1e2130;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:5px 8px;font-size:12px;cursor:pointer;">
+        <option value="lead">🔵 Lead</option>
+        <option value="initiated">🟡 Iniciou pagamento</option>
+        <option value="paid">🟢 Pagou</option>
+        <option value="active">💎 Ativo</option>
+        <option value="expiring">🔴 Expirando</option>
+        <option value="support">🟣 Suporte</option>
+        <option value="cancelled">⚫ Cancelado</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;flex-shrink:0;">
+        <input type="checkbox" id="kmAiToggle" onchange="kmToggleAi()" style="accent-color:#6366f1;width:14px;height:14px;">
+        IA
+      </label>
+      <button onclick="closeKModal()" style="background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+    </div>
+
+    <!-- Mensagens -->
+    <div id="kmMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;"></div>
+
+    <!-- Input -->
+    <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:10px;align-items:flex-end;flex-shrink:0;">
+      <textarea id="kmInput" rows="1" placeholder="Digite sua mensagem..."
+        style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:10px 14px;font-size:14px;resize:none;font-family:inherit;max-height:100px;overflow-y:auto;"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();kmSend()}"></textarea>
+      <button onclick="kmSend()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1087,8 +1128,101 @@ function renderKanbanCard(c) {
 }
 
 function openFromKanban(id) {
-  setView('chat');
-  openConv(id);
+  openKModal(id);
+}
+
+// ═══════════════════════════════════════════
+// MODAL KANBAN
+// ═══════════════════════════════════════════
+let kmConvId = null;
+
+async function openKModal(id) {
+  kmConvId = id;
+  const modal = document.getElementById('kModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await kmLoadMessages();
+}
+
+function closeKModal() {
+  document.getElementById('kModal').style.display = 'none';
+  document.body.style.overflow = '';
+  kmConvId = null;
+  renderKanban();
+}
+
+async function kmLoadMessages() {
+  if (!kmConvId) return;
+  const res = await fetch(`/crm/conversations/${kmConvId}/messages`);
+  const data = await res.json();
+  if (data.error) return;
+  const conv = data.conversation;
+
+  const name = conv.contact_name || conv.phone;
+  const color = avatarColor(name);
+  const av = document.getElementById('kmAvatar');
+  av.textContent = avatarInitials(name);
+  av.style.background = color;
+  document.getElementById('kmName').textContent = name;
+  document.getElementById('kmPhone').textContent = '📱 ' + conv.phone;
+  document.getElementById('kmStage').value = conv.stage;
+  document.getElementById('kmAiToggle').checked = conv.ai_active;
+
+  const box = document.getElementById('kmMessages');
+  box.innerHTML = data.messages.map(m => {
+    const isAi = m.sent_by === 'ai';
+    const isFollowup = m.sent_by === 'ai_followup';
+    const isOut = m.direction === 'out';
+    const by = isOut ? (isFollowup ? '🔔 Follow-up' : isAi ? '🤖 Maia' : `👤 ${m.sent_by||'Atendente'}`) : '';
+    const time = m.sent_at ? new Date(m.sent_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+    const bg = isOut
+      ? (isAi||isFollowup ? 'rgba(99,102,241,0.18)' : 'rgba(34,197,94,0.15)')
+      : 'rgba(255,255,255,0.06)';
+    const align = isOut ? 'flex-end' : 'flex-start';
+    const maxW = '72%';
+    return `<div style="display:flex;flex-direction:column;align-items:${align};gap:2px;max-width:${maxW};align-self:${align};">
+      ${by ? `<div style="font-size:10px;color:rgba(255,255,255,0.35);padding:0 4px;">${by}</div>` : ''}
+      <div style="background:${bg};border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;">${esc(m.content)}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);padding:0 4px;">${time}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function kmSend() {
+  if (!kmConvId) return;
+  const input = document.getElementById('kmInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  input.style.height = 'auto';
+  await fetch(`/crm/conversations/${kmConvId}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, attendant: 'Atendente' }),
+  });
+  await kmLoadMessages();
+}
+
+async function kmUpdateStage() {
+  if (!kmConvId) return;
+  const stage = document.getElementById('kmStage').value;
+  await fetch(`/crm/conversations/${kmConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stage }),
+  });
+  await loadConvs();
+}
+
+async function kmToggleAi() {
+  if (!kmConvId) return;
+  const ai_active = document.getElementById('kmAiToggle').checked;
+  await fetch(`/crm/conversations/${kmConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ai_active }),
+  });
 }
 
 // Drag events
