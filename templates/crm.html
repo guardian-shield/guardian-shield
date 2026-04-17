@@ -716,14 +716,14 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 <!-- MODAL KANBAN CHAT -->
 <div id="kModal" onclick="if(event.target===this)closeKModal()" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-  <div style="background:#16181f;border:1px solid rgba(255,255,255,0.08);border-radius:18px;width:min(700px,96vw);height:min(82vh,700px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+  <div style="background:#16181f;border:1px solid rgba(255,255,255,0.08);border-radius:18px;width:min(980px,96vw);height:min(85vh,720px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
 
     <!-- Header -->
-    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
-      <div id="kmAvatar" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;"></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+      <div id="kmAvatar" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;"></div>
       <div style="flex:1;min-width:0;">
         <div id="kmName" style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-        <div id="kmPhone" style="font-size:12px;color:rgba(255,255,255,0.4);"></div>
+        <div id="kmPhone" style="font-size:11px;color:rgba(255,255,255,0.4);"></div>
       </div>
       <select id="kmStage" onchange="kmUpdateStage()" style="background:#1e2130;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:5px 8px;font-size:12px;cursor:pointer;">
         <option value="lead">🔵 Lead</option>
@@ -734,23 +734,73 @@ input:checked + .slider:before { transform: translateX(16px); }
         <option value="support">🟣 Suporte</option>
         <option value="cancelled">⚫ Cancelado</option>
       </select>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;flex-shrink:0;">
-        <input type="checkbox" id="kmAiToggle" onchange="kmToggleAi()" style="accent-color:#6366f1;width:14px;height:14px;">
-        IA
-      </label>
-      <button onclick="closeKModal()" style="background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+      <button onclick="closeKModal()" style="background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
     </div>
 
-    <!-- Mensagens -->
-    <div id="kmMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;"></div>
+    <!-- Body: chat + painel -->
+    <div style="display:flex;flex:1;overflow:hidden;">
 
-    <!-- Input -->
-    <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:10px;align-items:flex-end;flex-shrink:0;">
-      <textarea id="kmInput" rows="1" placeholder="Digite sua mensagem..."
-        style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:10px 14px;font-size:14px;resize:none;font-family:inherit;max-height:100px;overflow-y:auto;"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();kmSend()}"></textarea>
-      <button onclick="kmSend()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
+      <!-- Mensagens -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid rgba(255,255,255,0.06);">
+        <div id="kmMessages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+          <textarea id="kmInput" rows="1" placeholder="Digite sua mensagem..."
+            style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:9px 12px;font-size:13px;resize:none;font-family:inherit;max-height:90px;overflow-y:auto;"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();kmSend()}"></textarea>
+          <button onclick="kmSend()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">➤</button>
+        </div>
+      </div>
+
+      <!-- Painel direito -->
+      <div style="width:220px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;padding:16px 14px;gap:12px;">
+
+        <!-- IA Toggle -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;font-weight:600;">🤖 IA Maia</span>
+          <label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;">
+            <input type="checkbox" id="kmAiToggle" onchange="kmToggleAi()" style="opacity:0;width:0;height:0;">
+            <span id="kmAiSlider" style="position:absolute;inset:0;background:#333;border-radius:20px;transition:background 0.2s;">
+              <span id="kmAiThumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:left 0.2s;"></span>
+            </span>
+          </label>
+        </div>
+
+        <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Nome</div>
+          <input id="kmInfoName" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:7px 10px;font-size:12px;box-sizing:border-box;" placeholder="Nome do contato">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">E-mail</div>
+          <input id="kmInfoEmail" type="email" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:7px 10px;font-size:12px;box-sizing:border-box;" placeholder="email@exemplo.com">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Atendente</div>
+          <input id="kmInfoAttendant" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:7px 10px;font-size:12px;box-sizing:border-box;" placeholder="Responsável">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Setor</div>
+          <select id="kmInfoSector" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:7px 10px;font-size:12px;box-sizing:border-box;cursor:pointer;">
+            <option value="">Selecionar</option>
+            <option>Vendas</option>
+            <option>Suporte</option>
+            <option>Financeiro</option>
+            <option>Pós-venda</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Anotações</div>
+          <textarea id="kmInfoNotes" rows="3" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:7px 10px;font-size:12px;resize:none;font-family:inherit;box-sizing:border-box;" placeholder="Observações..."></textarea>
+        </div>
+
+        <button id="kmBtnSave" onclick="kmSaveInfo()" style="width:100%;background:#6366f1;border:none;color:#fff;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;transition:background 0.15s;">Salvar</button>
+
+        <div style="height:1px;background:rgba(255,255,255,0.06);"></div>
+
+        <button id="kmBtnRecovery" onclick="kmEnqueueRecovery()" style="width:100%;background:#f59e0b;border:none;color:#fff;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;transition:background 0.15s;">🔄 Adicionar à recuperação</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1166,7 +1216,16 @@ async function kmLoadMessages() {
   document.getElementById('kmName').textContent = name;
   document.getElementById('kmPhone').textContent = '📱 ' + conv.phone;
   document.getElementById('kmStage').value = conv.stage;
-  document.getElementById('kmAiToggle').checked = conv.ai_active;
+  // Painel direito
+  document.getElementById('kmInfoName').value = conv.contact_name || '';
+  document.getElementById('kmInfoEmail').value = conv.contact_email || '';
+  document.getElementById('kmInfoAttendant').value = conv.attendant || '';
+  document.getElementById('kmInfoSector').value = conv.sector || '';
+  document.getElementById('kmInfoNotes').value = conv.notes || '';
+  const ai = conv.ai_active;
+  document.getElementById('kmAiToggle').checked = ai;
+  document.getElementById('kmAiSlider').style.background = ai ? '#6366f1' : '#333';
+  document.getElementById('kmAiThumb').style.left = ai ? '19px' : '3px';
 
   const box = document.getElementById('kmMessages');
   box.innerHTML = data.messages.map(m => {
@@ -1218,11 +1277,52 @@ async function kmUpdateStage() {
 async function kmToggleAi() {
   if (!kmConvId) return;
   const ai_active = document.getElementById('kmAiToggle').checked;
+  document.getElementById('kmAiSlider').style.background = ai_active ? '#6366f1' : '#333';
+  document.getElementById('kmAiThumb').style.left = ai_active ? '19px' : '3px';
   await fetch(`/crm/conversations/${kmConvId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ai_active }),
   });
+}
+
+async function kmSaveInfo() {
+  if (!kmConvId) return;
+  await fetch(`/crm/conversations/${kmConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contact_name:  document.getElementById('kmInfoName').value,
+      contact_email: document.getElementById('kmInfoEmail').value,
+      attendant:     document.getElementById('kmInfoAttendant').value,
+      sector:        document.getElementById('kmInfoSector').value,
+      notes:         document.getElementById('kmInfoNotes').value,
+    }),
+  });
+  const btn = document.getElementById('kmBtnSave');
+  btn.textContent = '✓ Salvo!';
+  btn.style.background = '#22c55e';
+  setTimeout(() => { btn.textContent = 'Salvar'; btn.style.background = '#6366f1'; }, 2000);
+  await loadConvs();
+}
+
+async function kmEnqueueRecovery() {
+  if (!kmConvId) return;
+  const conv = allConvs.find(c => c.id === kmConvId);
+  if (!confirm(`Adicionar ${conv?.contact_name || conv?.phone} ao fluxo de recuperação?`)) return;
+  const btn = document.getElementById('kmBtnRecovery');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+  const res = await fetch(`/crm/conversations/${kmConvId}/recovery-enqueue`, { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) {
+    btn.textContent = '✓ Na fila!';
+    showToast('✅ Lead adicionado à recuperação', 'success');
+  } else {
+    btn.textContent = '🔄 Adicionar à recuperação';
+    btn.disabled = false;
+    showToast('❌ ' + (data.error || 'Erro'), 'error');
+  }
 }
 
 // Drag events
