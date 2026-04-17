@@ -221,19 +221,19 @@
   <div class="etapa" id="etapa2">
     <div class="etapa-titulo">Escolha seu plano</div>
     <div class="aviso-mensal" id="avisoMensal">
-      O plano mensal é um teste único e já foi utilizado.<br>
-      Para continuar, renove com o plano anual.
+      ⚠️ O período de teste já foi utilizado nesta conta.<br>
+      Para continuar usando o Guardian Shield, adquira o plano anual.
     </div>
     <div class="planos">
-      <div class="plano-card" id="cardMensal" onclick="escolherPlano('mensal')">
-        <div class="plano-nome">Mensal</div>
-        <div class="plano-preco">R$ 99,00</div>
-        <div class="plano-detalhe">Teste · 30 dias</div>
+      <div class="plano-card" id="cardTeste" onclick="escolherPlano('teste')">
+        <div class="plano-nome">Teste</div>
+        <div class="plano-preco">R$ 49,90</div>
+        <div class="plano-detalhe">30 dias · compra única</div>
       </div>
       <div class="plano-card destaque" onclick="escolherPlano('anual')">
         <div class="plano-nome">Anual</div>
-        <div class="plano-preco">R$ 399,00</div>
-        <div class="plano-detalhe">365 dias · mais econômico</div>
+        <div class="plano-preco">R$ 299,00</div>
+        <div class="plano-detalhe">365 dias · melhor custo</div>
       </div>
     </div>
     <div class="voltar"><a onclick="irEtapa(1)">← Voltar</a></div>
@@ -384,9 +384,11 @@ async function confirmarEmail() {
     const resPlan = await fetch(`${API}/user-plan?email=${encodeURIComponent(email)}`);
     if (resPlan.ok) {
       const planData = await resPlan.json();
-      const usouMensal = planData.plan_type && planData.plan_type !== '';
-      document.getElementById('cardMensal').style.display = usouMensal ? 'none' : '';
-      document.getElementById('avisoMensal').style.display = usouMensal ? 'block' : 'none';
+      const usouTrial = planData.trial_usado === true;
+      document.getElementById('cardTeste').style.opacity  = usouTrial ? '0.4' : '1';
+      document.getElementById('cardTeste').style.cursor   = usouTrial ? 'not-allowed' : 'pointer';
+      document.getElementById('cardTeste').onclick        = usouTrial ? null : () => escolherPlano('teste');
+      document.getElementById('avisoMensal').style.display = usouTrial ? 'block' : 'none';
     }
 
     irEtapa(2);
@@ -401,9 +403,10 @@ async function confirmarEmail() {
 // ── ETAPA 2: escolhe plano ──
 function escolherPlano(plano) {
   planoAtual = plano;
-  const valor = plano === 'mensal' ? 'R$ 99,00 · 30 dias' : 'R$ 399,00 · 365 dias';
+  const valor = plano === 'teste' ? 'R$ 49,90 · 30 dias' : 'R$ 299,00 · 365 dias';
+  const nome  = plano === 'teste' ? 'Teste 30 dias' : 'Anual';
   document.getElementById('resumoPlano').innerHTML =
-    `Plano: <b>${plano.charAt(0).toUpperCase() + plano.slice(1)}</b> — ${valor}`;
+    `Plano: <b>${nome}</b> — ${valor}`;
   irEtapa(3);
 }
 
@@ -421,7 +424,7 @@ async function pagarPix() {
 
     // preenche etapa 4
     document.getElementById('pixValor').textContent =
-      planoAtual === 'mensal' ? 'R$ 99,00' : 'R$ 399,00';
+      planoAtual === 'teste' ? 'R$ 49,90' : 'R$ 299,00';
     document.getElementById('pixQrImg').src =
       `data:image/png;base64,${data.qr_code_base64}`;
     document.getElementById('pixCopiaCola').value = data.qr_code || '';
@@ -452,9 +455,10 @@ async function pagarCartao() {
       return;
     }
 
-    const valor = planoAtual === 'mensal' ? 99.00 : 399.00;
+    const valor = planoAtual === 'teste' ? 49.90 : 299.00;
+    const nomeP = planoAtual === 'teste' ? 'Teste 30 dias' : 'Anual';
     document.getElementById('cardResumoBrick').innerHTML =
-      `Plano <b>${planoAtual}</b> — R$ ${valor.toFixed(2).replace('.',',')}`;
+      `Plano <b>${nomeP}</b> — R$ ${valor.toFixed(2).replace('.',',')}`;
     document.getElementById('cardBrickStatus').style.display = 'none';
     document.getElementById('cardBrickLoading').style.display = 'block';
     document.getElementById('cardPaymentBrick_container').innerHTML = '';
@@ -549,7 +553,7 @@ async function verificarStatusPix() {
       const box = document.getElementById('pixStatusBox');
       box.classList.add('aprovado');
       document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
-      const valor = planoAtual === 'mensal' ? 99.00 : 499.00;
+      const valor = planoAtual === 'teste' ? 49.90 : 299.00;
       if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
       setTimeout(() => {
         window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;

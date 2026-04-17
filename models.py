@@ -22,6 +22,7 @@ class User(Base):
     whatsapp_code        = Column(String, nullable=True)
     whatsapp_code_expires = Column(DateTime, nullable=True)
     pre_liberado         = Column(Boolean, default=False)
+    trial_usado          = Column(Boolean, default=False)
     created_at           = Column(DateTime, default=func.now())
 
 

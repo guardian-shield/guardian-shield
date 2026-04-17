@@ -123,8 +123,8 @@ def get_db():
 @router.post("/create-pix")
 async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "", db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
-    if user and plano == "mensal" and user.plan_type == "mensal":
-        return {"error": "Plano mensal já utilizado"}
+    if user and plano == "teste" and user.trial_usado:
+        return {"error": "O período de teste já foi utilizado nesta conta. Para continuar usando o Guardian Shield, adquira o plano anual."}
 
     # Salva usuário e já entra no CRM — independente do PIX funcionar
     if whatsapp:
@@ -144,7 +144,7 @@ async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "",
         # Cria/atualiza conversa no CRM para o follow-up automático
         _registrar_lead_crm(whatsapp, email, plano, db, nome=nome)
 
-    valor = 99.00 if plano == "mensal" else 499.00 if plano == "anual" else None
+    valor = 49.90 if plano == "teste" else 299.00 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
 
@@ -197,7 +197,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
         else:
             parts = []
         email = parts[0] if parts else pagamento.get("payer", {}).get("email")
-        plano = parts[1] if len(parts) > 1 else "mensal"
+        plano = parts[1] if len(parts) > 1 else "teste"
 
         if email:
             user = db.query(User).filter(User.email == email).first()
@@ -211,9 +211,11 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             expirada    = (user.expires_at is not None and user.expires_at < datetime.utcnow())
             licenca_ativada_agora = False
             if sem_licenca or expirada:
-                dias = 30 if plano == "mensal" else 365
+                dias = 30 if plano == "teste" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
                 user.plan_type  = plano
+                if plano == "teste":
+                    user.trial_usado = True
                 if not user.password:
                     user.pre_liberado = True
                 db.commit()
@@ -226,7 +228,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             # Envia notificações só uma vez (quando licença for ativada agora)
             if licenca_ativada_agora and user:
                 from services.whatsapp_service import send_whatsapp_message
-                plano_nome = "Mensal" if plano == "mensal" else "Anual"
+                plano_nome = "Teste 30 dias" if plano == "teste" else "Anual"
                 # Mensagem para o cliente
                 if user.whatsapp:
                     try:
@@ -244,7 +246,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                         pass
                 # Notificação para o dono
                 try:
-                    plano_label = "Mensal (R$99)" if plano == "mensal" else "Anual (R$499)"
+                    plano_label = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual (R$299)"
                     msg_dono = (
                         f"🔔 *Nova venda Guardian Shield!*\n\n"
                         f"💰 PIX — Plano: *{plano_label}*\n"
@@ -274,7 +276,7 @@ def mp_public_key():
 async def process_card(request: Request):
     data = await request.json()
     email              = data.get("payer", {}).get("email") or data.get("email", "")
-    plano              = data.get("plano", "mensal")
+    plano              = data.get("plano", "teste")
     whatsapp           = data.get("whatsapp", "")
     nome               = data.get("nome", "")
     token              = data.get("token")
@@ -285,7 +287,16 @@ async def process_card(request: Request):
     if not token or not payment_method_id:
         return {"error": "Dados de cartão inválidos"}
 
-    valor = 99.00 if plano == "mensal" else 499.00
+    # Bloqueia trial se já foi usado
+    _db_check = SessionLocal()
+    try:
+        _u_check = _db_check.query(User).filter(User.email == email).first()
+        if _u_check and plano == "teste" and _u_check.trial_usado:
+            return {"error": "O período de teste já foi utilizado nesta conta. Para continuar usando o Guardian Shield, adquira o plano anual."}
+    finally:
+        _db_check.close()
+
+    valor = 49.90 if plano == "teste" else 299.00
 
     # Salva WhatsApp do lead e registra no CRM antes do pagamento
     if whatsapp and email:
@@ -335,14 +346,16 @@ async def process_card(request: Request):
             try:
                 from datetime import timedelta
                 from services.whatsapp_service import send_whatsapp_message
-                plano_nome = "Mensal" if plano == "mensal" else "Anual"
-                dias = 30 if plano == "mensal" else 365
+                plano_nome = "Teste 30 dias" if plano == "teste" else "Anual"
+                dias = 30 if plano == "teste" else 365
 
                 # Ativa licença
                 user_db = _db2.query(User).filter(User.email == email).first()
                 if user_db:
                     user_db.expires_at = __import__('datetime').datetime.utcnow() + timedelta(days=dias)
                     user_db.plan_type  = plano
+                    if plano == "teste":
+                        user_db.trial_usado = True
                     if not user_db.password:
                         user_db.pre_liberado = True
                     _db2.commit()

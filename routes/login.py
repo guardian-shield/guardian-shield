@@ -261,8 +261,8 @@ def verify_whatsapp(
 def user_plan(email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        return {"plan_type": None}
-    return {"plan_type": user.plan_type}
+        return {"plan_type": None, "trial_usado": False}
+    return {"plan_type": user.plan_type, "trial_usado": bool(user.trial_usado)}
 
 
 # =============================================================

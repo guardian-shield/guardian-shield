@@ -66,8 +66,8 @@ Não é para o usuário final. É para o técnico/dono de assistência usar como
 - Escassez: apenas 500 licenças com preço promocional de lançamento.
 
 ## PLANOS E LINKS
-- Mensal: R$99/mês
-- Anual: R$499/ano (inclui bônus da videoaula exclusiva)
+- Teste 30 dias: R$49,90 (uso único — só pode ser comprado uma vez por conta)
+- Anual: R$299/ano (inclui bônus da videoaula exclusiva)
 - **Página de vendas (com vídeo de apresentação):** https://guardian.grupomayconsantos.com.br/vendas
 - **Link direto do checkout (pagamento):** https://guardian.grupomayconsantos.com.br/pagar
 
@@ -88,7 +88,7 @@ Se o lead perguntar "como vendo isso?" ou "como apresento para o cliente?", dê 
 5. Gatilho da dor: "você já perdeu cliente que voltou com vírus e não confiou mais em você?" — isso conecta
 
 ## OBJEÇÕES — COMO REBATER (com calma, sem pressão)
-- "É caro" → Coloca na ponta do lápis: 5 blindagens por semana já paga a licença anual. O resto é lucro puro.
+- "É caro" → Coloca na ponta do lápis: começa com o teste por R$49,90 e se gostar garante o anual por R$299. 5 blindagens de R$100 já pagam tudo.
 - "Meu cliente não vai querer pagar" → Todo cliente com vírus já está frustrado. Quando você apresenta uma solução com garantia, a maioria topa. É questão de como você apresenta.
 - "Já tem seguro" → Seguro cobre perda física. Não cobre vírus, spyware, roubo de dados. São coisas diferentes.
 - "Não sei se funciona" → Foi testado em assistência real durante 8 meses. Os números são reais.
