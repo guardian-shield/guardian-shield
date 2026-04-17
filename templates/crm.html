@@ -386,6 +386,19 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 }
 .btn-save:hover { background: #4a60e0; }
 .btn-save.saved { background: var(--green); }
+.btn-recovery {
+  width: 100%;
+  background: #f59e0b;
+  border: none;
+  color: #fff;
+  padding: 7px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-weight: 600;
+}
+.btn-recovery:hover { background: #d97706; }
 
 .toggle-ai {
   display: flex;
@@ -683,6 +696,12 @@ input:checked + .slider:before { transform: translateX(16px); }
     </div>
 
     <button class="btn-save" id="btnSave" onclick="saveInfo()">Salvar</button>
+
+    <div class="divider"></div>
+
+    <button class="btn-recovery" id="btnRecovery" onclick="enqueueRecovery()" title="Adicionar ao fluxo de recuperação de abandono">
+      🔄 Adicionar à recuperação
+    </button>
   </div>
 </div>
 
@@ -965,6 +984,41 @@ async function saveInfo() {
   btn.classList.add('saved');
   setTimeout(() => { btn.textContent = 'Salvar'; btn.classList.remove('saved'); }, 2000);
   await loadConvs();
+}
+
+async function enqueueRecovery() {
+  if (!currentConvId) return;
+  const conv = allConvs.find(c => c.id === currentConvId);
+  if (!conv) return;
+  if (!confirm(`Adicionar ${conv.contact_name || conv.phone} ao fluxo de recuperação de abandono?`)) return;
+  const btn = document.getElementById('btnRecovery');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+  try {
+    const res = await fetch('/admin/recovery-enqueue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: conv.phone,
+        email: conv.contact_email || '',
+        nome: conv.contact_name || '',
+        tipo: 'abandonment',
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✅ Lead adicionado à fila de recuperação', 'success');
+      btn.textContent = '✓ Na fila!';
+    } else {
+      showToast('❌ Erro: ' + (data.error || 'desconhecido'), 'error');
+      btn.textContent = '🔄 Adicionar à recuperação';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showToast('❌ Erro de conexão', 'error');
+    btn.textContent = '🔄 Adicionar à recuperação';
+    btn.disabled = false;
+  }
 }
 
 // ═══════════════════════════════════════════════

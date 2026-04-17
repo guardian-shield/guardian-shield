@@ -430,3 +430,25 @@ def get_messages(db: Session = Depends(get_db), admin=Depends(verificar_admin)):
         }
         for l in logs
     ]
+
+
+# ─── API: enfileirar lead na recuperação manualmente ──────────────────────────
+
+@router.post("/admin/recovery-enqueue")
+async def recovery_enqueue(request: Request, db: Session = Depends(get_db), admin=Depends(verificar_admin)):
+    data = await request.json()
+    phone = data.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
+    email = data.get("email", "")
+    nome  = data.get("nome", "")
+    tipo  = data.get("tipo", "abandonment")
+
+    if not phone:
+        return {"error": "phone obrigatório"}
+
+    from services.recovery_service import criar_fila_abandono, criar_fila_renovacao
+    if tipo == "renewal":
+        criar_fila_renovacao(phone=phone, email=email, nome=nome, dias_para_vencer=0, db=db)
+    else:
+        criar_fila_abandono(phone=phone, email=email, nome=nome, db=db)
+
+    return {"ok": True, "phone": phone, "tipo": tipo}
