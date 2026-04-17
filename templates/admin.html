@@ -70,7 +70,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
 .badge-yellow{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);color:#d4a017}
 .badge-gray{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5)}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
-.dias-input{width:58px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;color:white;font-size:12px;text-align:center}
+.dias-input{width:76px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 8px;color:white;font-size:12px;text-align:center}
 
 /* ── FORM CONFIG ── */
 .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -417,7 +417,7 @@ function renderTabela(data) {
       <td>${hwidBadge}</td>
       <td>
         <div class="actions">
-          <input type="number" class="dias-input" id="dias_${u.email}" value="30" min="1" max="3650">
+          <input type="number" class="dias-input" id="dias_${u.email}" value="365" min="1" max="3650">
           <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')">Ativar</button>
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
