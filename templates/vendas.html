@@ -707,11 +707,11 @@ h2 .green { color: var(--green); }
         background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
         color:rgba(255,255,255,0.35);cursor:not-allowed;
       ">
-        ⏳ Disponível em <span id="vsl-countdown">5:00</span>
+        ⏳ Em breve a página libera...
       </button>
-      <button id="btn-vsl-liberado" class="btn-hero" style="display:none;" onclick="document.getElementById('preco').scrollIntoView({behavior:'smooth'})">
+      <button id="btn-vsl-liberado" class="btn-hero" style="display:none;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        VER A OFERTA COMPLETA ↓
+        ✅ Página liberada — role para ver a oferta ↓
       </button>
     </div>
     <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;">Veja os planos e comece ainda hoje</p>
@@ -1217,9 +1217,6 @@ h2 .green { color: var(--green); }
 
   function atualizarCd() {
     const m = Math.floor(restando / 60);
-    const s = restando % 60;
-    const el = document.getElementById('vsl-countdown');
-    if (el) el.textContent = m + ':' + pad(s);
   }
 
   function desbloquear() {
