@@ -475,3 +475,12 @@ def pagina_vendas():
     html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas.html")
     with open(os.path.abspath(html_path), encoding="utf-8") as f:
         return f.read()
+
+
+# GET /vendas2  →  versão sem VSL para teste
+# =============================================================
+@router.get("/vendas2", response_class=HTMLResponse)
+def pagina_vendas2():
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas2.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        return f.read()
