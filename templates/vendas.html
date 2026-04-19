@@ -709,12 +709,12 @@ h2 .green { color: var(--green); }
       ">
         ⏳ Disponível em <span id="vsl-countdown">5:00</span>
       </button>
-      <a href="/pagar" id="btn-vsl-liberado" class="btn-hero" style="display:none;">
+      <button id="btn-vsl-liberado" class="btn-hero" style="display:none;" onclick="document.getElementById('preco').scrollIntoView({behavior:'smooth'})">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        ATIVAR GUARDIAN SHIELD NA MINHA ASSISTÊNCIA
-      </a>
+        VER A OFERTA COMPLETA ↓
+      </button>
     </div>
-    <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;">🔒 Acesso imediato · Garantia de 7 dias</p>
+    <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;">Veja os planos e comece ainda hoje</p>
   </div>
 </div>
 
@@ -1227,14 +1227,13 @@ h2 .green { color: var(--green); }
     desbloqueado = true;
     if (timer) clearInterval(timer);
 
+    // Mostra botão "ver oferta" — página fica rolável
     const bloq = document.getElementById('btn-vsl-bloqueado');
     const lib  = document.getElementById('btn-vsl-liberado');
     if (bloq) bloq.style.display = 'none';
     if (lib)  lib.style.display  = 'inline-flex';
 
-    const footer = document.getElementById('footer-cta-section');
-    if (footer) footer.style.display = '';
-
+    // Footer CTA e sticky bar aparecem só quando chegar na seção de preços
     const bar = document.getElementById('stickyBar');
     if (bar) bar.dataset.bloqueado = '0';
   }
@@ -1286,11 +1285,20 @@ h2 .green { color: var(--green); }
   atualizarCd();
 })();
 
-// ── STICKY BAR (só aparece após desbloqueio VSL)
+// ── STICKY BAR + FOOTER CTA (aparecem quando chega na seção de preços)
 window.addEventListener('scroll', () => {
   const bar = document.getElementById('stickyBar');
-  if (bar.dataset.bloqueado === '1') return; // aguarda desbloqueio
+  if (bar.dataset.bloqueado === '1') return;
   bar.classList.toggle('visivel', window.scrollY > 400);
+
+  // Mostra footer CTA quando chega na seção de preços
+  const preco = document.getElementById('preco');
+  const footer = document.getElementById('footer-cta-section');
+  if (preco && footer && footer.style.display === 'none') {
+    if (window.scrollY + window.innerHeight >= preco.offsetTop + 100) {
+      footer.style.display = '';
+    }
+  }
 });
 
 // ── COUNTER ANIMATION
