@@ -408,6 +408,81 @@ def delete_conversation(conv_id: int, db: Session = Depends(get_db)):
 
 # ─── API: enfileirar lead na recuperação manualmente ──────────────────────────
 
+# ─── API: ticket de suporte do app desktop ───────────────────────────────────
+
+@router.post("/suporte-ticket")
+async def suporte_ticket(request: Request, db: Session = Depends(get_db)):
+    try:
+        data = await request.json()
+    except Exception:
+        return {"error": "JSON inválido"}
+
+    email     = (data.get("email") or "").strip()
+    nome      = (data.get("nome") or "Cliente").strip()
+    mensagem  = (data.get("mensagem") or "").strip()
+    device_id = (data.get("device_id") or "").strip()
+
+    if not mensagem:
+        return {"error": "Mensagem não pode estar vazia"}
+
+    # Número da Maia
+    MAIA_NUMBER = "5545999539960"
+
+    # Monta mensagem para a Maia
+    texto_maia = (
+        f"🛡️ *SUPORTE — Guardian Shield*\n\n"
+        f"👤 *Cliente:* {nome}\n"
+        f"📧 *E-mail:* {email or 'não informado'}\n"
+        f"📱 *Dispositivo:* {device_id or 'não informado'}\n\n"
+        f"💬 *Mensagem:*\n{mensagem}"
+    )
+
+    # Envia WhatsApp para a Maia
+    try:
+        send_whatsapp_message(MAIA_NUMBER, texto_maia, db)
+    except Exception as e:
+        logger.error(f"[SUPORTE] erro ao enviar WA para Maia: {e}")
+        return {"error": "Falha ao enviar mensagem. Tente novamente."}
+
+    # Cria ou atualiza conversa no CRM com stage 'support'
+    try:
+        conv = db.query(CrmConversation).filter(
+            CrmConversation.contact_email == email
+        ).first() if email else None
+
+        if conv:
+            conv.stage = "support"
+            conv.updated_at = datetime.utcnow()
+        else:
+            conv = CrmConversation(
+                phone=email or device_id or "app-suporte",
+                contact_name=nome,
+                contact_email=email,
+                stage="support",
+                ai_enabled=False,
+            )
+            db.add(conv)
+            db.flush()
+
+        # Registra a mensagem no histórico do CRM
+        msg = CrmMessage(
+            conversation_id=conv.id,
+            direction="in",
+            content=mensagem,
+            timestamp=datetime.utcnow(),
+        )
+        db.add(msg)
+        db.commit()
+        logger.info(f"[SUPORTE] ticket criado conv_id={conv.id} email={email}")
+    except Exception as e:
+        logger.error(f"[SUPORTE] erro ao salvar CRM: {e}")
+        # Não retorna erro — a mensagem já foi enviada para a Maia
+
+    return {"ok": True}
+
+
+# ─── API: enfileirar lead na recuperação manualmente ──────────────────────────
+
 @router.post("/crm/conversations/{conv_id}/recovery-enqueue")
 async def crm_recovery_enqueue(conv_id: int, db: Session = Depends(get_db)):
     conv = db.query(CrmConversation).filter(CrmConversation.id == conv_id).first()
