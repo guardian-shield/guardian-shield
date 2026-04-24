@@ -101,6 +101,21 @@ def migrar_banco():
             updated_at TIMESTAMP DEFAULT NOW()
         );""",
         "CREATE INDEX IF NOT EXISTS idx_recovery_phone ON recovery_queue(phone);",
+        # Blacklist colaborativa
+        """CREATE TABLE IF NOT EXISTS bl_reports (
+            id          SERIAL PRIMARY KEY,
+            pkg         VARCHAR NOT NULL,
+            tech_email  VARCHAR NOT NULL,
+            categoria   VARCHAR DEFAULT 'desconhecido',
+            reported_at TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_bl_reports_pkg ON bl_reports(pkg);",
+        "CREATE INDEX IF NOT EXISTS idx_bl_reports_tech ON bl_reports(tech_email);",
+        """CREATE TABLE IF NOT EXISTS bl_override (
+            pkg        VARCHAR PRIMARY KEY,
+            status     VARCHAR NOT NULL,  -- 'aprovado' | 'rejeitado'
+            updated_at TIMESTAMP DEFAULT NOW()
+        );""",
     ]
     with engine.connect() as conn:
         for sql in novos_campos:
@@ -133,3 +148,6 @@ app.include_router(pagamento.router)
 
 from routes import crm
 app.include_router(crm.router)
+
+from routes import blacklist
+app.include_router(blacklist.router)

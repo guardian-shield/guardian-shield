@@ -133,6 +133,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     <div class="tab active" onclick="switchTab('usuarios')">👥 Usuários</div>
     <div class="tab" onclick="switchTab('config')">⚙️ Configurações</div>
     <div class="tab" onclick="switchTab('mensagens')">💬 Mensagens</div>
+    <div class="tab" onclick="switchTab('blacklist')">🛡️ Blacklist</div>
   </div>
 
   <!-- TAB USUÁRIOS -->
@@ -302,6 +303,20 @@ tr:hover td{background:rgba(255,255,255,.025)}
   </div>
 </div>
 
+<!-- TAB BLACKLIST -->
+<div id="tab-blacklist" class="tab-content">
+  <div class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="section-title" style="margin:0">🛡️ Blacklist Colaborativa</div>
+      <button class="btn btn-ghost" onclick="carregarBlacklist()">↻ Atualizar</button>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px">
+      Apps reportados por técnicos ao remover da aba Suspeitos/Desconhecidos. Com <strong style="color:#e07b10">10+ técnicos únicos</strong> → entra na blacklist automática de todos os clientes.
+    </div>
+    <div id="blTabela" style="overflow-x:auto"></div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 <div id="loadingOverlay"><div class="spinner"></div></div>
@@ -368,13 +383,88 @@ async function api(method, path, body = null, token = TOKEN) {
 // ── TABS ──────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['usuarios','config','mensagens'];
+    const names = ['usuarios','config','mensagens','blacklist'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'config') carregarConfig();
+  if (name === 'config')    carregarConfig();
   if (name === 'mensagens') carregarMensagens();
+  if (name === 'blacklist') carregarBlacklist();
+}
+
+// ── BLACKLIST COLABORATIVA ────────────────────
+async function carregarBlacklist() {
+  showLoading(true);
+  const r = await api('GET', '/admin/blacklist');
+  showLoading(false);
+  if (!r || r.error) { toast(r?.error || 'Erro ao carregar', true); return; }
+
+  const { reportes, threshold } = r;
+  if (!reportes.length) {
+    document.getElementById('blTabela').innerHTML =
+      '<div style="color:rgba(255,255,255,.35);padding:20px 0;text-align:center">Nenhum app reportado ainda.</div>';
+    return;
+  }
+
+  const linhas = reportes.map(row => {
+    const cor = row.auto_blacklist ? '#ff6060' : row.tecnicos_unicos >= 5 ? '#e07b10' : 'rgba(255,255,255,.6)';
+    const badge = row.override === 'aprovado'
+      ? '<span style="background:#1a7a3a;color:#4cde8a;padding:1px 7px;border-radius:999px;font-size:10px">✓ aprovado</span>'
+      : row.override === 'rejeitado'
+      ? '<span style="background:#5a1a1a;color:#ff7070;padding:1px 7px;border-radius:999px;font-size:10px">✕ rejeitado</span>'
+      : row.auto_blacklist
+      ? '<span style="background:rgba(255,96,96,0.15);color:#ff6060;padding:1px 7px;border-radius:999px;font-size:10px">🔴 auto</span>'
+      : '';
+    return `<tr>
+      <td style="color:${cor};font-family:monospace;font-size:11px">${row.pkg}</td>
+      <td style="text-align:center;color:${cor};font-weight:700">${row.tecnicos_unicos} / ${threshold}</td>
+      <td style="text-align:center;color:rgba(255,255,255,.4)">${row.total_reportes}</td>
+      <td style="text-align:center">${row.categoria || '-'}</td>
+      <td style="text-align:center">${badge}</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          ${row.override !== 'aprovado' ? `<button class="btn btn-sm btn-green" onclick="blAprovar('${row.pkg}')">✓ Aprovar</button>` : ''}
+          ${row.override !== 'rejeitado' ? `<button class="btn btn-sm btn-red" onclick="blRejeitar('${row.pkg}')">✕ Rejeitar</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('blTabela').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="color:rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.08)">
+          <th style="text-align:left;padding:6px 8px">Pacote</th>
+          <th style="text-align:center;padding:6px 8px">Técnicos únicos</th>
+          <th style="text-align:center;padding:6px 8px">Reportes</th>
+          <th style="text-align:center;padding:6px 8px">Categoria</th>
+          <th style="text-align:center;padding:6px 8px">Status</th>
+          <th style="padding:6px 8px"></th>
+        </tr>
+      </thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
+}
+
+async function blAprovar(pkg) {
+  if (!confirm(`Aprovar "${pkg}" na blacklist global?`)) return;
+  showLoading(true);
+  const r = await api('POST', `/admin/blacklist/aprovar?pkg=${encodeURIComponent(pkg)}`);
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast(`${pkg} aprovado na blacklist!`);
+  carregarBlacklist();
+}
+
+async function blRejeitar(pkg) {
+  if (!confirm(`Rejeitar "${pkg}"? Ele nunca entrará na blacklist automática.`)) return;
+  showLoading(true);
+  const r = await api('POST', `/admin/blacklist/rejeitar?pkg=${encodeURIComponent(pkg)}`);
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast(`${pkg} rejeitado.`);
+  carregarBlacklist();
 }
 
 // ── CARREGAR TUDO ─────────────────────────────
