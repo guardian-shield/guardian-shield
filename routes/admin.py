@@ -146,6 +146,72 @@ def forcar_verificacao(
 
 
 # =============================================================
+# POST /admin/reenviar-codigo-wa
+# Reenvia código WhatsApp sem precisar ir no banco
+# =============================================================
+@router.post("/admin/reenviar-codigo-wa")
+def reenviar_codigo_wa(
+    email: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    import random
+    from datetime import timedelta
+    from services.whatsapp_service import send_verification_whatsapp
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+    if not user.whatsapp:
+        return {"error": f"Usuário não tem WhatsApp cadastrado. Cadastre pelo painel antes de reenviar."}
+
+    code = str(random.randint(100000, 999999))
+    user.whatsapp_code         = code
+    user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
+    user.whatsapp_verified     = False
+    db.commit()
+
+    try:
+        send_verification_whatsapp(user.whatsapp, user.nome or email, code, db)
+        return {"status": "enviado", "whatsapp": user.whatsapp, "code_preview": code[:2] + "****"}
+    except Exception as e:
+        return {"error": f"Falha ao enviar: {str(e)}", "whatsapp": user.whatsapp}
+
+
+# =============================================================
+# POST /admin/atualizar-whatsapp
+# Atualiza o WhatsApp de um usuário e reenvia o código
+# =============================================================
+@router.post("/admin/atualizar-whatsapp")
+def atualizar_whatsapp(
+    email: str,
+    whatsapp: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    import random
+    from datetime import timedelta
+    from services.whatsapp_service import send_verification_whatsapp
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+
+    user.whatsapp          = whatsapp
+    user.whatsapp_verified = False
+    code = str(random.randint(100000, 999999))
+    user.whatsapp_code         = code
+    user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
+    db.commit()
+
+    try:
+        send_verification_whatsapp(whatsapp, user.nome or email, code, db)
+        return {"status": "whatsapp_atualizado_e_codigo_enviado", "whatsapp": whatsapp}
+    except Exception as e:
+        return {"error": f"WhatsApp atualizado mas falha ao enviar código: {str(e)}"}
+
+
+# =============================================================
 # POST /admin/reset-hwid
 # =============================================================
 @router.post("/admin/reset-hwid")

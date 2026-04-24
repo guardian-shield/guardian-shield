@@ -197,6 +197,7 @@ def protected_route(
 
     # Verificação do WhatsApp (exigida no primeiro acesso após licença ativa)
     if not user_db.whatsapp_verified:
+        wa_erro = None
         # envia código se ainda não enviou ou se expirou
         if (
             not user_db.whatsapp_code
@@ -210,14 +211,22 @@ def protected_route(
                 db.commit()
                 try:
                     send_verification_whatsapp(user_db.whatsapp, user_db.nome or email, code, db)
+                    logger.warning(f"[WA] Código {code} enviado para {user_db.whatsapp}")
                 except Exception as e:
-                    print(f"[WA] Falha ao enviar código WA para {user_db.whatsapp}: {e}")
+                    wa_erro = str(e)
+                    logger.error(f"[WA] FALHA ao enviar código para {user_db.whatsapp}: {e}")
+            else:
+                wa_erro = "whatsapp_nao_cadastrado"
+                logger.warning(f"[WA] Usuário {email} sem WhatsApp cadastrado — não é possível enviar código")
 
-        return {
+        resp = {
             "acesso": False,
             "motivo": "whatsapp_nao_verificado",
             "whatsapp": user_db.whatsapp,
         }
+        if wa_erro:
+            resp["wa_erro"] = wa_erro
+        return resp
 
     return {
         "acesso":     True,
@@ -353,15 +362,29 @@ async def webhook(
                 user = db.query(User).filter(User.email == email).first()
                 dias = 30 if plano == "mensal" else 365
 
+                # Tenta extrair WhatsApp/telefone do pagador no Mercado Pago
+                payer      = pagamento.get("payer", {})
+                wa_payer   = None
+                phone_info = payer.get("phone", {})
+                if phone_info:
+                    area   = str(phone_info.get("area_code", ""))
+                    numero = str(phone_info.get("number", ""))
+                    if area and numero:
+                        wa_payer = area + numero
+
                 if user:
                     user.expires_at = datetime.utcnow() + timedelta(days=dias)
                     user.plan_type  = plano
+                    # Atualiza WhatsApp se ainda não tem
+                    if not user.whatsapp and wa_payer:
+                        user.whatsapp = wa_payer
                     # Se não tem senha ainda, marca pre_liberado para liberar cadastro no app
                     if not user.password:
                         user.pre_liberado = True
                 else:
                     user = User(
                         email        = email,
+                        whatsapp     = wa_payer,
                         pre_liberado = True,
                         expires_at   = datetime.utcnow() + timedelta(days=dias),
                         plan_type    = plano,
@@ -374,22 +397,27 @@ async def webhook(
                 meta_send_purchase(email, valor, plano, event_id=str(payment_id))
 
                 # Mensagem WhatsApp de confirmação de pagamento + link de download
-                if user and user.whatsapp:
+                wa_destino = user.whatsapp if user and user.whatsapp else wa_payer
+                if wa_destino:
                     try:
+                        from services.whatsapp_service import send_whatsapp_message
                         plano_nome = "Mensal" if plano == "mensal" else "Anual"
+                        nome_display = (user.nome if user and user.nome else None) or email
                         msg_confirmacao = (
                             f"✅ *Pagamento confirmado!*\n\n"
-                            f"Olá, {user.nome or email}!\n\n"
+                            f"Olá, {nome_display}!\n\n"
                             f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
                             f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
-                            f"https://drive.google.com/uc?export=download&id=1IF5gPconoMyfDU8HKLPIaMGlHu5UaIL4\n\n"
-                            f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
+                            f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
+                            f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail *{email}* e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
                             f"Qualquer dúvida, é só chamar! 🛡️"
                         )
-                        from services.whatsapp_service import send_whatsapp_message
-                        send_whatsapp_message(user.whatsapp, msg_confirmacao, db)
+                        send_whatsapp_message(wa_destino, msg_confirmacao, db)
+                        logger.warning(f"[WA] Confirmação de pagamento enviada para {wa_destino}")
                     except Exception as e:
-                        logger.error(f"[WA] Falha ao enviar confirmação de pagamento: {e}")
+                        logger.error(f"[WA] Falha ao enviar confirmação de pagamento para {wa_destino}: {e}")
+                else:
+                    logger.warning(f"[WA] Sem WhatsApp para enviar confirmação — email: {email}")
 
                 # Notificação de venda para o dono
                 try:

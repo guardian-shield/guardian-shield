@@ -421,7 +421,8 @@ function renderTabela(data) {
           <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')">Ativar</button>
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
-          <button class="btn btn-sm" style="background:rgba(212,160,23,0.2);border:1px solid rgba(212,160,23,0.4);color:#d4a017;" onclick="liberarVerificacao('${u.email}')">✓ Liberar</button>
+          <button class="btn btn-sm" style="background:rgba(212,160,23,0.2);border:1px solid rgba(212,160,23,0.4);color:#d4a017;" onclick="liberarVerificacao('${u.email}')">✓ Liberar WA</button>
+          <button class="btn btn-sm" style="background:rgba(30,160,80,0.2);border:1px solid rgba(50,220,120,0.4);color:#4cde8a;" onclick="reenviarCodigoWa('${u.email}','${esc(u.whatsapp||'')}')">📲 Reenviar código</button>
           <button class="btn btn-sm btn-blue" onclick="abrirModalMsg('${u.email}','${esc(u.nome||u.email)}','${esc(u.whatsapp||'')}')">💬</button>
           <button class="btn btn-sm" style="background:rgba(180,30,30,0.2);border:1px solid rgba(220,50,50,0.4);color:#ff5555;" onclick="deletarUsuario('${u.email}')">🗑 Excluir</button>
         </div>
@@ -470,12 +471,34 @@ async function resetHwid(email) {
 }
 
 async function liberarVerificacao(email) {
-  if (!confirm(`Liberar verificação de e-mail e WhatsApp para ${email}?`)) return;
+  if (!confirm(`Liberar verificação de WhatsApp para ${email} sem precisar de código?`)) return;
   showLoading(true);
   await api('POST', `/admin/forcar-verificacao?email=${encodeURIComponent(email)}`);
   showLoading(false);
-  toast('Verificação liberada!');
+  toast('WhatsApp verificado manualmente!');
   carregarUsuarios();
+}
+
+async function reenviarCodigoWa(email, whatsappAtual) {
+  let wa = whatsappAtual;
+  if (!wa) {
+    wa = prompt(`Usuário sem WhatsApp cadastrado.\nDigite o número (com DDD, sem +55):`);
+    if (!wa) return;
+    // Atualiza WhatsApp e reenvia
+    showLoading(true);
+    const r = await api('POST', `/admin/atualizar-whatsapp?email=${encodeURIComponent(email)}&whatsapp=${encodeURIComponent(wa)}`);
+    showLoading(false);
+    if (r?.error) { toast(r.error, true); return; }
+    toast(`WhatsApp ${wa} salvo e código enviado!`);
+    carregarUsuarios();
+    return;
+  }
+  if (!confirm(`Reenviar código de verificação WhatsApp para ${wa}?`)) return;
+  showLoading(true);
+  const r = await api('POST', `/admin/reenviar-codigo-wa?email=${encodeURIComponent(email)}`);
+  showLoading(false);
+  if (r?.error) { toast(r.error, true); return; }
+  toast(`Código reenviado para ${r.whatsapp}!`);
 }
 
 async function deletarUsuario(email) {
