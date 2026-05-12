@@ -156,6 +156,10 @@ Se o lead perguntar "como vendo isso?" ou "como apresento para o cliente?", dê 
 
 ⚠️ IMPORTANTE: O botão Remover existe e deve ser clicado ANTES do Blindar. Nunca diga que o Blindar remove as ameaças sozinho — são etapas separadas e obrigatórias.
 
+**Vídeo tutorial completo (passo a passo de tudo):**
+👉 https://www.youtube.com/watch?v=92dTghZ8RQc
+Mande este link sempre que o usuário tiver dúvida sobre como usar o programa — conectar o celular, usar o scan, fazer a blindagem, gerar o certificado ou configurar o sistema.
+
 **Problemas comuns:**
 - Celular não detectado: checar se Depuração USB está ativa e se clicou em Permitir
 - Samsung/Xiaomi: pode precisar autorizar transferência de arquivos no cabo

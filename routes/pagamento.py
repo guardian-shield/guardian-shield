@@ -310,9 +310,11 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                             f"✅ *Pagamento confirmado!*\n\n"
                             f"Olá, {user.nome or email}!\n\n"
                             f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
-                            f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
+                            f"📥 *Baixe o aplicativo:*\n"
                             f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
-                            f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
+                            f"Após instalar, faça login com seu e-mail e verifique o WhatsApp para ativar o acesso.\n\n"
+                            f"🎥 *Tutorial completo (conectar, scan, blindagem e certificado):*\n"
+                            f"https://www.youtube.com/watch?v=92dTghZ8RQc\n\n"
                             f"Qualquer dúvida, é só chamar! 🛡️"
                         )
                         send_whatsapp_message(user.whatsapp, msg_cliente, db)
@@ -468,9 +470,11 @@ async def process_card(request: Request):
                         f"✅ *Pagamento confirmado!*\n\n"
                         f"Olá, {nome_cliente}!\n\n"
                         f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
-                        f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
+                        f"📥 *Baixe o aplicativo:*\n"
                         f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
-                        f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
+                        f"Após instalar, faça login com seu e-mail e verifique o WhatsApp para ativar o acesso.\n\n"
+                        f"🎥 *Tutorial completo (conectar, scan, blindagem e certificado):*\n"
+                        f"https://www.youtube.com/watch?v=92dTghZ8RQc\n\n"
                         f"Qualquer dúvida, é só chamar! 🛡️"
                     )
                     send_whatsapp_message(whatsapp, msg_cliente, _db2)
@@ -690,6 +694,8 @@ async def register_free_trial(body: TrialRegisterRequest, db: Session = Depends(
             f"https://guardian.grupomayconsantos.com.br/download\n\n"
             f"Após instalar, abra o app, clique em *Login* e entre com:\n"
             f"📧 {email}\n\n"
+            f"🎥 *Tutorial completo (conectar o celular, scan, blindagem e certificado):*\n"
+            f"https://www.youtube.com/watch?v=92dTghZ8RQc\n\n"
             f"Qualquer dúvida é só responder aqui — estou aqui para te ajudar! 🛡️"
         )
         send_whatsapp_message(whatsapp, msg_boas_vindas, db)

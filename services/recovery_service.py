@@ -153,6 +153,7 @@ def _system_trial_nurture(step: int) -> str:
 def _system_trial_activation(step: int) -> str:
     """Mensagens para quem se cadastrou no trial mas ainda não baixou/ativou o software."""
     LINK_DOWNLOAD = "https://guardian.grupomayconsantos.com.br/download"
+    LINK_TUTORIAL = "https://www.youtube.com/watch?v=92dTghZ8RQc"
     base = (
         "Você é a Maia, atendente do Guardian Shield. "
         "Este usuário fez o cadastro do teste grátis de 7 dias mas ainda não baixou ou ativou o software. "
@@ -163,14 +164,14 @@ def _system_trial_activation(step: int) -> str:
         # step 0 — 1 dia após cadastro
         "O usuário se cadastrou ontem mas ainda não baixou o Guardian Shield. "
         "Pergunte se teve alguma dificuldade para baixar ou instalar. "
-        "Dê o link de download e diga que em 5 minutos está funcionando. "
-        "Link: " + LINK_DOWNLOAD,
+        "Dê o link de download e o link do tutorial em vídeo (que mostra o passo a passo completo). "
+        "Download: " + LINK_DOWNLOAD + " | Tutorial: " + LINK_TUTORIAL,
 
         # step 1 — dia 2
         "Já faz 2 dias que o usuário se cadastrou e ainda não ativou. "
         "Pergunte se está com dúvida na instalação — muita gente trava no cabo USB ou no modo desenvolvedor. "
-        "Ofereça ajuda e dê o link novamente. "
-        "Link: " + LINK_DOWNLOAD,
+        "Ofereça ajuda, dê o link de download e mencione que tem um tutorial em vídeo mostrando tudo. "
+        "Download: " + LINK_DOWNLOAD + " | Tutorial: " + LINK_TUTORIAL,
 
         # step 2 — dia 3
         "Terceiro dia sem ativar. Seja direta mas simpática — "
