@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Afiliado — Guardian Shield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0a1628;
+  color: #e8edf5;
+  min-height: 100vh;
+}
+
+/* TOPO */
+.topo {
+  background: #0d1f3c;
+  border-bottom: 1px solid rgba(30,111,217,0.25);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topo-logo { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #f0c040; }
+.topo-sub  { font-size: 13px; color: rgba(232,237,245,0.45); margin-left: auto; }
+
+/* LOGIN */
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 24px;
+}
+.login-card {
+  background: #0d1f3c;
+  border: 1px solid rgba(30,111,217,0.3);
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.login-titulo {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.login-sub { font-size: 13px; color: rgba(232,237,245,0.5); margin-bottom: 24px; }
+.login-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 9px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 3px;
+}
+.login-input:focus { border-color: #1e6fd9; }
+.btn-login {
+  width: 100%;
+  background: #1e6fd9;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 13px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-login:hover { opacity: 0.9; }
+.login-erro {
+  background: rgba(229,57,53,0.12);
+  border: 1px solid rgba(229,57,53,0.4);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  color: #fca5a5;
+  margin-top: 10px;
+  display: none;
+}
+
+/* PAINEL */
+.painel-wrap { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+.painel-header {
+  margin-bottom: 28px;
+}
+.painel-titulo {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.painel-sub { font-size: 14px; color: rgba(232,237,245,0.5); }
+
+/* CARDS DE STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: #0d1f3c;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px 18px;
+}
+.stat-label { font-size: 11px; font-weight: 600; color: rgba(232,237,245,0.45); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; }
+.stat-valor { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; line-height: 1; }
+.stat-valor.green { color: #25c466; }
+.stat-valor.gold  { color: #f0c040; }
+.stat-valor.blue  { color: #5ba3ff; }
+
+/* TABELA */
+.tabela-titulo {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.tabela-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: rgba(232,237,245,0.4);
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(232,237,245,0.85);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+.badge-pix    { background: rgba(37,196,102,0.15); color: #25c466; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.badge-cartao { background: rgba(91,163,255,0.15); color: #5ba3ff; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+
+.vazio {
+  text-align: center;
+  padding: 40px;
+  color: rgba(232,237,245,0.35);
+  font-size: 14px;
+}
+
+/* Aviso link */
+.link-box {
+  background: rgba(212,160,23,0.08);
+  border: 1px solid rgba(212,160,23,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.link-box span { font-size: 13px; color: rgba(232,237,245,0.65); }
+.link-box strong { color: #f0c040; font-size: 13px; word-break: break-all; }
+.btn-copiar-link {
+  background: rgba(212,160,23,0.15);
+  border: 1px solid rgba(212,160,23,0.4);
+  color: #f0c040;
+  border-radius: 7px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.btn-copiar-link:hover { background: rgba(212,160,23,0.25); }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <span style="font-size:18px">🛡️</span>
+  <span class="topo-logo">GUARDIAN SHIELD</span>
+  <span class="topo-sub">Painel do Afiliado</span>
+</div>
+
+<!-- TELA DE LOGIN -->
+<div class="login-wrap" id="telaLogin">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:14px">🔐</div>
+    <div class="login-titulo">Acesso restrito</div>
+    <div class="login-sub">Digite a senha para ver seu painel</div>
+    <input type="password" class="login-input" id="inputSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter') entrar()">
+    <button class="btn-login" onclick="entrar()">ENTRAR</button>
+    <div class="login-erro" id="erroLogin">Senha incorreta.</div>
+  </div>
+</div>
+
+<!-- TELA DO PAINEL -->
+<div class="painel-wrap" id="telaPainel" style="display:none">
+  <div class="painel-header">
+    <div class="painel-titulo">Painel de Afiliado</div>
+    <div class="painel-sub" id="painelSub">Carregando...</div>
+  </div>
+
+  <div class="link-box">
+    <span>🔗 Seu link de vendas:</span>
+    <strong id="linkAfiliado">—</strong>
+    <button class="btn-copiar-link" onclick="copiarLink()">Copiar</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total de vendas</div>
+      <div class="stat-valor blue" id="statVendas">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Valor gerado</div>
+      <div class="stat-valor green" id="statValor">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Comissão acumulada</div>
+      <div class="stat-valor gold" id="statComissao">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">% de comissão</div>
+      <div class="stat-valor" id="statPct">—</div>
+    </div>
+  </div>
+
+  <div class="tabela-titulo">Histórico de conversões</div>
+  <div class="tabela-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Cliente</th>
+          <th>Plano</th>
+          <th>Valor</th>
+          <th>Comissão</th>
+          <th>Método</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaBody">
+        <tr><td colspan="6" class="vazio">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const SLUG = location.pathname.split('/')[2];  // /afiliado/{slug}/painel
+const API  = '';
+let senhaAtual = '';
+
+async function entrar() {
+  const senha = document.getElementById('inputSenha').value.trim();
+  if (!senha) return;
+  senhaAtual = senha;
+
+  try {
+    const res  = await fetch(`${API}/afiliado/${SLUG}/dados?senha=${encodeURIComponent(senha)}`);
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('erroLogin').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('telaLogin').style.display = 'none';
+    document.getElementById('telaPainel').style.display = 'block';
+    renderPainel(data);
+  } catch(e) {
+    document.getElementById('erroLogin').textContent = 'Erro de conexão. Tente novamente.';
+    document.getElementById('erroLogin').style.display = 'block';
+  }
+}
+
+function renderPainel(data) {
+  document.getElementById('painelSub').textContent = `Bem-vinda, ${data.nome} 👋`;
+  document.getElementById('statVendas').textContent   = data.total_vendas;
+  document.getElementById('statValor').textContent    = formatBRL(data.total_valor);
+  document.getElementById('statComissao').textContent = formatBRL(data.total_comissao);
+  document.getElementById('statPct').textContent      = data.comissao_pct + '%';
+
+  const link = `https://guardian.grupomayconsantos.com.br/af/${SLUG}`;
+  document.getElementById('linkAfiliado').textContent = link;
+
+  const tbody = document.getElementById('tabelaBody');
+  if (!data.conversoes || data.conversoes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhuma venda ainda. Compartilhe seu link! 🚀</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.conversoes.map(c => `
+    <tr>
+      <td>${formatData(c.created_at)}</td>
+      <td>${c.nome_cliente || c.email_cliente || '—'}</td>
+      <td>${formatPlano(c.plano)}</td>
+      <td>${formatBRL(c.valor)}</td>
+      <td style="color:#f0c040;font-weight:600">${formatBRL(c.comissao)}</td>
+      <td><span class="badge-${c.metodo === 'pix' ? 'pix' : 'cartao'}">${c.metodo === 'pix' ? 'PIX' : 'Cartão'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function formatBRL(cents) {
+  return 'R$' + (cents / 100).toFixed(2).replace('.', ',');
+}
+function formatPlano(p) {
+  if (p === 'anual199') return 'Anual R$199';
+  if (p === 'anual')    return 'Anual R$299';
+  return p || '—';
+}
+function formatData(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function copiarLink() {
+  const link = `https://guardian.grupomayconsantos.com.br/af/${SLUG}`;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.querySelector('.btn-copiar-link');
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>

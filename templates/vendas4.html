@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Shield — Teste Grátis 7 Dias</title>
+<script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '2079654962888572');
+  fbq('track', 'PageView');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-H4JRM00ZBV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H4JRM00ZBV');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --azul:  #0a1628;
+  --azul2: #0d1f3c;
+  --blue:  #1e6fd9;
+  --gold:  #d4a017;
+  --gold2: #f0c040;
+  --green: #25c466;
+  --texto: #e8edf5;
+  --muted: rgba(232,237,245,0.55);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--azul);
+  color: var(--texto);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOPO ───────────────────────────────── */
+.topo {
+  background: rgba(10,22,40,0.97);
+  border-bottom: 1px solid rgba(30,111,217,0.25);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.logo-shield { font-size: 22px; }
+.logo-nome {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold2);
+  letter-spacing: 0.5px;
+}
+
+/* ── BADGE GRÁTIS ───────────────────────── */
+.badge-gratis {
+  background: linear-gradient(135deg, #25c466, #18a050);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* ── HERO ───────────────────────────────── */
+.hero {
+  padding: 36px 20px 0;
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.hero-eyebrow {
+  font-size: 13px;
+  color: var(--gold2);
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.hero h1 span { color: var(--green); }
+.hero-sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* ── PROOF ──────────────────────────────── */
+.proof-strip {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 0 20px 28px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.proof-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.proof-item .ico { font-size: 15px; }
+
+/* ── FORM CARD ──────────────────────────── */
+.form-wrap {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  padding: 0 16px;
+}
+.form-card {
+  background: linear-gradient(160deg, #0f2040, #091525);
+  border: 1px solid rgba(30,111,217,0.35);
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+}
+.form-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.form-sub {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 20px;
+}
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(232,237,245,0.6);
+  margin-bottom: 5px;
+  letter-spacing: 0.4px;
+}
+.form-group input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 9px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-group input:focus { border-color: var(--blue); }
+.form-group input::placeholder { color: rgba(255,255,255,0.25); }
+
+.btn-cadastrar {
+  width: 100%;
+  background: linear-gradient(135deg, #25c466, #18a050);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-cadastrar:hover { opacity: 0.92; }
+.btn-cadastrar:active { transform: scale(0.98); }
+.btn-cadastrar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.form-erro {
+  background: rgba(229,57,53,0.12);
+  border: 1px solid rgba(229,57,53,0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #fca5a5;
+  margin-top: 12px;
+  display: none;
+}
+.form-load {
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 12px;
+  display: none;
+}
+.form-termos {
+  font-size: 11px;
+  color: rgba(232,237,245,0.35);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ── SUCESSO ────────────────────────────── */
+#telaSuccess { display: none; }
+.success-card {
+  background: linear-gradient(160deg, #0a2518, #091c10);
+  border: 1px solid rgba(37,196,102,0.4);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.success-icon { font-size: 48px; margin-bottom: 14px; }
+.success-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+.success-txt {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.btn-download {
+  display: block;
+  background: linear-gradient(135deg, var(--blue), #1558b0);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  transition: opacity 0.2s;
+}
+.btn-download:hover { opacity: 0.9; }
+.success-nota {
+  font-size: 12px;
+  color: rgba(232,237,245,0.4);
+  line-height: 1.5;
+}
+
+/* ── COMO FUNCIONA ──────────────────────── */
+.como-wrap {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 36px 20px 16px;
+}
+.sec-titulo {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.steps-list { display: flex; flex-direction: column; gap: 14px; }
+.step-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.step-num {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-txt strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.step-txt span { font-size: 13px; color: var(--muted); }
+
+/* ── BENEFÍCIOS ─────────────────────────── */
+.benef-wrap {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 16px 20px 36px;
+}
+.benef-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.benef-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 14px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.benef-item .bi { font-size: 20px; display: block; margin-bottom: 6px; }
+
+/* ── FAQ ────────────────────────────────── */
+.faq-wrap {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+.faq-item {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 0;
+}
+.faq-q {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-a {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 8px;
+  display: none;
+}
+.faq-a.open { display: block; }
+
+/* ── CTA FINAL ──────────────────────────── */
+.cta-final {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+  text-align: center;
+}
+.cta-final p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.btn-cta-final {
+  display: block;
+  background: linear-gradient(135deg, #25c466, #18a050);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-cta-final:hover { opacity: 0.92; }
+
+/* ── RODAPÉ ─────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: rgba(232,237,245,0.25);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+</style>
+</head>
+<body>
+
+<!-- Topo -->
+<div class="topo">
+  <span class="logo-shield">🛡️</span>
+  <span class="logo-nome">GUARDIAN SHIELD</span>
+</div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-eyebrow">Para donos e técnicos de assistência técnica</div>
+  <h1>Teste o Guardian Shield<br><span>Grátis por 7 dias</span></h1>
+  <p class="hero-sub">
+    Blindagem digital profissional para celulares em 3 a 6 minutos.<br>
+    Cadastre-se agora e comece hoje — sem cartão, sem cobrança.
+  </p>
+</section>
+
+<!-- Proof strip -->
+<div class="proof-strip">
+  <div class="proof-item"><span class="ico">✅</span> Sem cartão de crédito</div>
+  <div class="proof-item"><span class="ico">⚡</span> Acesso imediato</div>
+  <div class="proof-item"><span class="ico">🔒</span> Windows · Software seguro</div>
+</div>
+
+<!-- Form / Sucesso -->
+<div class="form-wrap">
+
+  <!-- Formulário de cadastro -->
+  <div id="telaForm">
+    <div class="form-card">
+      <div class="form-title">Criar minha conta grátis</div>
+      <div class="form-sub">Preencha abaixo e receba o acesso na hora</div>
+
+      <div class="form-group">
+        <label>SEU NOME</label>
+        <input type="text" id="inputNome" placeholder="Ex: Carlos Silva" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>SEU E-MAIL</label>
+        <input type="email" id="inputEmail" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>WHATSAPP (com DDD)</label>
+        <input type="tel" id="inputWpp" placeholder="45999990000" autocomplete="tel" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label>CRIE UMA SENHA</label>
+        <input type="password" id="inputSenha" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+
+      <button class="btn-cadastrar" id="btnCadastrar" onclick="cadastrar()">
+        QUERO MEU TESTE GRÁTIS →
+      </button>
+      <div class="form-erro" id="erroForm"></div>
+      <div class="form-load" id="loadForm">⏳ Criando sua conta...</div>
+
+      <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(37,196,102,0.08);border:1px solid rgba(37,196,102,0.25);border-radius:9px;padding:12px;margin-top:14px;">
+        <span style="font-size:20px;line-height:1;flex-shrink:0;">💬</span>
+        <span style="font-size:13px;color:rgba(232,237,245,0.75);line-height:1.5;">
+          Logo após finalizar o cadastro, nosso suporte enviará o link para baixar a ferramenta <strong style="color:#e8edf5;">diretamente no seu WhatsApp.</strong>
+        </span>
+      </div>
+
+      <div class="form-termos">
+        Ao se cadastrar, você concorda com nossos Termos de Uso.<br>
+        Teste gratuito de 7 dias. Sem cobranças automáticas.
+      </div>
+    </div>
+  </div>
+
+  <!-- Tela de sucesso -->
+  <div id="telaSuccess">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">Conta criada com sucesso!</div>
+      <p class="success-txt">
+        Seu acesso de <strong>7 dias grátis</strong> está ativo!<br>
+        Nosso suporte já está enviando o link de download <strong>no seu WhatsApp</strong> agora mesmo.
+      </p>
+      <div style="background:rgba(37,196,102,0.1);border:1px solid rgba(37,196,102,0.3);border-radius:10px;padding:16px;margin-bottom:16px;text-align:left;">
+        <div style="font-size:13px;font-weight:600;color:#25c466;margin-bottom:8px;">📲 Próximos passos:</div>
+        <div style="font-size:13px;color:rgba(232,237,245,0.8);line-height:1.7;">
+          1. Aguarde a mensagem no seu WhatsApp com o link<br>
+          2. Baixe e instale o Guardian Shield no seu Windows<br>
+          3. Abra o app, clique em <strong>Login</strong> e entre com seu e-mail e senha
+        </div>
+      </div>
+      <p class="success-nota">
+        Dúvidas? É só responder a mensagem no WhatsApp — a Maia te atende na hora.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Como funciona -->
+<section class="como-wrap">
+  <div class="sec-titulo">Como funciona o teste</div>
+  <div class="steps-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-txt">
+        <strong>Cadastre-se agora (grátis)</strong>
+        <span>Sem cartão. Acesso liberado imediatamente.</span>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-txt">
+        <strong>Instale no seu computador Windows</strong>
+        <span>Baixe o instalador e entre com seu e-mail e senha.</span>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-txt">
+        <strong>Conecte um celular Android e rode a blindagem</strong>
+        <span>3 a 6 minutos. O sistema faz tudo — você só entrega o certificado.</span>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-txt">
+        <strong>Use por 7 dias sem custo</strong>
+        <span>Se gostar, continue com o plano anual. Se não, sem cobranças.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Benefícios -->
+<section class="benef-wrap">
+  <div class="sec-titulo">O que você ganha no teste</div>
+  <div class="benef-grid">
+    <div class="benef-item">
+      <span class="bi">🛡️</span>
+      <strong>Blindagem completa</strong><br>
+      <span style="color:var(--muted);font-size:12px">4 camadas de proteção por aparelho</span>
+    </div>
+    <div class="benef-item">
+      <span class="bi">📜</span>
+      <strong>Certificado digital</strong><br>
+      <span style="color:var(--muted);font-size:12px">PDF profissional para entregar ao cliente</span>
+    </div>
+    <div class="benef-item">
+      <span class="bi">🔍</span>
+      <strong>Scanner de vírus</strong><br>
+      <span style="color:var(--muted);font-size:12px">Detecta e remove ameaças antes de blindar</span>
+    </div>
+    <div class="benef-item">
+      <span class="bi">💬</span>
+      <strong>Suporte via WhatsApp</strong><br>
+      <span style="color:var(--muted);font-size:12px">A Maia te ajuda em tempo real</span>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-wrap">
+  <div class="sec-titulo">Dúvidas frequentes</div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Preciso de cartão de crédito para o teste? <span>+</span>
+    </div>
+    <div class="faq-a">Não. O teste de 7 dias é 100% gratuito e não exige nenhum dado de pagamento.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      O que acontece depois dos 7 dias? <span>+</span>
+    </div>
+    <div class="faq-a">Seu acesso é suspenso automaticamente. Nenhuma cobrança é feita. Se quiser continuar, basta assinar o plano anual por R$299/ano.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      O software funciona em qualquer Windows? <span>+</span>
+    </div>
+    <div class="faq-a">Sim. Windows 10 e 11 (64 bits). Basta instalar, fazer login e conectar um celular Android via USB.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      Posso usar em mais de um computador? <span>+</span>
+    </div>
+    <div class="faq-a">A licença permite uso em até 2 computadores simultaneamente.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">
+      E se eu tiver alguma dúvida durante o teste? <span>+</span>
+    </div>
+    <div class="faq-a">Nossa IA Maia responde pelo WhatsApp em segundos. Se precisar de um atendente humano, é só pedir.</div>
+  </div>
+</section>
+
+<!-- CTA final -->
+<div class="cta-final">
+  <p>Pronto para testar sem risco?</p>
+  <a class="btn-cta-final" onclick="document.getElementById('inputNome').focus(); window.scrollTo({top:0,behavior:'smooth'})">
+    QUERO MEU TESTE GRÁTIS →
+  </a>
+</div>
+
+<!-- Rodapé -->
+<footer>
+  © 2025 Guardian Shield · Grupo Maycon Santos · Todos os direitos reservados
+</footer>
+
+<script>
+const API = '';
+
+async function cadastrar() {
+  const nome  = document.getElementById('inputNome').value.trim();
+  const email = document.getElementById('inputEmail').value.trim();
+  const wpp   = document.getElementById('inputWpp').value.trim().replace(/\D/g,'');
+  const senha = document.getElementById('inputSenha').value.trim();
+
+  const erroEl = document.getElementById('erroForm');
+  const loadEl = document.getElementById('loadForm');
+  const btn    = document.getElementById('btnCadastrar');
+
+  erroEl.style.display = 'none';
+
+  if (!nome)                         { mostrarErro('Digite seu nome.'); return; }
+  if (!email || !email.includes('@')){ mostrarErro('Digite um e-mail válido.'); return; }
+  if (!wpp || wpp.length < 10)       { mostrarErro('Digite seu WhatsApp com DDD (ex: 45999990000).'); return; }
+  if (!senha || senha.length < 6)    { mostrarErro('A senha deve ter pelo menos 6 caracteres.'); return; }
+
+  btn.disabled = true;
+  loadEl.style.display = 'block';
+
+  try {
+    const res  = await fetch(`${API}/register-free-trial`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email, whatsapp: wpp, senha }),
+    });
+    const data = await res.json();
+
+    loadEl.style.display = 'none';
+
+    if (data.error) {
+      mostrarErro(data.error);
+      btn.disabled = false;
+      return;
+    }
+
+    // Pixel — Purchase (trial grátis = custo por cadastro no Meta)
+    // Usa o event_id do servidor para deduplicação com a Conversions API
+    const eventId = data.event_id || ('trial-' + email + '-' + Date.now());
+    if (typeof fbq !== 'undefined') {
+      fbq('track', 'Purchase', { value: 0.00, currency: 'BRL', content_name: 'Guardian Shield Trial Grátis' }, { eventID: eventId });
+    }
+    if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'trial_gratis' });
+
+    // Mostra tela de sucesso
+    document.getElementById('telaForm').style.display = 'none';
+    document.getElementById('telaSuccess').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    loadEl.style.display = 'none';
+    mostrarErro('Erro de conexão. Tente novamente.');
+    btn.disabled = false;
+  }
+}
+
+function mostrarErro(msg) {
+  const el = document.getElementById('erroForm');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function trackDownload() {
+  if (typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout', { content_name: 'trial_download' });
+}
+
+function toggleFaq(el) {
+  const a = el.nextElementSibling;
+  const span = el.querySelector('span');
+  a.classList.toggle('open');
+  span.textContent = a.classList.contains('open') ? '−' : '+';
+}
+
+// Enter no form
+document.addEventListener('DOMContentLoaded', () => {
+  ['inputNome','inputEmail','inputWpp','inputSenha'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') cadastrar();
+    });
+  });
+});
+</script>
+</body>
+</html>

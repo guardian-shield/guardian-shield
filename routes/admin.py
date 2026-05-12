@@ -212,6 +212,23 @@ def atualizar_whatsapp(
 
 
 # =============================================================
+# POST /admin/liberar-login
+# Remove flag pre_liberado para usuários travados no cadastro (ex: trial grátis)
+# =============================================================
+@router.post("/admin/liberar-login")
+def liberar_login(
+    email: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+    user.pre_liberado = False
+    db.commit()
+    return {"status": "liberado", "email": email, "pre_liberado": False}
+
+
 # POST /admin/reset-hwid
 # =============================================================
 @router.post("/admin/reset-hwid")

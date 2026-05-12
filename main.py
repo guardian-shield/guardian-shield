@@ -116,6 +116,38 @@ def migrar_banco():
             status     VARCHAR NOT NULL,  -- 'aprovado' | 'rejeitado'
             updated_at TIMESTAMP DEFAULT NOW()
         );""",
+        # Afiliados
+        """CREATE TABLE IF NOT EXISTS affiliates (
+            id           SERIAL PRIMARY KEY,
+            slug         VARCHAR UNIQUE NOT NULL,
+            nome         VARCHAR,
+            whatsapp     VARCHAR,
+            senha_hash   VARCHAR,
+            comissao_pct INTEGER DEFAULT 50,
+            ativo        BOOLEAN DEFAULT TRUE,
+            created_at   TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_affiliates_slug ON affiliates(slug);",
+        """CREATE TABLE IF NOT EXISTS affiliate_conversions (
+            id               SERIAL PRIMARY KEY,
+            affiliate_slug   VARCHAR,
+            email_cliente    VARCHAR,
+            nome_cliente     VARCHAR,
+            whatsapp_cliente VARCHAR,
+            plano            VARCHAR,
+            valor            INTEGER DEFAULT 0,
+            comissao         INTEGER DEFAULT 0,
+            payment_id       VARCHAR,
+            metodo           VARCHAR,
+            created_at       TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_aff_conv_slug ON affiliate_conversions(affiliate_slug);",
+        # Seed do afiliado profissaosmarti (idempotente)
+        """INSERT INTO affiliates (slug, nome, whatsapp, senha_hash, comissao_pct, ativo)
+           VALUES ('profissaosmarti', 'Profissão Smarti', '27999806096',
+                   '86d3e73560ac60035b80c9319d546e1ced1929a12b6f6ef40d8cef95c24a9680',
+                   50, TRUE)
+           ON CONFLICT (slug) DO NOTHING;""",
     ]
     with engine.connect() as conn:
         for sql in novos_campos:

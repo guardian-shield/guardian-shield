@@ -304,7 +304,8 @@ const API = '';  // mesma origem
 let emailAtual = '';
 let whatsappAtual = '';
 let nomeAtual = '';
-let planoAtual = '';
+let planoAtual  = '';
+let afiliadoAtual = '';
 let pixPaymentId = null;
 let pixInterval  = null;
 
@@ -312,8 +313,20 @@ let pixInterval  = null;
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const email  = params.get('email');
+  const plano    = params.get('plano');
+  const afiliado = params.get('afiliado') || '';
+  afiliadoAtual  = afiliado;
   if (email) {
     document.getElementById('inputEmail').value = email;
+  }
+  // pré-seleciona plano se vier na URL (ex: /pagar?plano=anual79)
+  if (plano) {
+    planoAtual = plano;
+    // esconde seleção de plano e vai direto para etapa de pagamento após email
+    if (plano === 'anual79' || plano === 'anual199') {
+      document.getElementById('cardTeste').style.display = 'none';
+      document.getElementById('avisoMensal').style.display = 'none';
+    }
   }
   document.getElementById('inputEmail').addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmarEmail();
@@ -374,39 +387,68 @@ async function confirmarEmail() {
     if (data.error && data.error.includes('não encontrado')) {
       // email novo — pode pagar e depois se cadastrar
       emailAtual = email;
-      irEtapa(2);
+      if (planoAtual) { confirmarPlanoPreSelecionado(); } else { irEtapa(2); }
       return;
     }
 
     emailAtual = email;
 
-    // verifica se já tem plano mensal
-    const resPlan = await fetch(`${API}/user-plan?email=${encodeURIComponent(email)}`);
-    if (resPlan.ok) {
-      const planData = await resPlan.json();
-      const usouTrial = planData.trial_usado === true;
-      document.getElementById('cardTeste').style.opacity  = usouTrial ? '0.4' : '1';
-      document.getElementById('cardTeste').style.cursor   = usouTrial ? 'not-allowed' : 'pointer';
-      document.getElementById('cardTeste').onclick        = usouTrial ? null : () => escolherPlano('teste');
-      document.getElementById('avisoMensal').style.display = usouTrial ? 'block' : 'none';
+    if (planoAtual) {
+      // plano pré-selecionado pela URL — pula etapa de escolha
+      confirmarPlanoPreSelecionado();
+    } else {
+      // verifica se já tem plano de teste para desabilitar o card
+      const resPlan = await fetch(`${API}/user-plan?email=${encodeURIComponent(email)}`);
+      if (resPlan.ok) {
+        const planData = await resPlan.json();
+        const usouTrial = planData.trial_usado === true;
+        document.getElementById('cardTeste').style.opacity  = usouTrial ? '0.4' : '1';
+        document.getElementById('cardTeste').style.cursor   = usouTrial ? 'not-allowed' : 'pointer';
+        document.getElementById('cardTeste').onclick        = usouTrial ? null : () => escolherPlano('teste');
+        document.getElementById('avisoMensal').style.display = usouTrial ? 'block' : 'none';
+      }
+      irEtapa(2);
     }
-
-    irEtapa(2);
   } catch(e) {
     esconderLoad('load1');
     // mesmo com erro de conexão, deixa prosseguir
     emailAtual = email;
-    irEtapa(2);
+    if (planoAtual) { confirmarPlanoPreSelecionado(); } else { irEtapa(2); }
   }
+}
+
+// ── helpers de plano ──
+function planoValor(plano) {
+  if (plano === 'teste')     return 49.90;
+  if (plano === 'anual79')   return 79.90;
+  if (plano === 'anual199')  return 199.00;
+  return 299.00;
+}
+function planoNome(plano) {
+  if (plano === 'teste')     return 'Teste 30 dias';
+  if (plano === 'anual79')   return 'Anual · Oferta Especial';
+  if (plano === 'anual199')  return 'Anual · Oferta Exclusiva';
+  return 'Anual';
+}
+function planoResumo(plano) {
+  if (plano === 'teste')     return 'R$ 49,90 · 30 dias';
+  if (plano === 'anual79')   return 'R$ 79,90 · 365 dias';
+  if (plano === 'anual199')  return 'R$ 199,00 · 365 dias';
+  return 'R$ 299,00 · 365 dias';
 }
 
 // ── ETAPA 2: escolhe plano ──
 function escolherPlano(plano) {
   planoAtual = plano;
-  const valor = plano === 'teste' ? 'R$ 49,90 · 30 dias' : 'R$ 299,00 · 365 dias';
-  const nome  = plano === 'teste' ? 'Teste 30 dias' : 'Anual';
   document.getElementById('resumoPlano').innerHTML =
-    `Plano: <b>${nome}</b> — ${valor}`;
+    `Plano: <b>${planoNome(plano)}</b> — ${planoResumo(plano)}`;
+  irEtapa(3);
+}
+
+// chamado quando o plano vem pré-selecionado pela URL (ex: vendas3 → anual79)
+function confirmarPlanoPreSelecionado() {
+  document.getElementById('resumoPlano').innerHTML =
+    `Plano: <b>${planoNome(planoAtual)}</b> — ${planoResumo(planoAtual)}`;
   irEtapa(3);
 }
 
@@ -416,7 +458,7 @@ async function pagarPix() {
   mostrarLoad('load3', 'Gerando PIX...');
 
   try {
-    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}&whatsapp=${encodeURIComponent(whatsappAtual)}&nome=${encodeURIComponent(nomeAtual)}`, { method: 'POST' });
+    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}&whatsapp=${encodeURIComponent(whatsappAtual)}&nome=${encodeURIComponent(nomeAtual)}&afiliado=${encodeURIComponent(afiliadoAtual)}`, { method: 'POST' });
     const data = await res.json();
     esconderLoad('load3');
 
@@ -424,7 +466,7 @@ async function pagarPix() {
 
     // preenche etapa 4
     document.getElementById('pixValor').textContent =
-      planoAtual === 'teste' ? 'R$ 49,90' : 'R$ 299,00';
+      'R$ ' + planoValor(planoAtual).toFixed(2).replace('.', ',');
     document.getElementById('pixQrImg').src =
       `data:image/png;base64,${data.qr_code_base64}`;
     document.getElementById('pixCopiaCola').value = data.qr_code || '';
@@ -455,8 +497,8 @@ async function pagarCartao() {
       return;
     }
 
-    const valor = planoAtual === 'teste' ? 49.90 : 299.00;
-    const nomeP = planoAtual === 'teste' ? 'Teste 30 dias' : 'Anual';
+    const valor = planoValor(planoAtual);
+    const nomeP = planoNome(planoAtual);
     document.getElementById('cardResumoBrick').innerHTML =
       `Plano <b>${nomeP}</b> — R$ ${valor.toFixed(2).replace('.',',')}`;
     document.getElementById('cardBrickStatus').style.display = 'none';
@@ -496,7 +538,7 @@ async function pagarCartao() {
           statusEl.style.color = '#a5b4fc';
           statusEl.textContent = '⏳ Processando pagamento...';
           try {
-            const payload = { ...formData, email: emailAtual, plano: planoAtual, whatsapp: whatsappAtual, nome: nomeAtual };
+            const payload = { ...formData, email: emailAtual, plano: planoAtual, whatsapp: whatsappAtual, nome: nomeAtual, afiliado: afiliadoAtual };
             const r = await fetch(`${API}/process-card`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -568,8 +610,7 @@ async function verificarStatusPix() {
       const box = document.getElementById('pixStatusBox');
       box.classList.add('aprovado');
       document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
-      const valor = planoAtual === 'teste' ? 49.90 : 299.00;
-      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: planoValor(planoAtual), currency: 'BRL' });
       setTimeout(() => {
         window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
       }, 1500);

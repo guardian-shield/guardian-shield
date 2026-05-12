@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Shield — Nova Fonte de Renda para Sua Assistência</title>
+<script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '2079654962888572');
+  fbq('track', 'PageView');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-H4JRM00ZBV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H4JRM00ZBV');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --azul:  #0a1628;
+  --azul2: #0d1f3c;
+  --blue:  #1e6fd9;
+  --blue2: #2c7be5;
+  --gold:  #d4a017;
+  --gold2: #f0c040;
+  --green: #25c466;
+  --red:   #e53935;
+  --texto: #e8edf5;
+  --muted: rgba(232,237,245,0.55);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--azul);
+  color: var(--texto);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* STICKY BAR */
+#stickyBar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: rgba(10,22,40,0.97);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px; gap: 16px;
+  transform: translateY(-100%);
+  transition: transform 0.35s ease;
+}
+#stickyBar.visivel { transform: translateY(0); }
+.sticky-texto { font-size: 13px; color: var(--muted); display: none; }
+@media(min-width:600px){ .sticky-texto { display: block; } }
+.btn-sticky {
+  background: var(--green); color: white;
+  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+  border: none; border-radius: 8px; padding: 9px 22px;
+  cursor: pointer; white-space: nowrap; text-decoration: none;
+  letter-spacing: 0.3px;
+}
+
+/* HERO */
+#hero {
+  min-height: 100vh;
+  background: radial-gradient(ellipse 120% 80% at 50% -10%, rgba(30,111,217,0.35) 0%, transparent 65%),
+              linear-gradient(180deg, #0a1628 0%, #060e1e 100%);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center;
+  padding: 80px 20px 60px;
+  position: relative; overflow: hidden;
+}
+#hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(135deg, transparent, transparent 60px,
+    rgba(255,255,255,0.012) 60px, rgba(255,255,255,0.012) 61px);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(212,160,23,0.12); border: 1px solid rgba(212,160,23,0.35);
+  border-radius: 100px; padding: 6px 16px; font-size: 12px;
+  color: var(--gold2); font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 28px; text-transform: uppercase;
+}
+.hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold2); animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.hero-logo {
+  display: flex; align-items: center; gap: 14px;
+  justify-content: center; margin-bottom: 36px;
+}
+.hero-logo img { width: 52px; filter: drop-shadow(0 0 20px rgba(100,180,255,0.5)); }
+.hero-logo-txt { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+.hero-logo-txt span { color: var(--gold); }
+
+h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(28px, 5.5vw, 58px);
+  font-weight: 700; line-height: 1.15;
+  max-width: 860px; margin: 0 auto 20px;
+  letter-spacing: -0.5px;
+}
+h1 .destaque { color: var(--gold); }
+h1 .verde    { color: var(--green); }
+
+.hero-sub {
+  font-size: clamp(15px, 2.2vw, 19px);
+  color: var(--muted); max-width: 600px;
+  margin: 0 auto 40px; line-height: 1.7;
+}
+
+.btn-hero {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, #25c466, #1aa554);
+  box-shadow: 0 6px 32px rgba(37,196,102,0.4);
+  color: white; font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(18px, 2.5vw, 22px); font-weight: 700;
+  border: none; border-radius: 12px;
+  padding: 18px 40px; cursor: pointer; text-decoration: none;
+  letter-spacing: 0.4px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-bottom: 14px;
+}
+.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(37,196,102,0.5); }
+.btn-hero:active { transform: scale(0.98); }
+
+.hero-garantia { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 48px; }
+
+/* STATS BAR */
+.stats-bar {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 0; max-width: 700px; margin: 0 auto;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; overflow: hidden;
+}
+.stat-item {
+  flex: 1; min-width: 140px; padding: 18px 20px;
+  text-align: center; border-right: 1px solid rgba(255,255,255,0.07);
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 30px; font-weight: 700; color: var(--gold2); line-height: 1;
+}
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* SECTIONS */
+section { padding: 80px 20px; max-width: 900px; margin: 0 auto; }
+section.full { max-width: 100%; padding: 80px 0; }
+
+h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(26px, 4vw, 42px); font-weight: 700;
+  line-height: 1.2; margin-bottom: 16px;
+}
+h2 .gold  { color: var(--gold); }
+h2 .green { color: var(--green); }
+
+/* PROBLEM */
+.crenca-list { display: flex; flex-direction: column; gap: 14px; margin: 28px 0; }
+.crenca-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2);
+  border-radius: 10px; padding: 16px 18px; font-size: 15px;
+}
+.crenca-item .icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+.verdade-box {
+  background: rgba(30,111,217,0.1); border: 1px solid rgba(30,111,217,0.25);
+  border-radius: 14px; padding: 28px; margin-top: 28px;
+}
+.verdade-box h3 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px; font-weight: 700; margin-bottom: 16px; color: var(--blue2);
+}
+.verdade-item { display: flex; align-items: center; gap: 12px; font-size: 15px; margin-bottom: 10px; }
+.verdade-item:last-child { margin-bottom: 0; }
+.verdade-item .v { color: var(--green); font-size: 18px; flex-shrink: 0; }
+
+/* HOW IT WORKS */
+.steps { display: flex; flex-direction: column; gap: 24px; margin-top: 36px; }
+.step-card {
+  display: flex; gap: 20px; align-items: flex-start;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 28px;
+}
+.step-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 48px; font-weight: 700; color: rgba(255,255,255,0.07);
+  line-height: 1; flex-shrink: 0; min-width: 56px;
+}
+.step-content h3 { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.step-content h3 span { color: var(--gold); }
+.step-bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.step-bullets li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.step-bullets li::before { content: '→'; color: var(--blue2); font-weight: 700; flex-shrink: 0; }
+
+/* MONEY */
+.money-section {
+  background: linear-gradient(135deg, rgba(212,160,23,0.08), rgba(212,160,23,0.03));
+  border: 1px solid rgba(212,160,23,0.2);
+  border-radius: 20px; padding: 40px 32px; text-align: center;
+}
+.money-options {
+  display: flex; flex-direction: column; gap: 14px;
+  margin: 28px 0; max-width: 520px; margin-left: auto; margin-right: auto;
+}
+.money-opt {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-radius: 10px; font-size: 15px;
+}
+.money-opt.ruim { background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.2); color: rgba(232,237,245,0.5); text-decoration: line-through; }
+.money-opt.bom  { background: rgba(37,196,102,0.1); border: 1px solid rgba(37,196,102,0.3); }
+.money-opt.melhor { background: rgba(212,160,23,0.12); border: 2px solid rgba(212,160,23,0.4); }
+.money-opt-tag { font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; background: var(--gold); color: #000; padding: 3px 10px; border-radius: 100px; }
+.money-conclusao { font-size: 18px; font-weight: 600; margin-top: 20px; color: var(--gold2); line-height: 1.5; }
+
+/* PROOF */
+.proof-section {
+  background: linear-gradient(180deg, rgba(30,111,217,0.08) 0%, transparent 100%);
+  border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 70px 20px; text-align: center;
+}
+.proof-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 20px; max-width: 800px; margin: 40px auto 0; }
+.proof-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 28px 20px; text-align: center; }
+.proof-num { font-family: 'Rajdhani', sans-serif; font-size: 40px; font-weight: 700; color: var(--gold2); line-height: 1; }
+.proof-desc { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+/* TESTIMONIALS */
+.depo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 20px; margin-top: 36px; }
+.depo-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; }
+.depo-stars { color: #f0c040; font-size: 14px; margin-bottom: 12px; }
+.depo-text { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; font-style: italic; }
+.depo-autor { display: flex; align-items: center; gap: 10px; }
+.depo-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--blue2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.depo-nome { font-size: 13px; font-weight: 600; }
+.depo-cidade { font-size: 11px; color: var(--muted); }
+
+/* DIFF TABLE */
+.diff-table { width: 100%; border-collapse: collapse; margin-top: 32px; border-radius: 14px; overflow: hidden; }
+.diff-table th { padding: 14px 20px; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; text-align: center; }
+.diff-table th.col-outros { background: rgba(229,57,53,0.1); color: rgba(255,255,255,0.5); }
+.diff-table th.col-gs     { background: rgba(37,196,102,0.15); color: var(--green); }
+.diff-table td { padding: 13px 20px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; }
+.diff-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.diff-table td.col-outros { color: rgba(255,255,255,0.35); }
+.diff-table td.col-gs     { color: var(--green); font-weight: 600; }
+.diff-table td.col-item   { text-align: left; color: var(--muted); }
+
+/* PRICING */
+.pricing-wrap { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 40px; }
+.price-card {
+  flex: 1; min-width: 240px; max-width: 420px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px; padding: 32px 28px; position: relative; transition: transform 0.2s;
+}
+.price-card.destaque { border-color: var(--gold); background: rgba(212,160,23,0.06); box-shadow: 0 0 40px rgba(212,160,23,0.15); }
+.price-badge {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: #000;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  padding: 4px 16px; border-radius: 100px; white-space: nowrap; letter-spacing: 0.5px;
+}
+.price-nome { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.price-desc { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+.price-valor { font-family: 'Rajdhani', sans-serif; font-size: 52px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.price-valor .cifrao { font-size: 24px; vertical-align: top; margin-top: 10px; display: inline-block; }
+.price-periodo { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+.price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.price-features li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.price-features li .ok { color: var(--green); font-size: 15px; flex-shrink: 0; }
+.btn-price {
+  width: 100%; padding: 14px;
+  font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700;
+  border: none; border-radius: 10px; cursor: pointer;
+  text-decoration: none; display: block; text-align: center;
+  transition: filter 0.15s, transform 0.12s; letter-spacing: 0.3px;
+}
+.btn-price.gold { background: linear-gradient(135deg, #d4a017, #b8880f); color: #000; box-shadow: 0 4px 20px rgba(212,160,23,0.35); }
+.btn-price:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* GARANTIA */
+.garantia-box {
+  text-align: center; max-width: 600px; margin: 60px auto 0;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 36px;
+}
+.garantia-icon { font-size: 52px; margin-bottom: 16px; }
+.garantia-box h3 { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+.garantia-box p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* URGENCY */
+.urgency-bar {
+  background: linear-gradient(135deg, rgba(229,57,53,0.15), rgba(229,57,53,0.05));
+  border: 1px solid rgba(229,57,53,0.3);
+  border-radius: 14px; padding: 24px 28px; text-align: center; margin: 40px 0;
+}
+.urgency-bar h3 { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #ff6b6b; margin-bottom: 8px; }
+.urgency-bar p { font-size: 14px; color: var(--muted); }
+#countdown { display: flex; justify-content: center; gap: 16px; margin: 16px 0 8px; }
+.cd-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px 16px; min-width: 64px; text-align: center; }
+.cd-num { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; color: #ff6b6b; line-height: 1; }
+.cd-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+/* FAQ */
+.faq-list { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
+.faq-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+.faq-q { padding: 18px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; user-select: none; }
+.faq-q .arr { transition: transform 0.25s; color: var(--muted); flex-shrink: 0; }
+.faq-item.open .faq-q .arr { transform: rotate(180deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; font-size: 14px; color: var(--muted); line-height: 1.7; padding: 0 20px; }
+.faq-item.open .faq-a { max-height: 200px; padding: 0 20px 18px; }
+
+/* FOOTER CTA */
+.footer-cta {
+  text-align: center; padding: 80px 20px;
+  background: radial-gradient(ellipse 100% 80% at 50% 100%, rgba(30,111,217,0.2) 0%, transparent 70%);
+}
+.footer-cta h2 { margin-bottom: 12px; font-size: clamp(26px, 4vw, 42px); }
+.footer-cta p { color: var(--muted); font-size: 16px; margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+/* DIVIDER */
+.divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0 20px; }
+
+/* ANIMATIONS */
+.fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* APP MOCKUP */
+.mockup-window { background: #0a1628; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.6); max-width: 520px; margin: 32px auto 0; }
+.mockup-titlebar { background: rgba(255,255,255,0.05); padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.mockup-dots { display: flex; gap: 6px; }
+.mockup-dots span { width: 11px; height: 11px; border-radius: 50%; }
+.mockup-dot-r { background: #ff5f57; } .mockup-dot-y { background: #ffbd2e; } .mockup-dot-g { background: #28c840; }
+.mockup-title-txt { font-size: 12px; color: rgba(255,255,255,0.4); margin-left: 8px; }
+.mockup-body { padding: 24px; }
+.mockup-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.mockup-logo-row { display: flex; align-items: center; gap: 8px; }
+.mockup-shield { font-size: 24px; }
+.mockup-brand { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; }
+.mockup-brand span { color: var(--gold); }
+.mockup-badge-ok { background: rgba(37,196,102,0.15); border: 1px solid rgba(37,196,102,0.3); color: var(--green); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+.mockup-device-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.mockup-device-icon { font-size: 28px; }
+.mockup-device-info { flex: 1; }
+.mockup-device-name { font-size: 13px; font-weight: 600; }
+.mockup-device-sub { font-size: 11px; color: var(--muted); }
+.mockup-connected { color: var(--green); font-size: 11px; font-weight: 600; }
+.mockup-scan-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.mockup-bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; margin-bottom: 16px; }
+.mockup-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #1e6fd9, #25c466); animation: scanbar 2.5s ease-in-out infinite alternate; }
+@keyframes scanbar { from { width: 30%; } to { width: 92%; } }
+.mockup-threats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.mockup-threat-box { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px; text-align: center; }
+.mockup-threat-num { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; }
+.mockup-threat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.mockup-btn-scan { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #25c466, #1aa554); color: white; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mockup-layers { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.mockup-layer { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 14px; font-size: 12px; }
+.mockup-layer-icon { font-size: 16px; }
+.mockup-layer-name { flex: 1; }
+.mockup-layer-status { font-size: 11px; font-weight: 700; }
+.mockup-layer-status.ok { color: var(--green); }
+
+/* CERTIFICATE MOCKUP */
+.cert-mockup { max-width: 500px; margin: 32px auto 0; background: linear-gradient(135deg, #fff9ee, #fffdf5); border: 2px solid #c8a227; border-radius: 14px; padding: 36px 40px; color: #1a1a1a; position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.cert-mockup::before { content: ''; position: absolute; inset: 8px; border: 1px solid rgba(200,162,39,0.4); border-radius: 8px; pointer-events: none; }
+.cert-header { text-align: center; margin-bottom: 20px; }
+.cert-brand { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #0a2a5e; letter-spacing: 1px; }
+.cert-brand span { color: #c8a227; }
+.cert-title { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.cert-divider { height: 2px; background: linear-gradient(90deg, transparent, #c8a227, transparent); margin: 16px 0; }
+.cert-body { text-align: center; }
+.cert-certifica { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.cert-nome { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #0a2a5e; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; }
+.cert-desc { font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+.cert-info { display: flex; justify-content: space-between; font-size: 11px; color: #888; }
+.cert-info strong { color: #333; display: block; font-size: 12px; }
+.cert-seal { position: absolute; bottom: 24px; right: 28px; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle, #0a2a5e, #0d3a7a); border: 2px solid #c8a227; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+@media(max-width:600px){
+  .step-card { flex-direction: column; }
+  .step-num { font-size: 32px; }
+  .diff-table { font-size: 12px; }
+  .diff-table th, .diff-table td { padding: 10px 12px; }
+  .cert-mockup { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- STICKY BAR -->
+<div id="stickyBar">
+  <span class="sticky-texto">⚡ Oferta exclusiva — acesso anual por R$199,00</span>
+  <a href="/pagar?plano=anual199&afiliado={{SLUG}}" class="btn-sticky" onclick="trackCTA()">GARANTIR AGORA →</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge"><span class="dot"></span> Exclusivo para Assistências Técnicas</div>
+
+  <div class="hero-logo">
+    <img src="/static/logo.png" onerror="this.style.display='none'">
+    <div class="hero-logo-txt">Guardian <span>Shield</span></div>
+  </div>
+
+  <h1>
+    A ferramenta que coloca de <span class="verde">R$3.000 a R$5.000</span> por mês<br>
+    no caixa da sua assistência —<br>
+    <span class="destaque">usando os mesmos clientes que você já atende</span>
+  </h1>
+
+  <p class="hero-sub">
+    Não é curso. Não é teoria.<br>
+    É uma ferramenta que você conecta…<br>
+    e transforma problema em <strong>faturamento recorrente</strong>.
+  </p>
+
+  <a href="/pagar?plano=anual199&afiliado={{SLUG}}" class="btn-hero" onclick="trackCTA()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    ATIVAR GUARDIAN SHIELD AGORA
+  </a>
+  <div class="hero-garantia">🔒 Pagamento seguro · Garantia de 7 dias · Acesso imediato</div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" data-target="17000">0</div>
+      <div class="stat-label">Celulares Processados</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-suffix="%" data-target="99">0</div>
+      <div class="stat-label">Taxa de Eficácia</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="432">0</div>
+      <div class="stat-label">Assistências Ativas</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-prefix="R$" data-target="5000">0</div>
+      <div class="stat-label">Faturamento Médio/Mês</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROBLEM -->
+<section class="fade-up">
+  <h2>A maioria dos técnicos acha que precisa de <span class="gold">mais</span> para ganhar mais</h2>
+
+  <div class="crenca-list">
+    <div class="crenca-item"><span class="icon">❌</span><span>Aprender mais técnicas e cursos caros</span></div>
+    <div class="crenca-item"><span class="icon">❌</span><span>Trabalhar mais horas por dia</span></div>
+    <div class="crenca-item"><span class="icon">❌</span><span>Pegar mais clientes do zero</span></div>
+  </div>
+
+  <div class="verdade-box">
+    <h3>👉 A verdade que ninguém te conta:</h3>
+    <div class="verdade-item"><span class="v">✓</span><span>Você <strong>já tem clientes suficientes</strong></span></div>
+    <div class="verdade-item"><span class="v">✓</span><span>Você só <strong>não está monetizando direito</strong></span></div>
+    <div class="verdade-item"><span class="v">✓</span><span>O dinheiro está no cliente que você <strong>já atendeu hoje</strong></span></div>
+  </div>
+</section>
+
+<!-- REVELATION -->
+<section class="fade-up" style="background:rgba(30,111,217,0.06);border-radius:20px;border:1px solid rgba(30,111,217,0.15);">
+  <h2>Existe um tipo de ferramenta que gera dinheiro <span class="green">praticamente no automático</span></h2>
+
+  <div style="display:flex;flex-direction:column;gap:14px;margin-top:28px;">
+    <div class="verdade-item" style="font-size:16px;"><span class="v" style="font-size:22px;">⚡</span><span>Não depende de <strong>estoque</strong></span></div>
+    <div class="verdade-item" style="font-size:16px;"><span class="v" style="font-size:22px;">⚡</span><span>Não depende de <strong>peça</strong></span></div>
+    <div class="verdade-item" style="font-size:16px;"><span class="v" style="font-size:22px;">⚡</span><span>Não depende de <strong>habilidade avançada</strong></span></div>
+    <div class="verdade-item" style="font-size:16px;"><span class="v" style="font-size:22px;">⚡</span><span>Funciona com <strong>qualquer celular Android</strong></span></div>
+  </div>
+
+  <div style="margin-top:32px;text-align:center;padding:28px;background:rgba(212,160,23,0.08);border:2px solid rgba(212,160,23,0.25);border-radius:14px;">
+    <p style="font-size:13px;color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Esta ferramenta é o</p>
+    <p style="font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.1;">Sistema de Blindagem Digital</p>
+    <p style="font-family:'Rajdhani',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:700;color:var(--gold);">Guardian Shield</p>
+    <p style="font-size:14px;color:var(--muted);margin-top:12px;">👉 Não é um software comum — é uma <strong>nova fonte de renda</strong> dentro da sua assistência</p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="fade-up">
+  <h2>2 etapas simples. <span class="gold">Resultado imediato.</span></h2>
+
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h3>LIMPEZA <span>AUTOMÁTICA</span></h3>
+        <p style="font-size:14px;color:var(--muted);">Você conecta o celular, clica em iniciar — e o sistema faz todo o trabalho:</p>
+        <ul class="step-bullets">
+          <li>Escaneia o dispositivo completo</li>
+          <li>Encontra ameaças e vírus ocultos</li>
+          <li>Remove tudo automaticamente</li>
+          <li>Sem precisar fazer nada manual</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step-card" style="border-color:rgba(212,160,23,0.25);background:rgba(212,160,23,0.04);">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h3>BLINDAGEM <span>— AQUI ESTÁ O DINHEIRO</span></h3>
+        <p style="font-size:14px;color:var(--muted);">Depois da limpeza vem a parte que muda tudo — 4 camadas de proteção que:</p>
+        <ul class="step-bullets">
+          <li>Bloqueiam novas infecções</li>
+          <li>Impedem instalação maliciosa</li>
+          <li>Protegem dados do cliente</li>
+          <li>O problema <strong style="color:var(--green)">NÃO VOLTA</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup-window fade-up">
+    <div class="mockup-titlebar">
+      <div class="mockup-dots"><span class="mockup-dot-r"></span><span class="mockup-dot-y"></span><span class="mockup-dot-g"></span></div>
+      <span class="mockup-title-txt">Guardian Shield — Limpeza Automática</span>
+    </div>
+    <div class="mockup-body">
+      <div class="mockup-topbar">
+        <div class="mockup-logo-row"><span class="mockup-shield">🛡️</span><span class="mockup-brand">Guardian <span>Shield</span></span></div>
+        <span class="mockup-badge-ok">● ATIVO</span>
+      </div>
+      <div class="mockup-device-box">
+        <span class="mockup-device-icon">📱</span>
+        <div class="mockup-device-info">
+          <div class="mockup-device-name">Samsung Galaxy A54</div>
+          <div class="mockup-device-sub">Android 13 · Conectado via USB</div>
+        </div>
+        <span class="mockup-connected">✓ Detectado</span>
+      </div>
+      <div class="mockup-scan-label"><span>Escaneando dispositivo...</span><span style="color:var(--green);">67%</span></div>
+      <div class="mockup-bar"><div class="mockup-bar-fill"></div></div>
+      <div class="mockup-threats">
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:#ff6b6b;">14</div><div class="mockup-threat-lbl">Ameaças</div></div>
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:var(--gold2);">3</div><div class="mockup-threat-lbl">Spywares</div></div>
+        <div class="mockup-threat-box"><div class="mockup-threat-num" style="color:var(--green);">0</div><div class="mockup-threat-lbl">Após limpeza</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup-window fade-up" style="margin-top:20px;">
+    <div class="mockup-titlebar">
+      <div class="mockup-dots"><span class="mockup-dot-r"></span><span class="mockup-dot-y"></span><span class="mockup-dot-g"></span></div>
+      <span class="mockup-title-txt">Guardian Shield — Blindagem Digital</span>
+    </div>
+    <div class="mockup-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">4 Camadas de Proteção Ativas</p>
+      <div class="mockup-layers">
+        <div class="mockup-layer"><span class="mockup-layer-icon">🔥</span><span class="mockup-layer-name">Bloqueio de novas infecções</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">🚫</span><span class="mockup-layer-name">Anti-instalação maliciosa</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">🔒</span><span class="mockup-layer-name">Proteção de dados pessoais</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+        <div class="mockup-layer"><span class="mockup-layer-icon">📡</span><span class="mockup-layer-name">Monitoramento de ameaças</span><span class="mockup-layer-status ok">✓ ATIVO</span></div>
+      </div>
+      <div class="mockup-btn-scan">⚡ BLINDAGEM APLICADA COM SUCESSO</div>
+    </div>
+  </div>
+</section>
+
+<!-- CERTIFICADO -->
+<section class="fade-up" style="text-align:center;">
+  <div style="background:linear-gradient(135deg,rgba(212,160,23,0.1),rgba(212,160,23,0.03));border:2px solid rgba(212,160,23,0.3);border-radius:20px;padding:44px 32px;">
+    <h2 style="margin-bottom:12px;">Cada blindagem gera um <span class="gold">Certificado de Garantia</span></h2>
+    <p style="color:var(--muted);font-size:16px;max-width:560px;margin:0 auto 28px;line-height:1.7;">
+      Ao finalizar o serviço, o Guardian Shield emite automaticamente um <strong style="color:white;">certificado profissional</strong> com o nome do cliente, data e prazo de proteção.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-bottom:28px;">
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 20px;font-size:14px;">🏆 <strong>Posicionamento premium</strong><br><span style="color:var(--muted);font-size:12px;">Você deixa de ser técnico e vira especialista</span></div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 20px;font-size:14px;">💰 <strong>Justifica cobrar mais</strong><br><span style="color:var(--muted);font-size:12px;">Cliente paga R$150+ sem questionar o preço</span></div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 20px;font-size:14px;">🔁 <strong>Gera fidelização</strong><br><span style="color:var(--muted);font-size:12px;">Cliente volta para renovar a proteção</span></div>
+    </div>
+    <p style="font-size:13px;color:var(--gold);font-weight:600;">👉 Nenhuma outra assistência da sua cidade oferece isso</p>
+    <div class="cert-mockup fade-up">
+      <div class="cert-header"><div class="cert-brand">Guardian <span>Shield</span></div><div class="cert-title">Proteção Digital Inteligente</div></div>
+      <div class="cert-divider"></div>
+      <div class="cert-body">
+        <div class="cert-certifica">Certifica que</div>
+        <div class="cert-nome">João Silva</div>
+        <div class="cert-desc">Teve seu dispositivo <strong>Samsung Galaxy A54</strong> submetido ao processo completo de Limpeza e Blindagem Digital Guardian Shield, com aplicação das 4 camadas de proteção avançada.</div>
+        <div class="cert-info">
+          <div><strong>02/04/2025</strong>Data de emissão</div>
+          <div><strong>Anual · 365 dias</strong>Plano de proteção</div>
+          <div><strong>02/04/2026</strong>Válido até</div>
+        </div>
+      </div>
+      <div class="cert-seal">🛡️</div>
+    </div>
+  </div>
+</section>
+
+<!-- MONEY -->
+<section class="fade-up" style="padding:0 20px;">
+  <div class="money-section">
+    <h2>Pensa como <span class="gold">seu cliente</span> pensa</h2>
+    <p style="color:var(--muted);font-size:15px;margin-top:8px;">Qual opção você escolheria?</p>
+    <div class="money-options">
+      <div class="money-opt ruim"><span>❌ Pagar R$20 toda semana para tirar vírus</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">Para sempre</span></div>
+      <div class="money-opt bom"><span>✅ Pagar <strong>R$99</strong> e ficar <strong>3 meses protegido</strong></span><span style="color:var(--green);font-size:13px;font-weight:600;">Mensal</span></div>
+      <div class="money-opt melhor"><span>✅ Pagar <strong>R$199</strong> e ter <strong>1 ano de garantia</strong></span><span class="money-opt-tag">MELHOR ESCOLHA</span></div>
+    </div>
+    <p class="money-conclusao">👉 A escolha é óbvia para o cliente.<br>E é exatamente aqui que <strong style="color:var(--gold)">você ganha dinheiro.</strong></p>
+  </div>
+</section>
+
+<!-- ANALOGIA -->
+<section class="fade-up" style="text-align:center;">
+  <p style="font-size:clamp(22px,3.5vw,36px);font-family:'Rajdhani',sans-serif;font-weight:700;line-height:1.3;max-width:680px;margin:0 auto;">Isso não é um serviço…<br><span style="color:var(--gold);">é uma máquina de faturamento no seu balcão</span></p>
+  <p style="font-size:16px;color:var(--muted);margin-top:20px;max-width:480px;margin-left:auto;margin-right:auto;">Todo cliente com problema vira uma <strong style="color:white;">oportunidade de lucro recorrente</strong></p>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:40px;">
+    <div style="background:rgba(37,196,102,0.08);border:1px solid rgba(37,196,102,0.2);border-radius:12px;padding:24px 32px;text-align:center;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;color:var(--green);">R$2.000</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">com apenas 10 clientes/mês</div>
+    </div>
+    <div style="background:rgba(212,160,23,0.1);border:2px solid rgba(212,160,23,0.3);border-radius:12px;padding:24px 32px;text-align:center;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;color:var(--gold2);">R$5.000</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">com apenas 20 clientes/mês</div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin-top:20px;">Sem peça · Sem estoque · Sem risco</p>
+</section>
+
+<!-- PROOF -->
+<div class="proof-section fade-up">
+  <h2 style="font-family:'Rajdhani',sans-serif;font-size:clamp(26px,4vw,40px);font-weight:700;">Números que falam por si</h2>
+  <div class="proof-grid">
+    <div class="proof-card"><div class="proof-num" data-target="17000" data-suffix="+">0</div><div class="proof-desc">Celulares processados com sucesso</div></div>
+    <div class="proof-card"><div class="proof-num" data-target="99" data-suffix=",97%">0</div><div class="proof-desc">Taxa de eficácia comprovada</div></div>
+    <div class="proof-card"><div class="proof-num" data-target="432" data-suffix="+">0</div><div class="proof-desc">Assistências técnicas ativas</div></div>
+    <div class="proof-card"><div class="proof-num" data-target="0" data-suffix=",002%">0</div><div class="proof-desc">Taxa de retorno do problema</div></div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section class="fade-up">
+  <h2>O que assistências estão <span class="green">dizendo</span></h2>
+  <div class="depo-grid">
+    <div class="depo-card"><div class="depo-stars">★★★★★</div><p class="depo-text">"No primeiro mês já recuperei o investimento 4 vezes. Hoje é o serviço que mais dá margem na minha assistência. Simples, rápido e funciona."</p><div class="depo-autor"><div class="depo-avatar">RC</div><div><div class="depo-nome">Rodrigo C.</div><div class="depo-cidade">Assistência Técnica · São Paulo, SP</div></div></div></div>
+    <div class="depo-card"><div class="depo-stars">★★★★★</div><p class="depo-text">"Minha assistência ficou 3 anos sem crescer. Com Guardian Shield eu adicionei R$3.200 extra em 60 dias, sem contratar ninguém."</p><div class="depo-autor"><div class="depo-avatar">FM</div><div><div class="depo-nome">Felipe M.</div><div class="depo-cidade">TechFix Assistência · Curitiba, PR</div></div></div></div>
+    <div class="depo-card"><div class="depo-stars">★★★★★</div><p class="depo-text">"O cliente fica impressionado com o certificado. Agora cobra R$150 por blindagem e o cliente acha barato. Nunca pensei nisso antes."</p><div class="depo-autor"><div class="depo-avatar">AS</div><div><div class="depo-nome">Ana S.</div><div class="depo-cidade">Cell Master · Belo Horizonte, MG</div></div></div></div>
+  </div>
+</section>
+
+<!-- DIFF -->
+<section class="fade-up">
+  <h2>Enquanto a concorrência apaga incêndio, <span class="gold">você constrói receita</span></h2>
+  <table class="diff-table">
+    <thead>
+      <tr>
+        <th style="background:rgba(255,255,255,0.03);text-align:left;padding:14px 20px;">Situação</th>
+        <th class="col-outros">Outros técnicos</th>
+        <th class="col-gs">Com Guardian Shield</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="col-item">Preço do serviço</td><td class="col-outros">R$20 a R$50</td><td class="col-gs">R$99 a R$199</td></tr>
+      <tr><td class="col-item">Cliente volta com o mesmo problema</td><td class="col-outros">Sempre</td><td class="col-gs">Nunca</td></tr>
+      <tr><td class="col-item">Margem de lucro</td><td class="col-outros">Baixa</td><td class="col-gs">Alta</td></tr>
+      <tr><td class="col-item">Diferencial no mercado</td><td class="col-outros">Nenhum</td><td class="col-gs">Único da cidade</td></tr>
+      <tr><td class="col-item">Certificado profissional</td><td class="col-outros">❌</td><td class="col-gs">✓ Incluso</td></tr>
+      <tr><td class="col-item">Renda recorrente</td><td class="col-outros">❌</td><td class="col-gs">✓ Todo mês</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- NEW WAVE -->
+<section class="fade-up" style="text-align:center;background:linear-gradient(135deg,rgba(229,57,53,0.06),rgba(212,160,23,0.06));border:1px solid rgba(255,255,255,0.06);border-radius:20px;">
+  <h2>Isso não é tendência — é uma <span class="gold">mudança de mercado</span></h2>
+  <p style="color:var(--muted);font-size:16px;max-width:560px;margin:16px auto 0;line-height:1.7;">Em 2026, assistências que não oferecerem proteção digital vão perder cliente para quem oferecer.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:36px;">
+    <div style="background:rgba(37,196,102,0.1);border:1px solid rgba(37,196,102,0.25);border-radius:10px;padding:18px 24px;font-size:15px;font-weight:600;">👑 Quem chega <strong style="color:var(--green)">primeiro</strong> domina</div>
+    <div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.2);border-radius:10px;padding:18px 24px;font-size:15px;color:rgba(255,255,255,0.5);">💸 Quem chega depois briga por preço</div>
+  </div>
+</section>
+
+<!-- URGENCY -->
+<section class="fade-up" style="padding:40px 20px;">
+  <div class="urgency-bar">
+    <h3>⏳ OFERTA EXCLUSIVA — TEMPO LIMITADO</h3>
+    <div id="countdown">
+      <div class="cd-box"><div class="cd-num" id="cd-h">00</div><div class="cd-label">horas</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-m">00</div><div class="cd-label">min</div></div>
+      <div class="cd-box"><div class="cd-num" id="cd-s">00</div><div class="cd-label">seg</div></div>
+    </div>
+    <p>Plano anual por <strong style="color:#ff6b6b;">R$199,00</strong> — disponível apenas pelo link exclusivo</p>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="fade-up" id="preco" style="text-align:center;">
+  <h2>Ative agora e comece a <span class="green">faturar esta semana</span></h2>
+  <p style="color:var(--muted);font-size:15px;margin-top:8px;">Acesso imediato após o pagamento · Oferta exclusiva</p>
+
+  <div class="pricing-wrap" style="justify-content:center;">
+    <div class="price-card destaque" style="max-width:460px;width:100%;">
+      <div class="price-badge">🔥 OFERTA EXCLUSIVA · ACESSO ANUAL</div>
+      <div class="price-nome">Guardian Shield Anual</div>
+      <div class="price-desc">Para quem quer escalar o faturamento. Acesso completo por 365 dias.</div>
+
+      <div style="background:rgba(255,100,100,0.12);border:1px solid rgba(255,100,100,0.35);border-radius:10px;padding:10px 16px;margin-bottom:12px;">
+        <div style="font-size:12px;color:#ff8080;letter-spacing:1px;text-transform:uppercase;font-weight:600;">⚠️ Vagas com este preço</div>
+        <div style="font-size:36px;font-weight:900;color:#ff6b6b;font-family:'Rajdhani',sans-serif;" id="licencas-contador">27</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">restantes nesta oferta exclusiva</div>
+      </div>
+
+      <div style="color:rgba(255,255,255,0.35);font-size:14px;text-decoration:line-through;margin-bottom:2px;">de R$ 299,00</div>
+      <div class="price-valor"><span class="cifrao">R$</span>199<span style="font-size:22px;">,00</span></div>
+      <div class="price-periodo">pagamento único · acesso por 365 dias · <strong style="color:#f59e0b;">economia de R$100</strong></div>
+
+      <ul class="price-features">
+        <li><span class="ok">✓</span> Acesso completo por 1 ano</li>
+        <li><span class="ok">✓</span> Scanner de vírus e remoção de ameaças</li>
+        <li><span class="ok">✓</span> Blindagem com 4 camadas de proteção</li>
+        <li><span class="ok">✓</span> Certificado digital profissional</li>
+        <li><span class="ok">✓</span> 2 dispositivos simultâneos</li>
+        <li><span class="ok">✓</span> Suporte prioritário via WhatsApp</li>
+        <li><span class="ok">✓</span> Atualizações incluídas durante 1 ano</li>
+        <li><span class="ok">✓</span> Garantia de 7 dias — 100% do dinheiro de volta</li>
+      </ul>
+      <a href="/pagar?plano=anual199&afiliado={{SLUG}}" class="btn-price gold" onclick="trackCTA()">GARANTIR MINHA VAGA POR R$199,00 →</a>
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;">Preço exclusivo pelo link. Fora daqui é R$299,00</div>
+    </div>
+  </div>
+
+  <div class="garantia-box">
+    <div class="garantia-icon">🛡️</div>
+    <h3>Garantia de 7 dias</h3>
+    <p>Se em 7 dias você não estiver satisfeito com os resultados, devolvemos 100% do seu investimento. Sem perguntas, sem burocracia. Você não tem nada a perder.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="fade-up">
+  <h2>Suas dúvidas <span class="gold">respondidas</span></h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Preciso de conhecimento técnico avançado para usar?<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Não. O Guardian Shield foi desenvolvido para ser simples. Você conecta o celular via USB, clica em iniciar e o sistema faz tudo automaticamente. Qualquer técnico consegue usar no primeiro dia.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Funciona com qualquer celular Android?<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Sim. O Guardian Shield é compatível com todos os modelos Android via conexão USB. Funciona com Samsung, Motorola, Xiaomi, LG e qualquer outro fabricante.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Quanto tempo leva para processar um celular?<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Em média de 3 a 6 minutos por dispositivo, dependendo do modelo. Durante esse tempo você pode atender outros clientes normalmente.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Quanto posso cobrar pelo serviço de blindagem?<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">As assistências ativas cobram entre R$80 e R$250 por blindagem, dependendo da cidade e posicionamento. O mais comum é R$99 mensal ou R$199 anual cobrado do cliente final.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">O acesso é imediato após o pagamento?<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Sim. Após confirmação do pagamento você recebe acesso imediato ao sistema. PIX aprova na hora. Cartão em poucos minutos.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER CTA -->
+<div class="footer-cta fade-up">
+  <h2>Você tem duas opções:<br><span class="gold">surfar essa onda</span> ou<br>entrar depois brigando por preço</h2>
+  <p>Assistências que ativarem o Guardian Shield hoje serão as referências em proteção digital da sua cidade.</p>
+
+  <a href="/pagar?plano=anual199&afiliado={{SLUG}}" class="btn-hero" style="font-size:20px;padding:22px 48px;" onclick="trackCTA()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    GARANTIR AGORA POR R$199,00
+  </a>
+  <p style="font-size:13px;color:rgba(255,255,255,0.3);margin-top:16px;">🔒 Pagamento 100% seguro · Garantia de 7 dias · Suporte via WhatsApp</p>
+
+  <div style="margin-top:48px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.06);">
+    <p style="font-size:12px;color:rgba(255,255,255,0.2);">© 2025 Guardian Shield · Planet Software · guardian.grupomayconsantos.com.br</p>
+  </div>
+</div>
+
+<script>
+// STICKY BAR
+window.addEventListener('scroll', () => {
+  const bar = document.getElementById('stickyBar');
+  if (bar) bar.classList.toggle('visivel', window.scrollY > 400);
+});
+
+// COUNTER ANIMATION
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target) || 0;
+  const suffix = el.dataset.suffix || '';
+  const prefix = el.dataset.prefix || '';
+  const duration = 1800;
+  const step = target / (duration / 16);
+  let current = 0;
+  const timer = setInterval(() => {
+    current += step;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = prefix + Math.floor(current).toLocaleString('pt-BR') + suffix;
+  }, 16);
+}
+
+// INTERSECTION OBSERVER
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('[data-target]').forEach(animateCounter);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.fade-up, .proof-section').forEach(el => observer.observe(el));
+document.querySelectorAll('#hero [data-target]').forEach(animateCounter);
+
+// COUNTDOWN (24h)
+(function() {
+  const end = Date.now() + (23 * 3600 + 47 * 60 + 33) * 1000;
+  setInterval(() => {
+    const diff = Math.max(0, end - Date.now());
+    document.getElementById('cd-h').textContent = String(Math.floor(diff/3600000)).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  }, 1000);
+})();
+
+// FAQ
+function toggleFaq(el) { el.closest('.faq-item').classList.toggle('open'); }
+
+// PIXEL
+function trackCTA() {
+  if (typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout', { value: 199.00, currency: 'BRL' });
+  if (typeof gtag !== 'undefined') gtag('event', 'begin_checkout');
+}
+
+// CONTADOR DE LICENÇAS
+(function() {
+  const el = document.getElementById('licencas-contador');
+  if (!el) return;
+  let n = parseInt(sessionStorage.getItem('gs_aff_lic')) || 27;
+  el.textContent = n;
+  setInterval(() => {
+    if (n > 5 && Math.random() < 0.07) {
+      n--;
+      sessionStorage.setItem('gs_aff_lic', n);
+      el.textContent = n;
+      el.style.transform = 'scale(1.2)';
+      setTimeout(() => el.style.transform = 'scale(1)', 300);
+    }
+  }, 9000);
+})();
+</script>
+</body>
+</html>

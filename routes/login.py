@@ -198,13 +198,17 @@ def protected_route(
     # Verificação do WhatsApp (exigida no primeiro acesso após licença ativa)
     if not user_db.whatsapp_verified:
         wa_erro = None
-        # envia código se ainda não enviou ou se expirou
-        if (
-            not user_db.whatsapp_code
-            or not user_db.whatsapp_code_expires
-            or datetime.utcnow() > user_db.whatsapp_code_expires
-        ):
-            if user_db.whatsapp:
+        if user_db.whatsapp:
+            # Reenvia se: não tem código, está expirado, OU tem mais de 10 minutos
+            # (10 min garante que código chegue mesmo se primeiro envio falhou,
+            #  sem sobrescrever enquanto usuário está digitando)
+            codigo_velho = (
+                not user_db.whatsapp_code
+                or not user_db.whatsapp_code_expires
+                or datetime.utcnow() > user_db.whatsapp_code_expires
+                or (datetime.utcnow() - (user_db.whatsapp_code_expires - timedelta(minutes=15))) > timedelta(minutes=10)
+            )
+            if codigo_velho:
                 code = _gerar_codigo()
                 user_db.whatsapp_code         = code
                 user_db.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
@@ -216,8 +220,10 @@ def protected_route(
                     wa_erro = str(e)
                     logger.error(f"[WA] FALHA ao enviar código para {user_db.whatsapp}: {e}")
             else:
-                wa_erro = "whatsapp_nao_cadastrado"
-                logger.warning(f"[WA] Usuário {email} sem WhatsApp cadastrado — não é possível enviar código")
+                logger.warning(f"[WA] Código recente (<10min) para {user_db.whatsapp} — não reenviado")
+        else:
+            wa_erro = "whatsapp_nao_cadastrado"
+            logger.warning(f"[WA] Usuário {email} sem WhatsApp cadastrado — não é possível enviar código")
 
         resp = {
             "acesso": False,
@@ -347,7 +353,7 @@ async def webhook(
             reference = pagamento.get("external_reference")
 
             if reference and "|" in reference:
-                parts = reference.split("|", 1)
+                parts = reference.split("|")  # 3 partes: email|plano|afiliado
                 email = parts[0]
                 plano = parts[1] if len(parts) > 1 else "mensal"
             elif reference and "-" in reference:
@@ -360,7 +366,9 @@ async def webhook(
 
             if status == "approved" and email:
                 user = db.query(User).filter(User.email == email).first()
-                dias = 30 if plano == "mensal" else 365
+                # Normaliza plano (anual79/anual199 → anual internamente)
+                plan_type_norm = "anual" if plano in ("anual79", "anual199") else plano
+                dias = 30 if plano in ("mensal", "teste") else 365
 
                 # Tenta extrair WhatsApp/telefone do pagador no Mercado Pago
                 payer      = pagamento.get("payer", {})
@@ -374,7 +382,7 @@ async def webhook(
 
                 if user:
                     user.expires_at = datetime.utcnow() + timedelta(days=dias)
-                    user.plan_type  = plano
+                    user.plan_type  = plan_type_norm
                     # Atualiza WhatsApp se ainda não tem
                     if not user.whatsapp and wa_payer:
                         user.whatsapp = wa_payer
@@ -387,7 +395,7 @@ async def webhook(
                         whatsapp     = wa_payer,
                         pre_liberado = True,
                         expires_at   = datetime.utcnow() + timedelta(days=dias),
-                        plan_type    = plano,
+                        plan_type    = plan_type_norm,
                     )
                     db.add(user)
                 db.commit()

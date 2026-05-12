@@ -134,6 +134,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     <div class="tab" onclick="switchTab('config')">⚙️ Configurações</div>
     <div class="tab" onclick="switchTab('mensagens')">💬 Mensagens</div>
     <div class="tab" onclick="switchTab('blacklist')">🛡️ Blacklist</div>
+    <div class="tab" onclick="switchTab('referencias')">📌 Referências</div>
   </div>
 
   <!-- TAB USUÁRIOS -->
@@ -317,6 +318,65 @@ tr:hover td{background:rgba(255,255,255,.025)}
   </div>
 </div>
 
+<!-- TAB REFERÊNCIAS -->
+<div id="tab-referencias" class="tab-content">
+
+  <div class="section">
+    <div class="section-title">🌐 Sites e URLs</div>
+    <table>
+      <tr><th>Serviço</th><th>URL</th></tr>
+      <tr><td>Hub principal</td><td><a href="https://www.grupomayconsantos.com.br" target="_blank" style="color:#5ba3ff">www.grupomayconsantos.com.br</a></td></tr>
+      <tr><td>Guardian Shield — Vendas</td><td><a href="https://guardian.grupomayconsantos.com.br/vendas2" target="_blank" style="color:#5ba3ff">guardian.grupomayconsantos.com.br/vendas2</a></td></tr>
+      <tr><td>Guardian Shield — API</td><td><a href="https://guardian.grupomayconsantos.com.br" target="_blank" style="color:#5ba3ff">guardian.grupomayconsantos.com.br</a></td></tr>
+      <tr><td>Guardian Shield — Pagamento</td><td><a href="https://guardian.grupomayconsantos.com.br/pagar" target="_blank" style="color:#5ba3ff">guardian.grupomayconsantos.com.br/pagar</a></td></tr>
+      <tr><td>Guardian Shield — Download</td><td><a href="https://guardian.grupomayconsantos.com.br/download" target="_blank" style="color:#5ba3ff">guardian.grupomayconsantos.com.br/download</a></td></tr>
+      <tr><td>Orçamento Fácil</td><td><a href="https://orcamentofacil.grupomayconsantos.com.br" target="_blank" style="color:#5ba3ff">orcamentofacil.grupomayconsantos.com.br</a></td></tr>
+      <tr><td>WhatsApp Suporte</td><td><a href="https://wa.me/5545999539960" target="_blank" style="color:#5ba3ff">wa.me/5545999539960</a></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📦 Download do App</div>
+    <table>
+      <tr><th>Item</th><th>URL</th></tr>
+      <tr><td>Instalador Windows (sempre latest)</td><td><a href="https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe" target="_blank" style="color:#5ba3ff">Guardian-Shield-Setup.exe</a></td></tr>
+      <tr><td>Todas as releases</td><td><a href="https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases" target="_blank" style="color:#5ba3ff">github.com/.../guardian-releases</a></td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🚀 Deploy dos Projetos</div>
+    <table>
+      <tr><th>Projeto</th><th>Como publicar</th></tr>
+      <tr><td>Guardian Shield App (Electron)</td><td style="font-family:monospace;font-size:12px;color:#4cde8a">GH_TOKEN=$(gh auth token) npm run publish</td></tr>
+      <tr><td>Mayzel Hub (site principal)</td><td style="font-family:monospace;font-size:12px;color:#4cde8a">railway up --service mayzel-hub</td></tr>
+      <tr><td>Guardian Shield Server (API)</td><td style="font-family:monospace;font-size:12px;color:#4cde8a">railway up --service guardian-shield</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📊 Pixel / Analytics</div>
+    <table>
+      <tr><th>Serviço</th><th>ID</th></tr>
+      <tr><td>Meta Pixel</td><td style="font-family:monospace;color:#d4a017">2079654962888572</td></tr>
+      <tr><td>Google Analytics</td><td style="font-family:monospace;color:#d4a017">G-H4JRM00ZBV</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📱 Versões do Guardian Shield</div>
+    <table>
+      <tr><th>Versão</th><th>Status</th><th>O que mudou</th></tr>
+      <tr><td>v1.2.2</td><td><span class="badge badge-green">Latest</span></td><td>Corrige aba Demais Apps (bug visual)</td></tr>
+      <tr><td>v1.2.1</td><td><span class="badge badge-gray">—</span></td><td>Tela Home + Backup & Formatação + Manuais</td></tr>
+      <tr><td>v1.2.0</td><td><span class="badge badge-red">Quebrada</span></td><td>Bug ]);  impedia login</td></tr>
+      <tr><td>v1.1.9</td><td><span class="badge badge-gray">—</span></td><td>Corrige falsos positivos MIUI/Android</td></tr>
+      <tr><td>v1.1.8</td><td><span class="badge badge-gray">—</span></td><td>Abas Crítico/Suspeitos/Desconhecidos + blacklist colaborativa</td></tr>
+    </table>
+  </div>
+
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 <div id="loadingOverlay"><div class="spinner"></div></div>
@@ -383,7 +443,7 @@ async function api(method, path, body = null, token = TOKEN) {
 // ── TABS ──────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['usuarios','config','mensagens','blacklist'];
+    const names = ['usuarios','config','mensagens','blacklist','referencias'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));

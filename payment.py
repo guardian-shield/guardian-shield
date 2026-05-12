@@ -62,13 +62,13 @@ def criar_pagamento(email, valor, plano):
 # =========================
 # PIX DIRETO
 # =========================
-def criar_pix(email, valor, plano):
+def criar_pix(email, valor, plano, external_reference: str = None):
     try:
         payment_data = {
             "transaction_amount": float(valor),
             "description": f"Plano {plano} - Guardian Shield",
             "payment_method_id": "pix",
-            "external_reference": f"{email}|{plano}",
+            "external_reference": external_reference or f"{email}|{plano}",
             "payer": {
                 "email": email
             }

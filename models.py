@@ -105,6 +105,37 @@ class RecoveryQueue(Base):
     updated_at    = Column(DateTime, default=func.now(), onupdate=func.now())
 
 
+class Affiliate(Base):
+    """Afiliado — influenciador ou parceiro com link próprio."""
+    __tablename__ = "affiliates"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    slug       = Column(String, unique=True, index=True)   # ex: profissaosmarti
+    nome       = Column(String, nullable=True)
+    whatsapp   = Column(String, nullable=True)             # para receber notificações
+    senha_hash = Column(String, nullable=True)             # sha256 da senha do painel
+    comissao_pct = Column(Integer, default=50)             # percentual (ex: 50 = 50%)
+    ativo      = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+
+class AffiliateConversion(Base):
+    """Venda rastreada via link de afiliado."""
+    __tablename__ = "affiliate_conversions"
+
+    id             = Column(Integer, primary_key=True, index=True)
+    affiliate_slug = Column(String, index=True)
+    email_cliente  = Column(String, nullable=True)
+    nome_cliente   = Column(String, nullable=True)
+    whatsapp_cliente = Column(String, nullable=True)
+    plano          = Column(String, nullable=True)
+    valor          = Column(Integer, default=0)       # em centavos (ex: 19900)
+    comissao       = Column(Integer, default=0)       # em centavos
+    payment_id     = Column(String, nullable=True)    # ID do Mercado Pago
+    metodo         = Column(String, nullable=True)    # pix | cartao
+    created_at     = Column(DateTime, default=func.now())
+
+
 class Garantia(Base):
     """Garantias de blindagem — uma linha por aparelho por usuário."""
     __tablename__ = "garantias"

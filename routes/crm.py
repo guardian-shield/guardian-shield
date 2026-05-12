@@ -187,19 +187,32 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
             db.add(CrmMessage(conversation_id=conv.id, direction="out", content=aviso_cliente, sent_by="ai"))
         except Exception:
             pass
-        # Notifica o dono APENAS se estiver dentro do horário de atendimento
-        if is_business_hours():
-            try:
-                aviso = (
-                    f"🔔 *CRM — Atendimento solicitado!*\n\n"
-                    f"👤 Contato: {conv.contact_name or phone}\n"
-                    f"📱 WhatsApp: {phone}\n\n"
-                    f"A pessoa pediu falar com atendente humano.\n"
-                    f"Acesse o CRM: https://guardian.grupomayconsantos.com.br/crm"
-                )
-                send_whatsapp_message("45998452596", aviso, db)
-            except Exception:
-                pass
+
+        # Busca as últimas mensagens do cliente para dar contexto ao dono
+        try:
+            ultimas = db.query(CrmMessage)\
+                .filter(CrmMessage.conversation_id == conv.id, CrmMessage.direction == "in")\
+                .order_by(CrmMessage.sent_at.desc()).limit(3).all()
+            historico_str = "\n".join(
+                f"  • {m.content[:120]}" for m in reversed(ultimas)
+            ) if ultimas else "  (sem histórico)"
+        except Exception:
+            historico_str = "  (erro ao buscar histórico)"
+
+        # Notifica o dono — SEMPRE (dentro ou fora do horário)
+        try:
+            horario_info = "🟢 Dentro do horário" if is_business_hours() else f"🔴 Fora do horário — retoma {next_business_hours_str()}"
+            aviso = (
+                f"🔔 *CRM — Atendimento solicitado!*\n\n"
+                f"👤 Contato: {conv.contact_name or phone}\n"
+                f"📱 WhatsApp: {phone}\n"
+                f"🕐 {horario_info}\n\n"
+                f"💬 *Últimas mensagens:*\n{historico_str}\n\n"
+                f"Acesse o CRM: https://guardian.grupomayconsantos.com.br/crm"
+            )
+            send_whatsapp_message("45998452596", aviso, db)
+        except Exception:
+            pass
         db.commit()
         return {"status": "transferred"}
 
@@ -212,7 +225,28 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
             .limit(20).all()
         history = [{"direction": m.direction, "content": m.content, "sent_at": m.sent_at.isoformat() if m.sent_at else None} for m in reversed(history)]
 
-        ai_text = get_ai_response(history, content)
+        # Busca contexto do usuário pelo WhatsApp para personalizar a Maia
+        user_context = None
+        try:
+            from models import User
+            from sqlalchemy import or_
+            # phone vem do Evolution com prefixo 55 (ex: 5527997804343)
+            # o banco pode ter com ou sem o prefixo — tenta os dois
+            phone_sem55 = phone[2:] if phone.startswith("55") and len(phone) > 11 else phone
+            phone_com55 = phone if phone.startswith("55") else ("55" + phone)
+            user = db.query(User).filter(
+                or_(User.whatsapp == phone, User.whatsapp == phone_sem55, User.whatsapp == phone_com55)
+            ).first()
+            if user:
+                user_context = {
+                    "nome": user.nome,
+                    "plan_type": user.plan_type,
+                    "expires_at": user.expires_at.isoformat() if user.expires_at else None,
+                }
+        except Exception as _ue:
+            logger.error(f"[CRM] Falha ao buscar contexto do usuário: {_ue}")
+
+        ai_text = get_ai_response(history, content, user_context=user_context)
         if not ai_text:
             # Cota esgotada ou resposta vazia — silencioso, não faz nada
             db.commit()
@@ -245,19 +279,21 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
 
         if transfer:
             conv.ai_active = False
-            # Notifica atendente APENAS dentro do horário comercial
-            if is_business_hours():
-                try:
-                    aviso = (
-                        f"🔔 *CRM — Atendimento necessário!*\n\n"
-                        f"👤 Contato: {conv.contact_name or phone}\n"
-                        f"📱 WhatsApp: {phone}\n\n"
-                        f"💬 Última mensagem: {content}\n\n"
-                        f"Acesse o CRM para continuar: https://guardian.grupomayconsantos.com.br/crm"
-                    )
-                    send_whatsapp_message("45998452596", aviso, db)
-                except Exception:
-                    pass
+            # Notifica o dono SEMPRE (dentro ou fora do horário)
+            try:
+                from services.crm_ai import next_business_hours_str
+                horario_info = "🟢 Dentro do horário" if is_business_hours() else f"🔴 Fora do horário — retoma {next_business_hours_str()}"
+                aviso = (
+                    f"🔔 *CRM — Atendimento necessário!*\n\n"
+                    f"👤 Contato: {conv.contact_name or phone}\n"
+                    f"📱 WhatsApp: {phone}\n"
+                    f"🕐 {horario_info}\n\n"
+                    f"💬 Problema relatado: {content}\n\n"
+                    f"Acesse o CRM para continuar: https://guardian.grupomayconsantos.com.br/crm"
+                )
+                send_whatsapp_message("45998452596", aviso, db)
+            except Exception:
+                pass
 
         db.commit()
 
@@ -425,58 +461,97 @@ async def suporte_ticket(request: Request, db: Session = Depends(get_db)):
     if not mensagem:
         return {"error": "Mensagem não pode estar vazia"}
 
-    # Número da Maia
-    MAIA_NUMBER = "5545999539960"
-
-    # Monta mensagem para a Maia
-    texto_maia = (
-        f"🛡️ *SUPORTE — Guardian Shield*\n\n"
-        f"👤 *Cliente:* {nome}\n"
-        f"📧 *E-mail:* {email or 'não informado'}\n"
-        f"📱 *Dispositivo:* {device_id or 'não informado'}\n\n"
-        f"💬 *Mensagem:*\n{mensagem}"
-    )
-
-    # Envia WhatsApp para a Maia
+    # Busca o WhatsApp do cliente pelo email para entrar em contato
+    phone_cliente = None
     try:
-        send_whatsapp_message(MAIA_NUMBER, texto_maia, db)
+        from models import User
+        user = db.query(User).filter(User.email == email).first() if email else None
+        if user and user.whatsapp:
+            phone_cliente = user.whatsapp.replace("+", "").replace(" ", "").replace("-", "")
+            if not nome or nome == "Cliente":
+                nome = user.nome or nome
     except Exception as e:
-        logger.error(f"[SUPORTE] erro ao enviar WA para Maia: {e}")
-        return {"error": "Falha ao enviar mensagem. Tente novamente."}
+        logger.error(f"[SUPORTE] erro ao buscar usuário: {e}")
 
     # Cria ou atualiza conversa no CRM com stage 'support'
+    conv = None
     try:
-        conv = db.query(CrmConversation).filter(
-            CrmConversation.contact_email == email
-        ).first() if email else None
+        # Tenta achar pelo phone primeiro, depois por email
+        if phone_cliente:
+            conv = db.query(CrmConversation).filter(CrmConversation.phone == phone_cliente).first()
+        if not conv and email:
+            conv = db.query(CrmConversation).filter(CrmConversation.contact_email == email).first()
 
         if conv:
             conv.stage = "support"
+            conv.ai_active = True  # Maia entra em contato
+            if not conv.contact_email and email:
+                conv.contact_email = email
+            if phone_cliente and (not conv.phone or conv.phone == email):
+                conv.phone = phone_cliente
             conv.updated_at = datetime.utcnow()
         else:
             conv = CrmConversation(
-                phone=email or device_id or "app-suporte",
+                phone=phone_cliente or email or device_id or "app-suporte",
                 contact_name=nome,
                 contact_email=email,
                 stage="support",
-                ai_enabled=False,
+                ai_active=True,
             )
             db.add(conv)
             db.flush()
 
-        # Registra a mensagem no histórico do CRM
-        msg = CrmMessage(
+        # Registra a mensagem do cliente no histórico
+        db.add(CrmMessage(
             conversation_id=conv.id,
             direction="in",
             content=mensagem,
-            timestamp=datetime.utcnow(),
-        )
-        db.add(msg)
+            sent_by=nome,
+        ))
         db.commit()
-        logger.info(f"[SUPORTE] ticket criado conv_id={conv.id} email={email}")
+        logger.warning(f"[SUPORTE] ticket criado conv_id={conv.id} email={email} phone={phone_cliente}")
     except Exception as e:
         logger.error(f"[SUPORTE] erro ao salvar CRM: {e}")
-        # Não retorna erro — a mensagem já foi enviada para a Maia
+
+    # Maia entra em contato com o cliente pelo WhatsApp
+    if phone_cliente:
+        try:
+            msg_maia = (
+                f"Oi, {nome.split()[0] if nome else 'tudo bem'}! 👋\n\n"
+                f"Vi que você abriu um ticket de suporte no Guardian Shield.\n\n"
+                f"*Sua mensagem:* _{mensagem}_\n\n"
+                f"Pode me contar mais detalhes? Vou te ajudar agora mesmo! 🛡️"
+            )
+            send_whatsapp_message(phone_cliente, msg_maia, db)
+            if conv:
+                db.add(CrmMessage(
+                    conversation_id=conv.id,
+                    direction="out",
+                    content=msg_maia,
+                    sent_by="ai",
+                ))
+                db.commit()
+        except Exception as e:
+            logger.error(f"[SUPORTE] erro ao enviar WA para cliente {phone_cliente}: {e}")
+
+    # Notifica o dono com todos os dados do cliente
+    try:
+        from services.crm_ai import is_business_hours, next_business_hours_str
+        horario_info = "🟢 Dentro do horário" if is_business_hours() else f"🔴 Fora do horário — retoma {next_business_hours_str()}"
+        aviso_dono = (
+            f"🎫 *Ticket de suporte — app Guardian Shield*\n\n"
+            f"👤 *Cliente:* {nome}\n"
+            f"📧 *E-mail:* {email or 'não informado'}\n"
+            f"📱 *WhatsApp:* {phone_cliente or 'não cadastrado'}\n"
+            f"🖥️ *Dispositivo:* {device_id or 'não informado'}\n"
+            f"🕐 {horario_info}\n\n"
+            f"💬 *Mensagem:*\n{mensagem}\n\n"
+            f"{'✅ Maia já entrou em contato com o cliente.' if phone_cliente else '⚠️ Sem WhatsApp cadastrado — Maia não conseguiu contatar.'}\n"
+            f"Acesse o CRM: https://guardian.grupomayconsantos.com.br/crm"
+        )
+        send_whatsapp_message("45998452596", aviso_dono, db)
+    except Exception as e:
+        logger.error(f"[SUPORTE] erro ao notificar dono: {e}")
 
     return {"ok": True}
 

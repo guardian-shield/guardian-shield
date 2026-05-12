@@ -195,6 +195,7 @@ async def process_license_recovery():
             User.expires_at != None,
             User.expires_at >= cutoff,
             User.whatsapp != None,
+            User.plan_type != "trial_gratis",
         ).all()
 
         for user in users:
@@ -260,16 +261,71 @@ def _get_recovery_message(email: str, days: int, expired: bool) -> str:
         return ""
 
 
+async def process_trial_expiry_check():
+    """
+    Verifica usuários com trial expirado e sem conversão.
+    Se não houver fila trial_expired ativa, cria uma.
+    Também cancela filas de ativação/nurture para quem já expirou.
+    """
+    from models import User, RecoveryQueue
+    from services.recovery_service import criar_fila_trial_expirado, cancelar_fila
+
+    if _is_quiet_hours():
+        return
+
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        # Busca usuários com trial expirado, sem plano pago e com WhatsApp
+        users = db.query(User).filter(
+            User.plan_type == "trial_gratis",
+            User.expires_at != None,
+            User.expires_at < now,
+            User.whatsapp != None,
+        ).all()
+
+        for user in users:
+            phone = user.whatsapp.replace("+", "").replace(" ", "").replace("-", "")
+
+            # Cancela filas de ativação e nurture (trial acabou, não faz mais sentido)
+            for tipo in ("trial_activation", "trial_nurture"):
+                for item in db.query(RecoveryQueue).filter(
+                    RecoveryQueue.phone == phone,
+                    RecoveryQueue.tipo == tipo,
+                    RecoveryQueue.status.in_(["pending", "paused"]),
+                ).all():
+                    item.status = "completed"
+            db.commit()
+
+            # Cria fila de reengajamento se ainda não existe
+            criar_fila_trial_expirado(
+                phone=phone,
+                email=user.email or "",
+                nome=user.nome or "",
+                db=db,
+            )
+
+    except Exception as e:
+        logger.error(f"[TRIAL_EXPIRY] Erro: {e}")
+    finally:
+        db.close()
+
+
 async def run_followup_loop():
     """Loop em background — verifica a cada 60 segundos."""
     logger.warning("[FOLLOWUP] Scheduler iniciado.")
+    tick = 0
     while True:
         try:
             await asyncio.sleep(60)
+            tick += 1
             await process_followups()
             await process_license_recovery()
             from services.recovery_service import process_recovery_queue
             await process_recovery_queue()
+            # Verifica trials expirados a cada 10 minutos
+            if tick % 10 == 0:
+                await process_trial_expiry_check()
         except asyncio.CancelledError:
             break
         except Exception as e:

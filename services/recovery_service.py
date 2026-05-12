@@ -41,6 +41,18 @@ RENEWAL_STEPS = [
     timedelta(days=5),       # step 4 — 7 dias após expirar
 ]
 
+# Nurturing de trial grátis — conversão para anual nos últimos 2 dias
+TRIAL_NURTURE_STEPS = [
+    timedelta(hours=2),      # step 0 — dia 0 · dica de primeiros passos
+    timedelta(days=3),       # step 1 — dia 3 · check-in (como está indo?)
+    timedelta(days=2),       # step 2 — dia 5 · início da conversão (suave)
+    timedelta(days=1),       # step 3 — dia 6 · pergunta sobre uso + urgência leve
+    timedelta(days=1),       # step 4 — dia 7 · pergunta sobre uso + último dia
+]
+
+# Ativação de trial — quem cadastrou mas ainda não baixou/ativou (1x/dia até ativar ou expirar)
+TRIAL_ACTIVATION_STEPS = [timedelta(days=1)] * 7  # máximo 7 tentativas diárias
+
 # ── Prompts contextuais por fluxo/step ───────────────────────────────────────
 
 def _system_abandonment(step: int) -> str:
@@ -91,6 +103,159 @@ def _system_renewal(step: int, days_left: int, expired: bool) -> str:
             f"Já faz {abs(days_left)} dias sem acesso. Última tentativa — mostre o que está perdendo. Tom direto mas respeitoso.",
         ]
     instrucao = instrucoes[min(step % len(instrucoes), len(instrucoes)-1)]
+    return base + "\n\nINSTRUÇÃO: " + instrucao
+
+
+def _system_trial_nurture(step: int) -> str:
+    """Mensagens para quem está no trial grátis de 7 dias — foco em uso e conversão nos últimos 2 dias."""
+    LINK_ANUAL = "https://guardian.grupomayconsantos.com.br/pagar"
+    base = (
+        "Você é a Maia, atendente do Guardian Shield. "
+        "Este usuário está no período de teste gratuito de 7 dias. "
+        "Escreva APENAS a mensagem de WhatsApp, sem prefácio, máximo 3-4 linhas. "
+        "Tom natural, de quem conhece a pessoa. Nunca mencione que é IA."
+    )
+    instrucoes = [
+        # step 0 — 2h após cadastro — primeiros passos
+        "O usuário acabou de se cadastrar há 2 horas. Envie uma dica prática e curta para conectar o primeiro celular. "
+        "Mostre que é simples: cabo USB, ativar Depuração USB, clicar Conectar no app. Finalize convidando a testar hoje mesmo. "
+        "Tom animado e acolhedor.",
+
+        # step 1 — dia 3 — check-in
+        "Já se passaram 3 dias do teste. Pergunte se já conseguiu conectar algum celular e rodar a primeira blindagem. "
+        "Se a pessoa ainda não tentou, ofereça ajuda rápida. Não mencione preço ainda — foco em uso e resultado.",
+
+        # step 2 — dia 5 — início suave da conversão (2 dias antes do fim)
+        "Faltam 2 dias para o teste acabar. Mencione isso de forma leve e natural. "
+        "Mostre o valor do plano anual (R$299/ano) e faça a conta rápida: "
+        "5 blindagens de R$100 = R$500 numa semana. A licença se paga sozinha. "
+        "Não pressione — só plante a semente. "
+        "Link do pagamento: " + LINK_ANUAL,
+
+        # step 3 — dia 6 — pergunta sobre uso + urgência leve
+        "É o 6º dia do teste. Pergunte como está sendo a experiência — se conseguiu conectar algum celular, "
+        "se rodou alguma blindagem, o que achou do processo. Mostre interesse genuíno. "
+        "No final, mencione de forma leve que o teste acaba amanhã e dê o link caso queira garantir o anual. "
+        "Tom: curiosa e parceira, não de vendedora. "
+        "Link: " + LINK_ANUAL,
+
+        # step 4 — dia 7 — pergunta sobre uso + último dia
+        "Hoje é o último dia do teste. Comece perguntando: o que achou no geral? Conseguiu usar? "
+        "Teve alguma dificuldade ou correu tudo bem? Mostre que você quer saber a opinião real. "
+        "Depois mencione que o acesso encerra hoje e dê o link direto para quem quiser continuar. "
+        "Tom: humana, sem pressão excessiva — quem quer, clica. "
+        "Link: " + LINK_ANUAL,
+    ]
+    instrucao = instrucoes[min(step, len(instrucoes) - 1)]
+    return base + "\n\nINSTRUÇÃO: " + instrucao
+
+
+def _system_trial_activation(step: int) -> str:
+    """Mensagens para quem se cadastrou no trial mas ainda não baixou/ativou o software."""
+    LINK_DOWNLOAD = "https://guardian.grupomayconsantos.com.br/download"
+    base = (
+        "Você é a Maia, atendente do Guardian Shield. "
+        "Este usuário fez o cadastro do teste grátis de 7 dias mas ainda não baixou ou ativou o software. "
+        "Escreva APENAS a mensagem de WhatsApp, sem prefácio, máximo 3 linhas. "
+        "Tom: prestativo, sem pressão. Nunca mencione que é IA."
+    )
+    instrucoes = [
+        # step 0 — 1 dia após cadastro
+        "O usuário se cadastrou ontem mas ainda não baixou o Guardian Shield. "
+        "Pergunte se teve alguma dificuldade para baixar ou instalar. "
+        "Dê o link de download e diga que em 5 minutos está funcionando. "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 1 — dia 2
+        "Já faz 2 dias que o usuário se cadastrou e ainda não ativou. "
+        "Pergunte se está com dúvida na instalação — muita gente trava no cabo USB ou no modo desenvolvedor. "
+        "Ofereça ajuda e dê o link novamente. "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 2 — dia 3
+        "Terceiro dia sem ativar. Seja direta mas simpática — "
+        "diga que o período de 7 dias já começou a correr e que seria uma pena não aproveitar. "
+        "Pergunte o que está impedindo: é dificuldade técnica, falta de tempo ou outra coisa? "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 3 — dia 4
+        "O usuário ainda não ativou e já passou metade do teste. "
+        "Tom gentil mas com alguma urgência: já passaram 4 dos 7 dias. "
+        "Diga que se precisar de ajuda para instalar você acompanha passo a passo. "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 4 — dia 5
+        "5 dias de teste e ainda sem ativar. Pergunte se a pessoa ainda tem interesse "
+        "ou se algo mudou — sem julgamento, só para entender. "
+        "Reforce que faltam só 2 dias e que o download é rápido. "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 5 — dia 6
+        "Penúltimo dia do teste sem nenhuma ativação. "
+        "Mensagem curta e direta: amanhã o período acaba. "
+        "Pergunte se quer ajuda para configurar agora, porque ainda dá tempo. "
+        "Link: " + LINK_DOWNLOAD,
+
+        # step 6 — dia 7
+        "Último dia. Último aviso sobre o download. "
+        "Tom empático: sem pressão, mas deixa claro que o acesso encerra hoje. "
+        "Se não for o momento, tudo bem — só deixa o link para quando precisar. "
+        "Link: " + LINK_DOWNLOAD,
+    ]
+    instrucao = instrucoes[min(step, len(instrucoes) - 1)]
+    return base + "\n\nINSTRUÇÃO: " + instrucao
+
+
+def _system_trial_expired(step: int) -> str:
+    """Mensagens diárias para quem teve trial expirado e não converteu — sem fim definido."""
+    LINK_ANUAL  = "https://guardian.grupomayconsantos.com.br/pagar?plano=anual"
+    LINK_MENSAL = "https://guardian.grupomayconsantos.com.br/pagar"
+    base = (
+        "Você é a Maia, atendente do Guardian Shield. "
+        "Este usuário fez o teste grátis de 7 dias mas o período expirou e ele não contratou. "
+        "Escreva APENAS a mensagem de WhatsApp, sem prefácio, máximo 3-4 linhas. "
+        "Tom: natural, sem pressão excessiva. Varie o ângulo a cada mensagem. "
+        "Nunca repita exatamente a mesma abordagem. Nunca mencione que é IA. "
+        "Sempre inclua o link ao final."
+    )
+    # Ciclo de 7 ângulos diferentes que se repetem
+    angulos = [
+        # 0 — dia após expirar
+        "O teste acabou ontem. Pergunte o que achou da experiência — gostou? Teve alguma dificuldade? "
+        "Diga que ficou a disposição e que quem quiser continuar garante o anual por R$299. "
+        "Link: " + LINK_ANUAL,
+
+        # 1 — prova social
+        "Use um dado concreto de resultado: 'Técnicos que usam o Guardian Shield cobram em média R$100 por blindagem — "
+        "5 blindagens numa semana já pagam a licença anual.' "
+        "Pergunte se a pessoa já pensou em oferecer esse serviço. Link: " + LINK_ANUAL,
+
+        # 2 — remover dor
+        "Aborde a dor: cliente que volta com vírus 2 dias depois e culpa o técnico. "
+        "Com o Guardian Shield o problema não volta — e tem certificado de garantia para provar. "
+        "Pergunte se isso já aconteceu com ela. Link: " + LINK_ANUAL,
+
+        # 3 — ancoragem de preço
+        "Faça a conta: se cobrar R$80 por blindagem, em 4 atendimentos a licença anual se paga. "
+        "O resto é lucro. Não precisa de peça, não precisa de mão extra. "
+        "Ainda dá para garantir — link: " + LINK_ANUAL,
+
+        # 4 — oferta mensal como porta de entrada
+        "Se o anual parecer um compromisso grande, diga que também tem o plano mensal para testar sem tanto risco. "
+        "Assim ela pode começar a cobrar dos clientes, sentir o retorno, e depois decide se renova. "
+        "Link: " + LINK_MENSAL,
+
+        # 5 — depoimento / resultado real
+        "Mostre que funciona na prática: 'O Maycon, criador do Guardian Shield, gerou R$35 mil líquidos "
+        "com esse serviço em 8 meses na própria assistência dele.' "
+        "Pergunte o que impede a pessoa de começar. Link: " + LINK_ANUAL,
+
+        # 6 — check-in simples
+        "Mensagem curta e leve: 'Oi, tudo bem? Só passando para ver se surgiu alguma dúvida ou se posso ajudar em algo. "
+        "Se quiser reativar é só clicar aqui →' "
+        "Link: " + LINK_ANUAL,
+    ]
+    instrucao = angulos[step % len(angulos)]  # rotaciona ciclicamente
     return base + "\n\nINSTRUÇÃO: " + instrucao
 
 
@@ -362,6 +527,44 @@ async def process_recovery_queue():
                 system = _system_renewal(item.step, days_left, expired)
             elif item.tipo == "support":
                 system = _system_support_onboarding(item.step)
+            elif item.tipo == "trial_nurture":
+                # Se o trial já foi convertido para plano pago, cancela nurturing
+                from models import User
+                user_trial = db.query(User).filter(User.email == item.email).first() if item.email else None
+                if user_trial and user_trial.plan_type in ("anual", "anual79", "anual199", "mensal"):
+                    item.status = "completed"
+                    db.commit()
+                    continue
+                system = _system_trial_nurture(item.step)
+
+            elif item.tipo == "trial_activation":
+                # Cancela se o usuário ativou (tem hwid) ou se o trial expirou
+                from models import User
+                user_act = db.query(User).filter(User.email == item.email).first() if item.email else None
+                if user_act:
+                    if user_act.hwid_1:
+                        # Usuário ativou o software — não precisa mais desse fluxo
+                        item.status = "completed"
+                        db.commit()
+                        logger.warning(f"[RECOVERY] trial_activation cancelado — {item.phone} ativou")
+                        continue
+                    if user_act.plan_type in ("anual", "anual79", "anual199", "mensal"):
+                        item.status = "completed"
+                        db.commit()
+                        continue
+                system = _system_trial_activation(item.step)
+
+            elif item.tipo == "trial_expired":
+                # Cancela se o usuário converteu para plano pago
+                from models import User
+                user_exp = db.query(User).filter(User.email == item.email).first() if item.email else None
+                if user_exp and user_exp.plan_type in ("anual", "anual79", "anual199", "mensal"):
+                    item.status = "completed"
+                    db.commit()
+                    logger.warning(f"[RECOVERY] trial_expired cancelado — {item.phone} converteu")
+                    continue
+                system = _system_trial_expired(item.step)
+
             else:
                 item.status = "cancelled"
                 db.commit()
@@ -403,13 +606,20 @@ async def process_recovery_queue():
                 # Avança step ou finaliza
                 next_step = item.step + 1
                 steps_map = {
-                    "abandonment": ABANDONMENT_STEPS,
-                    "renewal": RENEWAL_STEPS,
-                    "support": [timedelta(days=3), timedelta(days=4), timedelta(days=8)],
+                    "abandonment":       ABANDONMENT_STEPS,
+                    "renewal":           RENEWAL_STEPS,
+                    "support":           [timedelta(days=3), timedelta(days=4), timedelta(days=8)],
+                    "trial_nurture":     TRIAL_NURTURE_STEPS,
+                    "trial_activation":  TRIAL_ACTIVATION_STEPS,
                 }
                 steps = steps_map.get(item.tipo, [])
 
-                if next_step < len(steps):
+                if item.tipo == "trial_expired":
+                    # Loop infinito diário — continua até converter ou cancelar
+                    item.step = next_step  # avança p/ mudar o ângulo
+                    item.next_send_at = now + timedelta(days=1)
+                    item.updated_at = now
+                elif next_step < len(steps):
                     item.step = next_step
                     item.next_send_at = now + steps[next_step]
                     item.updated_at = now
@@ -435,6 +645,97 @@ async def process_recovery_queue():
 
 
 # ── Fluxo de suporte pós-pagamento ───────────────────────────────────────────
+
+def criar_fila_trial_nurture(phone: str, email: str = "", nome: str = "", db=None):
+    """Chamado quando usuário faz cadastro de trial grátis — nurturing de 7 dias para conversão."""
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+    try:
+        existente = db.query(RecoveryQueue).filter(
+            RecoveryQueue.phone == phone,
+            RecoveryQueue.tipo == "trial_nurture",
+            RecoveryQueue.status == "pending",
+        ).first()
+        if existente:
+            return  # já tem fila ativa
+
+        db.add(RecoveryQueue(
+            phone=phone,
+            email=email,
+            nome=nome,
+            tipo="trial_nurture",
+            step=0,
+            next_send_at=datetime.utcnow() + TRIAL_NURTURE_STEPS[0],
+            status="pending",
+        ))
+        db.commit()
+        logger.warning(f"[RECOVERY] Fila trial_nurture criada para {phone}")
+    finally:
+        if close_db:
+            db.close()
+
+
+def criar_fila_trial_ativacao(phone: str, email: str = "", nome: str = "", db=None):
+    """Chamado no cadastro do trial — dispara diariamente até o usuário ativar ou o trial expirar."""
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+    try:
+        existente = db.query(RecoveryQueue).filter(
+            RecoveryQueue.phone == phone,
+            RecoveryQueue.tipo == "trial_activation",
+            RecoveryQueue.status == "pending",
+        ).first()
+        if existente:
+            return
+        db.add(RecoveryQueue(
+            phone=phone,
+            email=email,
+            nome=nome,
+            tipo="trial_activation",
+            step=0,
+            next_send_at=datetime.utcnow() + TRIAL_ACTIVATION_STEPS[0],
+            status="pending",
+        ))
+        db.commit()
+        logger.warning(f"[RECOVERY] Fila trial_activation criada para {phone}")
+    finally:
+        if close_db:
+            db.close()
+
+
+def criar_fila_trial_expirado(phone: str, email: str = "", nome: str = "", db=None):
+    """Criada pelo scheduler quando trial expira sem conversão — dispara diariamente sem fim."""
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+    try:
+        existente = db.query(RecoveryQueue).filter(
+            RecoveryQueue.phone == phone,
+            RecoveryQueue.tipo == "trial_expired",
+            RecoveryQueue.status.in_(["pending", "paused"]),
+        ).first()
+        if existente:
+            return  # já tem fila ativa
+        db.add(RecoveryQueue(
+            phone=phone,
+            email=email,
+            nome=nome,
+            tipo="trial_expired",
+            step=0,
+            next_send_at=datetime.utcnow() + timedelta(hours=2),  # primeiro disparo em 2h
+            status="pending",
+        ))
+        db.commit()
+        logger.warning(f"[RECOVERY] Fila trial_expired criada para {phone}")
+    finally:
+        if close_db:
+            db.close()
+
 
 def criar_fila_suporte(phone: str, email: str = "", nome: str = "", db=None):
     """Chamado quando pagamento é confirmado — inicia onboarding."""

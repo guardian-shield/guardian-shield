@@ -14,6 +14,50 @@ from payment import criar_pix, criar_pagamento, buscar_pagamento, processar_cart
 router = APIRouter()
 
 
+def _registrar_conversao_afiliado(db, slug: str, email_cliente: str, nome_cliente: str,
+                                   whatsapp_cliente: str, plano: str, valor_cents: int,
+                                   payment_id: str = "", metodo: str = "pix"):
+    """Registra conversão e notifica o afiliado via WhatsApp."""
+    from models import Affiliate, AffiliateConversion
+    from services.whatsapp_service import send_whatsapp_message
+
+    aff = db.query(Affiliate).filter(Affiliate.slug == slug, Affiliate.ativo == True).first()
+    if not aff:
+        return
+
+    comissao_cents = int(valor_cents * aff.comissao_pct / 100)
+
+    db.add(AffiliateConversion(
+        affiliate_slug   = slug,
+        email_cliente    = email_cliente,
+        nome_cliente     = nome_cliente or email_cliente,
+        whatsapp_cliente = whatsapp_cliente,
+        plano            = plano,
+        valor            = valor_cents,
+        comissao         = comissao_cents,
+        payment_id       = payment_id,
+        metodo           = metodo,
+    ))
+    db.commit()
+
+    if aff.whatsapp:
+        valor_fmt    = f"R${valor_cents/100:.2f}".replace(".", ",")
+        comissao_fmt = f"R${comissao_cents/100:.2f}".replace(".", ",")
+        try:
+            send_whatsapp_message(
+                aff.whatsapp,
+                f"🎉 *Nova venda pelo seu link!*\n\n"
+                f"👤 Cliente: {nome_cliente or email_cliente}\n"
+                f"💰 Valor: *{valor_fmt}*\n"
+                f"🤑 Sua comissão: *{comissao_fmt}* ({aff.comissao_pct}%)\n\n"
+                f"Acesse seu painel para acompanhar:\n"
+                f"https://guardian.grupomayconsantos.com.br/afiliado/{slug}/painel",
+                db,
+            )
+        except Exception:
+            pass
+
+
 def _registrar_lead_crm(phone: str, email: str, plano: str, db, nome: str = ""):
     """Cria ou atualiza conversa no CRM assim que lead informa dados — garante follow-up mesmo se PIX falhar."""
     from models import CrmConversation, CrmMessage
@@ -124,7 +168,7 @@ def get_db():
 # POST /create-pix  →  cria pagamento PIX direto
 # =============================================================
 @router.post("/create-pix")
-async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "", db: Session = Depends(get_db)):
+async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "", afiliado: str = "", db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if user and plano == "teste" and user.trial_usado:
         return {"error": "O período de teste já foi utilizado nesta conta. Para continuar usando o Guardian Shield, adquira o plano anual."}
@@ -147,12 +191,16 @@ async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "",
         # Cria/atualiza conversa no CRM para o follow-up automático
         _registrar_lead_crm(whatsapp, email, plano, db, nome=nome)
 
-    valor = 49.90 if plano == "teste" else 299.00 if plano == "anual" else None
+    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
 
+    ext_ref = f"{email}|{plano}"
+    if afiliado:
+        ext_ref += f"|{afiliado}"
+
     try:
-        resultado = criar_pix(email, valor, plano)
+        resultado = criar_pix(email, valor, plano, external_reference=ext_ref)
     except Exception as e:
         return {"error": f"Falha ao gerar PIX: {e}"}
 
@@ -202,15 +250,16 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
     if status == "approved":
         from datetime import datetime, timedelta
         reference = pagamento.get("external_reference", "")
-        # Suporta separador "|" (novo) e "-" (legado)
+        # Suporta separador "|" (novo) e "-" (legado); 3 partes = email|plano|afiliado
         if reference and "|" in reference:
-            parts = reference.split("|", 1)
+            parts = reference.split("|")
         elif reference and "-" in reference:
             parts = reference.split("-", 1)
         else:
             parts = []
-        email = parts[0] if parts else pagamento.get("payer", {}).get("email")
-        plano = parts[1] if len(parts) > 1 else "teste"
+        email          = parts[0] if parts else pagamento.get("payer", {}).get("email")
+        plano          = parts[1] if len(parts) > 1 else "teste"
+        afiliado_slug  = parts[2] if len(parts) > 2 else None
 
         if email:
             user = db.query(User).filter(User.email == email).first()
@@ -226,7 +275,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             if sem_licenca or expirada:
                 dias = 30 if plano == "teste" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
-                user.plan_type  = plano
+                user.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
                 if plano == "teste":
                     user.trial_usado = True
                 if not user.password:
@@ -252,6 +301,8 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             if licenca_ativada_agora and user:
                 from services.whatsapp_service import send_whatsapp_message
                 plano_nome = "Teste 30 dias" if plano == "teste" else "Anual"
+                plano_label_pix = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
+                planoValor_pix = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00
                 # Mensagem para o cliente
                 if user.whatsapp:
                     try:
@@ -260,7 +311,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                             f"Olá, {user.nome or email}!\n\n"
                             f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
                             f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
-                            f"https://drive.google.com/uc?export=download&id=1IF5gPconoMyfDU8HKLPIaMGlHu5UaIL4\n\n"
+                            f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
                             f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
                             f"Qualquer dúvida, é só chamar! 🛡️"
                         )
@@ -269,10 +320,9 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                         pass
                 # Notificação para o dono
                 try:
-                    plano_label = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual (R$299)"
                     msg_dono = (
                         f"🔔 *Nova venda Guardian Shield!*\n\n"
-                        f"💰 PIX — Plano: *{plano_label}*\n"
+                        f"💰 PIX — Plano: *{plano_label_pix}*\n"
                         f"📧 Cliente: {email}\n"
                         f"📱 WhatsApp: {user.whatsapp or 'não informado'}\n\n"
                         f"✅ Licença ativada automaticamente."
@@ -280,6 +330,20 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                     send_whatsapp_message("45998452596", msg_dono, db)
                 except Exception:
                     pass
+
+                # Conversão de afiliado
+                if afiliado_slug:
+                    _registrar_conversao_afiliado(
+                        db=db,
+                        slug=afiliado_slug,
+                        email_cliente=email,
+                        nome_cliente=user.nome or "",
+                        whatsapp_cliente=user.whatsapp or "",
+                        plano=plano,
+                        valor_cents=int(planoValor_pix * 100),
+                        payment_id=str(pagamento.get("id", "")),
+                        metodo="pix",
+                    )
 
     return {"status": status}
 
@@ -302,6 +366,7 @@ async def process_card(request: Request):
     plano              = data.get("plano", "teste")
     whatsapp           = data.get("whatsapp", "")
     nome               = data.get("nome", "")
+    afiliado_slug_card = data.get("afiliado", "")
     token              = data.get("token")
     installments       = data.get("installments", 1)
     payment_method_id  = data.get("payment_method_id")
@@ -320,7 +385,7 @@ async def process_card(request: Request):
     finally:
         _db_check.close()
 
-    valor = 49.90 if plano == "teste" else 299.00
+    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00
 
     # Salva WhatsApp do lead e registra no CRM antes do pagamento
     if whatsapp and email:
@@ -379,7 +444,7 @@ async def process_card(request: Request):
                 user_db = _db2.query(User).filter(User.email == email).first()
                 if user_db:
                     user_db.expires_at = __import__('datetime').datetime.utcnow() + timedelta(days=dias)
-                    user_db.plan_type  = plano
+                    user_db.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
                     if plano == "teste":
                         user_db.trial_usado = True
                     if not user_db.password:
@@ -404,17 +469,17 @@ async def process_card(request: Request):
                         f"Olá, {nome_cliente}!\n\n"
                         f"Seu plano *Guardian Shield {plano_nome}* foi ativado com sucesso.\n\n"
                         f"📥 *Baixe o aplicativo pelo link abaixo:*\n"
-                        f"https://drive.google.com/uc?export=download&id=1IF5gPconoMyfDU8HKLPIaMGlHu5UaIL4\n\n"
+                        f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
                         f"Após instalar, abra o app, clique em *Cadastro*, use o e-mail acima e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
                         f"Qualquer dúvida, é só chamar! 🛡️"
                     )
                     send_whatsapp_message(whatsapp, msg_cliente, _db2)
 
                 # Notificação para o dono
-                plano_label = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual (R$299)"
+                plano_label_card = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
                 msg_dono = (
                     f"🔔 *Nova venda Guardian Shield!*\n\n"
-                    f"💳 Cartão — Plano: *{plano_label}*\n"
+                    f"💳 Cartão — Plano: *{plano_label_card}*\n"
                     f"📧 Cliente: {email}\n"
                     f"📱 WhatsApp: {whatsapp or 'não informado'}\n\n"
                     f"✅ Licença ativada automaticamente."
@@ -422,6 +487,20 @@ async def process_card(request: Request):
                 send_whatsapp_message("45998452596", msg_dono, _db2)
                 # Atualiza CRM para active
                 _ativar_no_crm(whatsapp, _db2)
+
+                # Conversão de afiliado (cartão)
+                if afiliado_slug_card:
+                    _registrar_conversao_afiliado(
+                        db=_db2,
+                        slug=afiliado_slug_card,
+                        email_cliente=email,
+                        nome_cliente=nome or (user_db.nome if user_db else ""),
+                        whatsapp_cliente=whatsapp,
+                        plano=plano,
+                        valor_cents=int(valor * 100),
+                        payment_id=str(resultado.get("id", "")),
+                        metodo="cartao",
+                    )
             except Exception:
                 pass
             finally:
@@ -484,3 +563,238 @@ def pagina_vendas2():
     html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas2.html")
     with open(os.path.abspath(html_path), encoding="utf-8") as f:
         return f.read()
+
+
+# GET /vendas3  →  oferta especial anual R$79,90
+# =============================================================
+@router.get("/vendas3", response_class=HTMLResponse)
+def pagina_vendas3():
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas3.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        return f.read()
+
+
+# GET /vendas4  →  teste grátis 7 dias (Instagram)
+# =============================================================
+@router.get("/vendas4", response_class=HTMLResponse)
+def pagina_vendas4():
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas4.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        return f.read()
+
+
+# POST /register-free-trial  →  cadastro gratuito 7 dias
+# =============================================================
+from pydantic import BaseModel as _BaseModel
+
+class TrialRegisterRequest(_BaseModel):
+    nome: str
+    email: str
+    whatsapp: str
+    senha: str
+
+
+@router.post("/register-free-trial")
+async def register_free_trial(body: TrialRegisterRequest, db: Session = Depends(get_db)):
+    from datetime import datetime, timedelta
+    from auth import hash_password
+
+    nome     = body.nome.strip()
+    email    = body.email.strip().lower()
+    whatsapp = body.whatsapp.strip().replace("+", "").replace(" ", "").replace("-", "")
+    senha    = body.senha.strip()
+
+    if not nome or not email or not whatsapp or not senha:
+        return {"error": "Preencha todos os campos."}
+    if "@" not in email:
+        return {"error": "E-mail inválido."}
+    if len(whatsapp) < 10:
+        return {"error": "WhatsApp inválido."}
+    if len(senha) < 6:
+        return {"error": "A senha deve ter pelo menos 6 caracteres."}
+
+    # Verifica se email já existe
+    existente = db.query(User).filter(User.email == email).first()
+    if existente:
+        # Se já tem licença ativa, informa
+        if existente.expires_at and existente.expires_at > datetime.utcnow():
+            return {"error": "Este e-mail já tem uma conta ativa. Faça login no aplicativo."}
+        # Se nunca usou trial, ativa
+        if existente.trial_usado:
+            return {"error": "Este e-mail já utilizou o período de teste. Para continuar, adquira o plano anual."}
+
+    senha_hash = hash_password(senha)
+
+    if existente:
+        user = existente
+        if not user.password:
+            user.password = senha_hash
+        if not user.whatsapp:
+            user.whatsapp = whatsapp
+        if not user.nome:
+            user.nome = nome
+    else:
+        user = User(
+            nome=nome,
+            email=email,
+            password=senha_hash,
+            whatsapp=whatsapp,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Ativa licença de 7 dias
+    user.expires_at  = datetime.utcnow() + timedelta(days=7)
+    user.plan_type   = "trial_gratis"
+    user.trial_usado = True
+    # pre_liberado=False — usuário já tem senha, pode fazer login normalmente
+    user.pre_liberado = False
+    db.commit()
+
+    # CRM — cria conversa como "active" (tem acesso) para IA saber que é trial
+    from models import CrmConversation, CrmMessage
+    conv = db.query(CrmConversation).filter(CrmConversation.phone == whatsapp).first()
+    if not conv:
+        conv = CrmConversation(
+            phone=whatsapp,
+            contact_name=nome,
+            contact_email=email,
+            stage="active",
+            ai_active=True,
+        )
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+    else:
+        conv.stage = "active"
+        conv.contact_name  = conv.contact_name or nome
+        conv.contact_email = conv.contact_email or email
+        db.commit()
+
+    db.add(CrmMessage(
+        conversation_id=conv.id,
+        direction="out",
+        content=f"[Sistema] Cadastro via teste grátis (vendas4) — 7 dias. Plano: trial_gratis.",
+        sent_by="system",
+    ))
+    db.commit()
+
+    # WhatsApp de boas-vindas
+    try:
+        from services.whatsapp_service import send_whatsapp_message
+        msg_boas_vindas = (
+            f"🎉 *Olá, {nome}!*\n\n"
+            f"Seu acesso ao *Guardian Shield* foi ativado — você tem *7 dias grátis* para testar tudo.\n\n"
+            f"📥 *Baixe agora pelo link:*\n"
+            f"https://guardian.grupomayconsantos.com.br/download\n\n"
+            f"Após instalar, abra o app, clique em *Login* e entre com:\n"
+            f"📧 {email}\n\n"
+            f"Qualquer dúvida é só responder aqui — estou aqui para te ajudar! 🛡️"
+        )
+        send_whatsapp_message(whatsapp, msg_boas_vindas, db)
+    except Exception:
+        pass
+
+    # Notifica o dono
+    try:
+        from services.whatsapp_service import send_whatsapp_message
+        msg_dono = (
+            f"🆓 *Novo cadastro — Teste Grátis (vendas4)*\n\n"
+            f"👤 {nome}\n"
+            f"📧 {email}\n"
+            f"📱 {whatsapp}\n\n"
+            f"⏳ Licença: 7 dias grátis"
+        )
+        send_whatsapp_message("45998452596", msg_dono, db)
+    except Exception:
+        pass
+
+    # Inicia fila de nurturing (conversão) + fila de ativação (quem não baixou)
+    try:
+        from services.recovery_service import criar_fila_trial_nurture, criar_fila_trial_ativacao
+        criar_fila_trial_nurture(whatsapp, email=email, nome=nome)
+        criar_fila_trial_ativacao(whatsapp, email=email, nome=nome)
+    except Exception:
+        pass
+
+    # Conversions API — Purchase com valor 0 para o Meta registrar custo por cadastro
+    import time as _time
+    event_id = f"trial-{email}-{int(_time.time())}"
+    try:
+        from services.meta_events import send_purchase
+        send_purchase(email=email, valor=0.00, plano="trial_gratis", event_id=event_id)
+    except Exception:
+        pass
+
+    return {"ok": True, "event_id": event_id}
+
+
+# =============================================================
+# GET /af/{slug}  →  página de vendas do afiliado
+# =============================================================
+@router.get("/af/{slug}", response_class=HTMLResponse)
+def pagina_afiliado(slug: str, db: Session = Depends(get_db)):
+    from models import Affiliate
+    aff = db.query(Affiliate).filter(Affiliate.slug == slug, Affiliate.ativo == True).first()
+    if not aff:
+        return HTMLResponse("<h1>Link inválido ou inativo.</h1>", status_code=404)
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas_afiliado.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        html = f.read()
+    return html.replace("{{SLUG}}", slug)
+
+
+# =============================================================
+# GET /afiliado/{slug}/painel  →  dashboard da afiliada
+# =============================================================
+@router.get("/afiliado/{slug}/painel", response_class=HTMLResponse)
+def painel_afiliado(slug: str):
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "afiliado_painel.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        return f.read()
+
+
+# =============================================================
+# GET /afiliado/{slug}/dados  →  dados do painel (com senha)
+# =============================================================
+@router.get("/afiliado/{slug}/dados")
+def dados_afiliado(slug: str, senha: str = "", db: Session = Depends(get_db)):
+    import hashlib
+    from models import Affiliate, AffiliateConversion
+
+    aff = db.query(Affiliate).filter(Affiliate.slug == slug).first()
+    if not aff:
+        return {"error": "Afiliado não encontrado"}
+
+    senha_hash = hashlib.sha256(senha.encode()).hexdigest()
+    if aff.senha_hash != senha_hash:
+        return {"error": "Senha incorreta"}
+
+    conversoes = db.query(AffiliateConversion)\
+        .filter(AffiliateConversion.affiliate_slug == slug)\
+        .order_by(AffiliateConversion.created_at.desc())\
+        .all()
+
+    total_valor    = sum(c.valor for c in conversoes)
+    total_comissao = sum(c.comissao for c in conversoes)
+
+    return {
+        "nome":          aff.nome or slug,
+        "comissao_pct":  aff.comissao_pct,
+        "total_vendas":  len(conversoes),
+        "total_valor":   total_valor,
+        "total_comissao": total_comissao,
+        "conversoes": [
+            {
+                "created_at":    c.created_at.isoformat() if c.created_at else None,
+                "nome_cliente":  c.nome_cliente,
+                "email_cliente": c.email_cliente,
+                "plano":         c.plano,
+                "valor":         c.valor,
+                "comissao":      c.comissao,
+                "metodo":        c.metodo,
+            }
+            for c in conversoes
+        ],
+    }

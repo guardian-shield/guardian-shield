@@ -85,18 +85,41 @@ Não é para o usuário final. É para o técnico/dono de assistência usar como
 - Escassez: apenas 500 licenças com preço promocional de lançamento.
 
 ## PLANOS E LINKS
+- **Teste grátis 7 dias:** GRATUITO — cadastro em https://guardian.grupomayconsantos.com.br/vendas4 (sem cartão, sem cobrança)
 - Teste 30 dias: R$49,90 (uso único — só pode ser comprado uma vez por conta)
 - Anual: R$299/ano (inclui bônus da videoaula exclusiva)
-- **Página de vendas (com vídeo de apresentação):** https://guardian.grupomayconsantos.com.br/vendas
+- **Página de vendas (com vídeo de apresentação):** https://guardian.grupomayconsantos.com.br/vendas2
 - **Link direto do checkout (pagamento):** https://guardian.grupomayconsantos.com.br/pagar
 
-Quando o lead demonstrar interesse, quiser saber mais, pedir para ver o produto ou pedir o link, **envie primeiro a página de vendas** para ele assistir o vídeo:
-👉 https://guardian.grupomayconsantos.com.br/vendas
+**FLUXO OBRIGATÓRIO ao receber um novo lead:**
+1. Se apresente brevemente como Maia, assistente do Guardian Shield
+2. Diga que pode conferir todos os detalhes e já mande o link da página de vendas:
+   👉 https://guardian.grupomayconsantos.com.br/vendas2
+3. Após ~5 minutos (ou quando a pessoa responder), pergunte: "E aí, já deu uma olhada no site? Ficou alguma dúvida? 😊"
+4. A partir daí, conduza a conversa conforme as respostas.
+
+Nunca faça perguntas longas de qualificação antes de mandar o link — mande o link primeiro, deixe o site apresentar o produto, depois converse.
 
 Quando ele já viu o vídeo, estiver pronto para comprar ou pedir o link de pagamento, envie o checkout:
 👉 https://guardian.grupomayconsantos.com.br/pagar
 
-Nunca mande só o checkout sem ele ter visto a apresentação antes — a sequência certa é: vídeo primeiro, checkout depois.
+Nunca mande só o checkout sem ele ter visto a apresentação antes — a sequência certa é: site/vídeo primeiro, checkout depois.
+
+## TESTE GRÁTIS — QUANDO E COMO USAR
+O teste grátis de 7 dias é sua maior arma para remover objeções. Use quando:
+- A pessoa diz "deixa eu pensar", "não sei se funciona", "vou ver depois"
+- Demonstra interesse mas hesita em pagar
+- Pede para ver antes de comprar
+- Diz que é caro ou que não tem certeza
+
+Como apresentar: "Você não precisa decidir agora nem pagar nada — temos um teste grátis de 7 dias completo. Você instala, usa de verdade com seus clientes, vê o resultado. Se gostar, aí você assina o anual. Se não gostar, não paga nada. Quer testar?"
+Link do teste grátis: https://guardian.grupomayconsantos.com.br/vendas4
+
+Regras do teste grátis:
+- É 100% gratuito, sem cartão
+- Dura 7 dias com acesso completo
+- Cada e-mail só pode usar uma vez
+- Após os 7 dias, a pessoa decide se assina o anual (R$299)
 
 ## TÉCNICAS DE VENDA (use quando o lead pedir dicas ou perguntar como vender)
 Se o lead perguntar "como vendo isso?" ou "como apresento para o cliente?", dê um resumo prático e direto:
@@ -207,7 +230,74 @@ def _is_new_conversation(conversation_history: list) -> bool:
     return (datetime.utcnow() - sent_at).total_seconds() > 4 * 3600
 
 
-def get_ai_response(conversation_history: list, user_message: str) -> str:
+def _build_user_context_block(user_context: dict | None) -> str:
+    """Monta bloco de contexto do usuário para injetar no system prompt."""
+    if not user_context:
+        return ""
+
+    plan = user_context.get("plan_type", "")
+    nome = user_context.get("nome", "")
+    expires_at = user_context.get("expires_at")
+    days_left = None
+
+    if expires_at:
+        try:
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at)
+            delta = expires_at - datetime.utcnow()
+            days_left = max(0, delta.days)
+        except Exception:
+            pass
+
+    lines = ["\n\n## CONTEXTO DO USUÁRIO ATUAL"]
+
+    if nome:
+        lines.append(f"- Nome: {nome}")
+
+    if plan == "trial_gratis":
+        lines.append("- Plano: TESTE GRÁTIS DE 7 DIAS")
+        if days_left is not None:
+            if days_left <= 0:
+                lines.append("- Status: teste EXPIRADO")
+            elif days_left == 1:
+                lines.append("- Status: último dia do teste — URGÊNCIA MÁXIMA para converter")
+            elif days_left <= 2:
+                lines.append(f"- Status: {days_left} dias restantes no teste — momento de pressionar conversão")
+            else:
+                lines.append(f"- Status: {days_left} dias restantes no teste")
+        lines.append(
+            "- Comportamento esperado: esta pessoa está no teste gratuito. "
+            "Ajude com dúvidas técnicas e de uso do software. "
+            "Quando natural, reforce o valor da ferramenta e incentive a compra do plano anual (R$299) antes do teste acabar. "
+            "Nos últimos 2 dias, aumente a urgência — amanhã/hoje o acesso encerra. "
+            "Link para converter: https://guardian.grupomayconsantos.com.br/pagar?plano=anual"
+        )
+    elif plan in ("anual", "anual79", "anual199"):
+        lines.append("- Plano: ANUAL (cliente pagante)")
+        if days_left is not None:
+            if days_left <= 30:
+                lines.append(f"- Status: licença expira em {days_left} dias — momento de falar em renovação")
+            else:
+                lines.append(f"- Status: licença válida por mais {days_left} dias")
+        lines.append("- Comportamento: suporte total. NÃO tente vender. Foque em ajudar a usar e ter resultado.")
+    elif plan == "mensal":
+        lines.append("- Plano: MENSAL (cliente pagante)")
+        if days_left is not None:
+            lines.append(f"- Status: {days_left} dias restantes")
+        lines.append("- Comportamento: suporte total. Pode mencionar upgrade para anual se surgir oportunidade natural.")
+    elif plan == "teste":
+        lines.append("- Plano: TESTE PAGO (30 dias)")
+        if days_left is not None:
+            lines.append(f"- Status: {days_left} dias restantes")
+        lines.append("- Comportamento: suporte técnico. Pode mencionar upgrade para anual quando natural.")
+    else:
+        lines.append("- Plano: lead (ainda não comprou)")
+        lines.append("- Comportamento: vendedora. Objetivo é fechar a venda.")
+
+    return "\n".join(lines)
+
+
+def get_ai_response(conversation_history: list, user_message: str, user_context: dict | None = None) -> str:
     """Chama o Claude (Anthropic) e retorna a resposta da IA."""
     if not ANTHROPIC_API_KEY:
         return ""
@@ -228,7 +318,8 @@ def get_ai_response(conversation_history: list, user_message: str) -> str:
             "Continue a conversa normalmente como se fosse a mesma pessoa de sempre."
         )
 
-    system = SYSTEM_PROMPT + intro_instruction
+    context_block = _build_user_context_block(user_context)
+    system = SYSTEM_PROMPT + context_block + intro_instruction
 
     # Monta histórico no formato Anthropic (roles: user/assistant, alternados)
     messages = []
