@@ -314,6 +314,95 @@ async def process_trial_expiry_check():
         db.close()
 
 
+async def process_trial_digest():
+    """
+    Envia resumo dos novos trials para o dono às 12h e 20h (horário Brasília).
+    Usa AppConfig 'trial_digest_last_sent' para saber o ponto de corte.
+    """
+    from models import User, AppConfig
+    from services.whatsapp_service import send_whatsapp_message
+
+    # Horário de Brasília = UTC-3
+    now_br = datetime.utcnow() - timedelta(hours=3)
+    hour = now_br.hour
+
+    # Só dispara na janela das 12h (12:00–12:01) ou 20h (20:00–20:01)
+    if hour not in (12, 20):
+        return
+
+    db = SessionLocal()
+    try:
+        # Chave de controle: guarda o último horário que enviou o digest
+        cfg_key = "trial_digest_last_sent"
+        row = db.query(AppConfig).filter(AppConfig.key == cfg_key).first()
+        last_sent_str = row.value if row else None
+
+        # Se já enviou nesta janela (dentro dos últimos 5 minutos), não reenvia
+        if last_sent_str:
+            last_sent = datetime.fromisoformat(last_sent_str)
+            diff_min = (datetime.utcnow() - last_sent).total_seconds() / 60
+            if diff_min < 5:
+                return
+
+        # Ponto de corte: desde o último digest enviado (ou últimas 12h se nunca rodou)
+        if last_sent_str:
+            cutoff = datetime.fromisoformat(last_sent_str)
+        else:
+            cutoff = datetime.utcnow() - timedelta(hours=12)
+
+        # Busca trials cadastrados desde o último digest
+        novos = db.query(User).filter(
+            User.plan_type == "trial_gratis",
+            User.created_at > cutoff,
+            User.created_at <= datetime.utcnow(),
+        ).order_by(User.created_at.asc()).all()
+
+        # Total acumulado de trials ativos agora
+        total_ativos = db.query(User).filter(
+            User.plan_type == "trial_gratis",
+            User.expires_at > datetime.utcnow(),
+        ).count()
+
+        if not novos:
+            # Nenhum novo — não envia, mas marca o horário para não repetir
+            _salvar_cfg(db, cfg_key, datetime.utcnow().isoformat())
+            db.commit()
+            return
+
+        periodo_label = "manhã" if hour == 12 else "noite"
+        linhas = "\n".join(
+            f"  • {u.nome or 'Sem nome'} | {u.email} | {u.whatsapp or 'sem WA'}"
+            for u in novos
+        )
+
+        msg = (
+            f"🆓 *Resumo de Trials — {periodo_label} ({now_br.strftime('%d/%m %H:%M')})*\n\n"
+            f"*{len(novos)} novo(s) cadastro(s)* desde o último resumo:\n\n"
+            f"{linhas}\n\n"
+            f"📊 Total de trials ativos agora: *{total_ativos}*\n"
+            f"Acesse o painel: https://guardian.grupomayconsantos.com.br/admin"
+        )
+
+        send_whatsapp_message("45998452596", msg, db)
+        _salvar_cfg(db, cfg_key, datetime.utcnow().isoformat())
+        db.commit()
+        logger.warning(f"[DIGEST] Resumo de trials enviado — {len(novos)} novos, {total_ativos} ativos")
+
+    except Exception as e:
+        logger.error(f"[DIGEST] Erro ao enviar resumo de trials: {e}")
+    finally:
+        db.close()
+
+
+def _salvar_cfg(db, key: str, value: str):
+    from models import AppConfig
+    row = db.query(AppConfig).filter(AppConfig.key == key).first()
+    if row:
+        row.value = value
+    else:
+        db.add(AppConfig(key=key, value=value))
+
+
 async def run_followup_loop():
     """Loop em background — verifica a cada 60 segundos."""
     logger.warning("[FOLLOWUP] Scheduler iniciado.")
@@ -329,6 +418,8 @@ async def run_followup_loop():
             # Verifica trials expirados a cada 10 minutos
             if tick % 10 == 0:
                 await process_trial_expiry_check()
+            # Resumo de trials às 12h e 20h
+            await process_trial_digest()
         except asyncio.CancelledError:
             break
         except Exception as e:

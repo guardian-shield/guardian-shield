@@ -712,19 +712,8 @@ async def register_free_trial(body: TrialRegisterRequest, db: Session = Depends(
     except Exception:
         pass
 
-    # Notifica o dono
-    try:
-        from services.whatsapp_service import send_whatsapp_message
-        msg_dono = (
-            f"🆓 *Novo cadastro — Teste Grátis (vendas4)*\n\n"
-            f"👤 {nome}\n"
-            f"📧 {email}\n"
-            f"📱 {whatsapp}\n\n"
-            f"⏳ Licença: 7 dias grátis"
-        )
-        send_whatsapp_message("45998452596", msg_dono, db)
-    except Exception:
-        pass
+    # Notificação do dono agora é feita em lote às 12h e 20h (crm_followup.py)
+    # para não spammar a cada cadastro individual
 
     # Inicia fila de nurturing (conversão) + fila de ativação (quem não baixou)
     try:
