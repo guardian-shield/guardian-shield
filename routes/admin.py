@@ -97,6 +97,7 @@ def listar_usuarios(db: Session = Depends(get_db), admin=Depends(verificar_admin
 def ativar_usuario(
     email: str,
     dias: int = 30,
+    plano: str = "",
     db: Session = Depends(get_db),
     admin=Depends(verificar_admin),
 ):
@@ -104,10 +105,17 @@ def ativar_usuario(
     if not user:
         return {"error": "Usuário não encontrado"}
     user.expires_at = datetime.utcnow() + timedelta(days=dias)
-    if not user.plan_type:
+    # Define plano: usa o parâmetro se informado, ou infere pelos dias, ou mantém "manual"
+    if plano:
+        user.plan_type = plano
+    elif dias >= 300:
+        user.plan_type = "anual"
+    elif dias >= 25:
+        user.plan_type = "teste"
+    else:
         user.plan_type = "manual"
     db.commit()
-    return {"status": "ativado", "expira_em": user.expires_at}
+    return {"status": "ativado", "expira_em": user.expires_at, "plan_type": user.plan_type}
 
 
 # =============================================================

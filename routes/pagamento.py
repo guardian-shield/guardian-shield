@@ -271,8 +271,13 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                 db.refresh(user)
             sem_licenca = not user.expires_at
             expirada    = (user.expires_at is not None and user.expires_at < datetime.utcnow())
+            # Upgrade de trial para plano pago — ativa mesmo com trial ainda válido
+            upgrade_trial = (
+                plano not in ("teste", "trial_gratis") and
+                user.plan_type in ("trial_gratis", None)
+            )
             licenca_ativada_agora = False
-            if sem_licenca or expirada:
+            if sem_licenca or expirada or upgrade_trial:
                 dias = 30 if plano == "teste" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
                 user.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
