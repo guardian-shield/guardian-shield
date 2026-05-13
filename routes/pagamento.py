@@ -330,8 +330,9 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                         f"✅ Licença ativada automaticamente."
                     )
                     send_whatsapp_message("45998452596", msg_dono, db)
-                except Exception:
-                    pass
+                    logger.warning(f"[VENDA] Notificação enviada ao dono — PIX {plano_label_pix} {email}")
+                except Exception as e:
+                    logger.error(f"[VENDA] FALHA ao notificar dono — PIX {email}: {e}")
 
                 # Conversão de afiliado
                 if afiliado_slug:
@@ -488,7 +489,11 @@ async def process_card(request: Request):
                     f"📱 WhatsApp: {whatsapp or 'não informado'}\n\n"
                     f"✅ Licença ativada automaticamente."
                 )
-                send_whatsapp_message("45998452596", msg_dono, _db2)
+                try:
+                    send_whatsapp_message("45998452596", msg_dono, _db2)
+                    logger.warning(f"[VENDA] Notificação enviada ao dono — Cartão {plano_label_card} {email}")
+                except Exception as e:
+                    logger.error(f"[VENDA] FALHA ao notificar dono — Cartão {email}: {e}")
                 # Atualiza CRM para active
                 _ativar_no_crm(whatsapp, _db2)
 
