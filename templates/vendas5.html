@@ -225,33 +225,39 @@ h2 .red   { color: #ff7070; }
 
 /* ── COMO FUNCIONA: steps visuais ── */
 .steps {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0; margin: 40px 0; position: relative;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px; margin: 40px 0;
 }
-.steps::before {
-  content: ''; position: absolute; top: 36px; left: 10%; right: 10%; height: 2px;
-  background: linear-gradient(90deg, rgba(30,111,217,0.3), rgba(37,196,102,0.4));
-}
-@media(max-width:600px){ .steps::before { display: none; } }
 .step {
-  text-align: center; padding: 20px 16px; position: relative;
+  text-align: center; padding: 0 8px; position: relative;
+}
+.step-img-wrap {
+  position: relative; margin: 0 auto 14px;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(44,123,229,0.35);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  background: #0d1f3c;
+}
+.step-img-wrap img {
+  width: 100%; display: block; border-radius: 12px;
 }
 .step-num {
-  width: 52px; height: 52px; border-radius: 50%;
+  position: absolute; top: 8px; left: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
   background: linear-gradient(135deg, var(--blue), #0d4fa0);
-  border: 2px solid rgba(44,123,229,0.5);
+  border: 2px solid rgba(44,123,229,0.7);
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px;
-  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
-  box-shadow: 0 4px 20px rgba(30,111,217,0.4);
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+  box-shadow: 0 2px 10px rgba(30,111,217,0.5);
+  z-index: 1;
 }
-.step-titulo { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.step-titulo { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .step-tempo {
   display: inline-block; background: rgba(37,196,102,0.12);
   border: 1px solid rgba(37,196,102,0.3); border-radius: 99px;
   font-size: 11px; color: var(--green); font-weight: 600;
-  padding: 2px 10px; margin-top: 8px;
+  padding: 2px 10px; margin-top: 6px;
 }
 
 /* ── BLINDAGEM: 4 camadas ── */
@@ -543,31 +549,46 @@ h2 .red   { color: #ff7070; }
 
   <div class="steps">
     <div class="step">
-      <div class="step-num">1</div>
+      <div class="step-img-wrap">
+        <div class="step-num">1</div>
+        <img src="/static/step1.png" alt="Conectar celular">
+      </div>
       <div class="step-titulo">Conectar</div>
       <div class="step-desc">Conecte o celular do cliente via USB ao computador</div>
       <div class="step-tempo">⏱ 30 segundos</div>
     </div>
     <div class="step">
-      <div class="step-num">2</div>
+      <div class="step-img-wrap">
+        <div class="step-num">2</div>
+        <img src="/static/step2.png" alt="Scanear">
+      </div>
       <div class="step-titulo">Scanear</div>
       <div class="step-desc">O sistema analisa e lista todos os arquivos maliciosos encontrados</div>
       <div class="step-tempo">⏱ 1 minuto</div>
     </div>
     <div class="step">
-      <div class="step-num">3</div>
+      <div class="step-img-wrap">
+        <div class="step-num">3</div>
+        <img src="/static/step3.png" alt="Remover">
+      </div>
       <div class="step-titulo">Remover</div>
       <div class="step-desc">Remove vírus, spywares e arquivos ocultos com 1 clique</div>
       <div class="step-tempo">⏱ 1 minuto</div>
     </div>
     <div class="step">
-      <div class="step-num">4</div>
+      <div class="step-img-wrap">
+        <div class="step-num">4</div>
+        <img src="/static/step4.png" alt="Blindar">
+      </div>
       <div class="step-titulo">Blindar</div>
       <div class="step-desc">Instala 4 camadas de proteção diretamente no sistema do celular</div>
       <div class="step-tempo">⏱ 2 minutos</div>
     </div>
     <div class="step">
-      <div class="step-num">5</div>
+      <div class="step-img-wrap">
+        <div class="step-num">5</div>
+        <img src="/static/step5.png" alt="Certificado">
+      </div>
       <div class="step-titulo">Certificado</div>
       <div class="step-desc">Gera e imprime o certificado oficial com sua assinatura e garantia</div>
       <div class="step-tempo">⏱ 30 segundos</div>
