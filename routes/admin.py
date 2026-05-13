@@ -399,13 +399,56 @@ def send_message(payload: dict, db: Session = Depends(get_db), admin=Depends(ver
     if not mensagem:
         return {"error": "Mensagem vazia"}
 
+    now = datetime.utcnow()
+    PLANOS_PAGOS = {"anual", "anual79", "anual199", "teste", "mensal"}
+
     destinatarios = []
     if email == "todos":
-        users = db.query(User).filter(
-            User.expires_at > datetime.utcnow(),
+        destinatarios = db.query(User).filter(
+            User.expires_at > now,
             User.email_verified == True,
         ).all()
-        destinatarios = users
+    elif email == "seg_trial_ativo":
+        # Trial grátis ainda dentro do prazo
+        destinatarios = db.query(User).filter(
+            User.plan_type == "trial_gratis",
+            User.expires_at > now,
+            User.whatsapp != None,
+        ).all()
+    elif email == "seg_trial_expirado":
+        # Trial expirado sem conversão para plano pago
+        destinatarios = db.query(User).filter(
+            User.trial_usado == True,
+            User.plan_type == "trial_gratis",
+            User.whatsapp != None,
+        ).filter(
+            (User.expires_at == None) | (User.expires_at <= now)
+        ).all()
+    elif email == "seg_mensal":
+        destinatarios = db.query(User).filter(
+            User.plan_type == "mensal",
+            User.expires_at > now,
+            User.whatsapp != None,
+        ).all()
+    elif email == "seg_anual":
+        destinatarios = db.query(User).filter(
+            User.plan_type.in_(["anual", "anual79", "anual199"]),
+            User.expires_at > now,
+            User.whatsapp != None,
+        ).all()
+    elif email == "seg_pagos":
+        destinatarios = db.query(User).filter(
+            User.plan_type.in_(list(PLANOS_PAGOS)),
+            User.expires_at > now,
+            User.whatsapp != None,
+        ).all()
+    elif email == "seg_sem_hwid":
+        # Cadastraram mas nunca ativaram o app (sem HWID)
+        destinatarios = db.query(User).filter(
+            User.expires_at > now,
+            User.hwid_1 == None,
+            User.whatsapp != None,
+        ).all()
     else:
         user = db.query(User).filter(User.email == email).first()
         if not user:

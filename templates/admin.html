@@ -290,13 +290,21 @@ tr:hover td{background:rgba(255,255,255,.025)}
   <div id="tab-mensagens" class="tab-content">
     <div class="section">
       <div class="section-title">📤 Enviar Mensagem</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div class="field">
-          <label>Destinatário</label>
-          <select id="msgDestinatario">
-            <option value="todos">— Todos os usuários ativos —</option>
+
+      <!-- Segmentos -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Segmento de Destino</div>
+        <div id="msgSegmentos" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:rgba(255,255,255,.3)">ou usuário específico:</span>
+          <select id="msgDestinatario" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:5px 10px;color:white;font-size:12px;font-family:'Inter',sans-serif;outline:none;flex:1;max-width:340px">
+            <option value="">— selecionar —</option>
           </select>
         </div>
+        <div id="msgContador" style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.35);min-height:18px"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="field">
           <label>Canal</label>
           <select id="msgCanal">
@@ -990,19 +998,90 @@ async function salvarConfig(e) {
 }
 
 // ── MENSAGENS ─────────────────────────────────
+let _msgSegSelecionado = 'todos';
+let _usuariosCache     = [];
+
+const MSG_SEGMENTOS = [
+  { id:'todos',              label:'Todos ativos',          cor:'#1e6fd9', icon:'👥' },
+  { id:'seg_trial_ativo',    label:'Trial ativo',           cor:'#7c3aed', icon:'🧪' },
+  { id:'seg_trial_expirado', label:'Trial expirado s/ conv',cor:'#cc3333', icon:'⏰' },
+  { id:'seg_mensal',         label:'Plano Mensal',          cor:'#1faa55', icon:'📅' },
+  { id:'seg_anual',          label:'Plano Anual',           cor:'#d4a017', icon:'⭐' },
+  { id:'seg_pagos',          label:'Todos pagos',           cor:'#e07b10', icon:'💰' },
+  { id:'seg_sem_hwid',       label:'Sem HWID (não ativou)', cor:'#888',    icon:'📵' },
+];
+
+function renderSegmentos() {
+  const cont = document.getElementById('msgSegmentos');
+  if (!cont) return;
+  cont.innerHTML = MSG_SEGMENTOS.map(s => {
+    const ativo = _msgSegSelecionado === s.id;
+    const count = _contarSegmento(s.id);
+    return `<button onclick="selecionarSegmento('${s.id}')" style="
+      display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;transition:all .15s;
+      background:${ativo ? s.cor+'33' : 'rgba(255,255,255,.05)'};
+      border:1px solid ${ativo ? s.cor : 'rgba(255,255,255,.1)'};
+      color:${ativo ? 'white' : 'rgba(255,255,255,.5)'}">
+      ${s.icon} ${s.label}
+      <span style="background:${ativo ? s.cor : 'rgba(255,255,255,.1)'};color:${ativo?'white':'rgba(255,255,255,.5)'};border-radius:999px;padding:1px 7px;font-size:10px">${count}</span>
+    </button>`;
+  }).join('');
+  atualizarContador();
+}
+
+function _contarSegmento(id) {
+  const now = new Date();
+  const u   = _usuariosCache;
+  if (id === 'todos')              return u.filter(x => x.ativo).length;
+  if (id === 'seg_trial_ativo')    return u.filter(x => x.plano === 'trial_gratis' && x.ativo && x.whatsapp).length;
+  if (id === 'seg_trial_expirado') return u.filter(x => x.plano === 'trial_gratis' && !x.ativo && x.whatsapp).length;
+  if (id === 'seg_mensal')         return u.filter(x => x.plano === 'mensal' && x.ativo && x.whatsapp).length;
+  if (id === 'seg_anual')          return u.filter(x => ['anual','anual79','anual199'].includes(x.plano) && x.ativo && x.whatsapp).length;
+  if (id === 'seg_pagos')          return u.filter(x => ['anual','anual79','anual199','mensal','teste'].includes(x.plano) && x.ativo && x.whatsapp).length;
+  if (id === 'seg_sem_hwid')       return u.filter(x => x.ativo && !x.hwid_1 && x.whatsapp).length;
+  return 0;
+}
+
+function selecionarSegmento(id) {
+  _msgSegSelecionado = id;
+  // Limpa o select individual quando escolhe segmento
+  document.getElementById('msgDestinatario').value = '';
+  renderSegmentos();
+}
+
+function atualizarContador() {
+  const el = document.getElementById('msgContador');
+  if (!el) return;
+  const sel = document.getElementById('msgDestinatario').value;
+  if (sel) {
+    const u = _usuariosCache.find(x => x.email === sel);
+    el.textContent = u ? `✉️ ${u.nome || u.email}` : '';
+    return;
+  }
+  const count = _contarSegmento(_msgSegSelecionado);
+  const seg   = MSG_SEGMENTOS.find(s => s.id === _msgSegSelecionado);
+  el.textContent = count > 0
+    ? `📨 ${count} usuário(s) receberão esta mensagem — ${seg?.label || ''}`
+    : `⚠️ Nenhum usuário neste segmento`;
+}
+
 async function popularSelectDestinatario() {
   const data = await api('GET', '/admin/users');
   if (!data) return;
+  _usuariosCache = data;
   const sel = document.getElementById('msgDestinatario');
-  const current = sel.value;
-  sel.innerHTML = '<option value="todos">— Todos os usuários ativos —</option>';
+  sel.innerHTML = '<option value="">— usuário específico —</option>';
   data.forEach(u => {
     const opt = document.createElement('option');
     opt.value = u.email;
     opt.textContent = `${u.nome || u.email} (${u.email})`;
     sel.appendChild(opt);
   });
-  sel.value = current || 'todos';
+  sel.onchange = () => {
+    if (sel.value) _msgSegSelecionado = '';
+    atualizarContador();
+  };
+  renderSegmentos();
 }
 
 async function carregarMensagens() {
@@ -1022,15 +1101,22 @@ async function carregarMensagens() {
 }
 
 async function enviarMensagem() {
-  const dest   = document.getElementById('msgDestinatario').value;
-  const canal  = document.getElementById('msgCanal').value;
-  const texto  = document.getElementById('msgTexto').value.trim();
+  const individ = document.getElementById('msgDestinatario').value;
+  const dest    = individ || _msgSegSelecionado || 'todos';
+  const canal   = document.getElementById('msgCanal').value;
+  const texto   = document.getElementById('msgTexto').value.trim();
   if (!texto) { toast('Digite uma mensagem.', true); return; }
+
+  const count = individ ? 1 : _contarSegmento(dest);
+  const seg   = MSG_SEGMENTOS.find(s => s.id === dest);
+  const label = individ ? individ : (seg?.label || dest);
+  if (!confirm(`Enviar mensagem para ${count} usuário(s) do segmento "${label}"?\n\n${texto.substring(0,120)}${texto.length>120?'...':''}`)) return;
+
   showLoading(true);
   const r = await api('POST', '/admin/send-message', { email: dest, canal, mensagem: texto });
   showLoading(false);
   if (r?.error) { toast(r.error, true); return; }
-  toast(`Mensagem enviada para ${r.enviados || 1} destinatário(s)!`);
+  toast(`✅ Mensagem enviada para ${r.enviados} de ${r.total} destinatário(s)!`);
   document.getElementById('msgTexto').value = '';
   carregarMensagens();
 }
