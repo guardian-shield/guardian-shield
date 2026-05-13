@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardian Shield — Chega de cobrar R$20 por vírus</title>
+<title>Guardian Shield — Chega de perder 15 minutos removendo vírus</title>
 <script>
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
@@ -479,59 +479,18 @@ h2 .red   { color: #ff7070; }
 <!-- URGÊNCIA -->
 <div id="urgBar">⚡ OFERTA POR TEMPO LIMITADO — Apenas 270 licenças restantes com preço promocional</div>
 
-<!-- STICKY BAR -->
-<div id="stickyBar">
-  <span class="sticky-txt">Guardian Shield — Licença Anual R$297,00</span>
-  <a href="/pagar?plano=anual" class="btn-sticky">→ GARANTIR AGORA</a>
-</div>
-
 <!-- ═══════════════════════════════════════════ HERO -->
 <section id="hero">
   <div class="hero-badge"><span class="dot"></span> Software para assistência técnica</div>
 
   <h1>
-    Chega de cobrar <span class="risco">R$20</span> por vírus.<br>
-    Remova em <span class="verde">2 minutos</span>.<br>
-    Cobre <span class="gold">R$200</span>.
+    Chega de perder <span class="risco">15 minutos</span> removendo vírus.<br>
+    Remova em <span class="verde">2 minutos</span>.
   </h1>
 
   <p class="hero-sub">
-    O software que transforma remoção de vírus no serviço mais lucrativo da sua assistência técnica — com blindagem digital, certificado oficial e garantia para o cliente final.
+    O software que transforma remoção de vírus no serviço mais lucrativo da sua assistência técnica — além de tirar vírus, ofereça blindagem digital, certificado oficial e garantia para o cliente final, e cobre até R$200.
   </p>
-
-  <!-- Barra de escassez -->
-  <div class="escassez-wrap">
-    <div class="escassez-label">
-      <span>Licenças promocionais</span>
-      <span>⚠️ Apenas 270 restantes</span>
-    </div>
-    <div class="barra-bg"><div class="barra-fill"></div></div>
-  </div>
-
-  <a href="/pagar?plano=anual" class="btn-hero">
-    <span class="btn-hero-icon">🛡️</span>
-    QUERO O GUARDIAN SHIELD AGORA
-  </a>
-  <p class="hero-trust">🔒 Pagamento seguro &nbsp;·&nbsp; Acesso imediato &nbsp;·&nbsp; 30 dias de garantia</p>
-
-  <div class="stats-bar">
-    <div class="stat-item">
-      <div class="stat-num">2min</div>
-      <div class="stat-lbl">por celular</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">R$200</div>
-      <div class="stat-lbl">por blindagem</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">4</div>
-      <div class="stat-lbl">camadas de proteção</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">30d</div>
-      <div class="stat-lbl">garantia total</div>
-    </div>
-  </div>
 </section>
 
 <!-- ═══════════════════════════════════════════ DOR -->
@@ -558,7 +517,7 @@ h2 .red   { color: #ff7070; }
     <div class="comp-card comp-depois">
       <div class="comp-titulo">✅ Com Guardian Shield</div>
       <div class="comp-item"><span class="ic">⚡</span><span>2 a 6 minutos, automático</span></div>
-      <div class="comp-item"><span class="ic">💰</span><span>R$100 a R$200 por blindagem</span></div>
+      <div class="comp-item"><span class="ic">💰</span><span>Além de retirar vírus, ofereça a blindagem digital e cobre de R$100 a R$200</span></div>
       <div class="comp-item"><span class="ic">😊</span><span>Cliente nunca mais volta com vírus</span></div>
       <div class="comp-item"><span class="ic">📜</span><span>Certificado oficial com garantia</span></div>
       <div class="comp-item"><span class="ic">📈</span><span>R$2.000 a R$5.000 a mais por mês</span></div>
@@ -575,7 +534,6 @@ h2 .red   { color: #ff7070; }
 
 <!-- ═══════════════════════════════════════════ PRODUTO -->
 <section class="fade-up">
-  <div class="sec-label">A solução</div>
   <h2>Apresento o <span class="gold">Guardian Shield</span></h2>
   <p style="font-size:16px;color:var(--muted);max-width:680px;margin-bottom:40px">
     Um software de computador desenvolvido especificamente para técnicos de assistência técnica. Conecte o celular do cliente, 2 cliques, 2 minutos. O sistema localiza, analisa e deleta todos os apps e arquivos maliciosos — incluindo os ocultos e as sementes que reinstalam vírus dias depois.
@@ -818,8 +776,7 @@ h2 .red   { color: #ff7070; }
 
 <!-- ═══════════════════════════════════════════ OFERTA -->
 <section class="fade-up">
-  <div class="sec-label">Investimento</div>
-  <h2 style="text-align:center">💰 A <span class="gold">Oferta</span></h2>
+  <h2 style="text-align:center">💰 <span class="gold">Investimento</span></h2>
 
   <!-- Barra de escassez -->
   <div style="max-width:520px;margin:24px auto 32px">
@@ -923,11 +880,6 @@ h2 .red   { color: #ff7070; }
 </div>
 
 <script>
-// ── STICKY BAR
-window.addEventListener('scroll', () => {
-  document.getElementById('stickyBar').classList.toggle('visivel', window.scrollY > 500);
-});
-
 // ── FADE UP
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
