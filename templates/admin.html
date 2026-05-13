@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guardian Shield — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:#060f25;color:#e0e6f0;min-height:100vh}
@@ -139,6 +140,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
 
   <div id="tabBar">
     <div class="tab active" onclick="switchTab('usuarios')">👥 Usuários</div>
+    <div class="tab" onclick="switchTab('dashboard')">📊 Dashboard</div>
     <div class="tab" onclick="switchTab('config')">⚙️ Configurações</div>
     <div class="tab" onclick="switchTab('mensagens')">💬 Mensagens</div>
     <div class="tab" onclick="switchTab('blacklist')">🛡️ Blacklist</div>
@@ -374,6 +376,84 @@ tr:hover td{background:rgba(255,255,255,.025)}
   </div>
 </div>
 
+<!-- TAB DASHBOARD -->
+<div id="tab-dashboard" class="tab-content">
+
+  <!-- Cabeçalho + controles -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:white;letter-spacing:.5px">📊 Dashboard</div>
+    <div style="display:flex;gap:4px;margin-left:auto;align-items:center">
+      <span style="font-size:11px;color:rgba(255,255,255,.3);margin-right:4px">Período:</span>
+      <button class="btn btn-sm btn-ghost" id="pBtn7"  onclick="setPeriodo(7)">7d</button>
+      <button class="btn btn-sm btn-blue" id="pBtn30" onclick="setPeriodo(30)">30d</button>
+      <button class="btn btn-sm btn-ghost" id="pBtn90" onclick="setPeriodo(90)">90d</button>
+      <button class="btn btn-sm btn-ghost" onclick="carregarDashboard()" style="margin-left:6px">↻ Atualizar</button>
+    </div>
+  </div>
+
+  <!-- Cards visão geral -->
+  <div id="dashCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:20px">
+    <div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.25);padding:40px;font-size:14px">Clique em ↻ Atualizar ou acesse esta aba para carregar os dados.</div>
+  </div>
+
+  <!-- Funil Aquisição + Distribuição Planos -->
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px">
+    <div class="section">
+      <div class="section-title">🔀 Funil de Aquisição</div>
+      <div id="dashFunilAquisicao"><div style="color:rgba(255,255,255,.2);text-align:center;padding:30px">—</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">🍩 Distribuição de Planos</div>
+      <canvas id="chartPlanos"></canvas>
+    </div>
+  </div>
+
+  <!-- Crescimento -->
+  <div class="section" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="section-title" style="margin:0">📈 Crescimento</div>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-sm btn-blue"  id="cBtn-cadastros" onclick="toggleSerie('cadastros')">Cadastros</button>
+        <button class="btn btn-sm btn-blue"  id="cBtn-vendas"    onclick="toggleSerie('vendas')">Vendas</button>
+        <button class="btn btn-sm btn-ghost" id="cBtn-receita"   onclick="toggleSerie('receita')">Receita (R$)</button>
+      </div>
+    </div>
+    <canvas id="chartCrescimento" style="max-height:200px"></canvas>
+  </div>
+
+  <!-- Funil Trial + Churn -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="section">
+      <div class="section-title">🧪 Funil do Trial</div>
+      <div id="dashFunilTrial"><div style="color:rgba(255,255,255,.2);text-align:center;padding:30px">—</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">⚠️ Churn &amp; Renovações</div>
+      <div id="dashChurn"><div style="color:rgba(255,255,255,.2);text-align:center;padding:30px">—</div></div>
+    </div>
+  </div>
+
+  <!-- CRM: stages + leads por dia -->
+  <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:16px">
+    <div class="section">
+      <div class="section-title">💬 CRM — Stages</div>
+      <canvas id="chartStages"></canvas>
+      <div id="dashCrmInfo" style="margin-top:10px"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">📲 Leads por Dia (30d)</div>
+      <canvas id="chartLeads" style="max-height:200px"></canvas>
+    </div>
+  </div>
+
+  <!-- Afiliados -->
+  <div class="section">
+    <div class="section-title">🤝 Afiliados</div>
+    <div id="dashAfiliados"><div style="color:rgba(255,255,255,.2);text-align:center;padding:30px">—</div></div>
+  </div>
+
+</div>
+
 <!-- TAB BLACKLIST -->
 <div id="tab-blacklist" class="tab-content">
   <div class="section">
@@ -513,7 +593,7 @@ async function api(method, path, body = null, token = TOKEN) {
 // ── TABS ──────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['usuarios','config','mensagens','blacklist','referencias'];
+    const names = ['usuarios','dashboard','config','mensagens','blacklist','referencias'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -521,6 +601,7 @@ function switchTab(name) {
   if (name === 'config')    carregarConfig();
   if (name === 'mensagens') carregarMensagens();
   if (name === 'blacklist') carregarBlacklist();
+  if (name === 'dashboard') carregarDashboard();
 }
 
 // ── BLACKLIST COLABORATIVA ────────────────────
@@ -998,6 +1079,241 @@ function esc(str) {
 document.querySelectorAll('.modal').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
+
+// ── DASHBOARD ─────────────────────────────────
+let _dashPeriodo = 30;
+let _dashData    = null;
+let _charts      = {};
+let _series      = { cadastros: true, vendas: true, receita: false };
+
+const PLANO_LABEL = {
+  trial_gratis: 'Trial grátis', anual: 'Anual R$299', anual79: 'Anual R$79',
+  anual199: 'Anual R$199', teste: 'Teste 30d', mensal: 'Mensal',
+  manual: 'Manual', sem_plano: 'Sem plano',
+};
+const STAGE_LABEL = {
+  lead:'Lead', initiated:'Iniciado', paid:'Pago', active:'Ativo',
+  expiring:'Expirando', cancelled:'Cancelado', support:'Suporte',
+};
+const STAGE_COR = {
+  lead:'#1e6fd9', initiated:'#7c3aed', paid:'#1faa55', active:'#4cde8a',
+  expiring:'#d4a017', cancelled:'#cc3333', support:'#e07b10',
+};
+const PLANO_COR = ['#1e6fd9','#1faa55','#d4a017','#7c3aed','#e07b10','#cc3333','#888','#4cde8a'];
+
+function _destroyChart(key) { if (_charts[key]) { _charts[key].destroy(); delete _charts[key]; } }
+
+function fmtR$(cents) {
+  return 'R$ ' + (cents/100).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function setPeriodo(dias) {
+  _dashPeriodo = dias;
+  [7,30,90].forEach(d => {
+    const b = document.getElementById('pBtn'+d);
+    if (b) b.className = 'btn btn-sm ' + (d===dias ? 'btn-blue' : 'btn-ghost');
+  });
+  carregarDashboard();
+}
+
+async function carregarDashboard() {
+  showLoading(true);
+  const data = await api('GET', `/admin/dashboard?periodo=${_dashPeriodo}`);
+  showLoading(false);
+  if (!data || data.error) { toast('Erro ao carregar dashboard', true); return; }
+  _dashData = data;
+  renderDashCards(data.cards);
+  renderFunilBar('dashFunilAquisicao', data.funil_aquisicao, ['#1e6fd9','#7c3aed','#1faa55','#d4a017']);
+  renderChartDonut('chartPlanos', data.planos_dist.map(p=>PLANO_LABEL[p.plano]||p.plano), data.planos_dist.map(p=>p.total), PLANO_COR);
+  renderChartCrescimento(data.crescimento);
+  renderFunilBar('dashFunilTrial', data.funil_trial, ['#1e6fd9','#7c3aed','#1faa55','#d4a017','#cc3333']);
+  renderChurn(data.churn);
+  renderCrm(data.crm);
+  renderAfiliados(data.afiliados);
+}
+
+function renderDashCards(c) {
+  const cards = [
+    { icon:'💰', value: fmtR$(c.receita_mes_cents), label:'Receita do mês',    sub:'estimativa', cor:'#1faa55' },
+    { icon:'🆕', value: c.cadastros_hoje,            label:'Cadastros hoje',    sub:`${c.cadastros_mes} no mês`, cor:'#1e6fd9' },
+    { icon:'✅', value: c.ativos_total,              label:'Ativos agora',      sub:`${c.pagos_ativos} pagos`, cor:'#4cde8a' },
+    { icon:'🧪', value: c.trials_ativos,             label:'Trials ativos',     sub:'teste grátis', cor:'#7c3aed' },
+    { icon:'⏳', value: c.expirando_7d,              label:'Expirando em 7d',   sub:'risco de churn', cor: c.expirando_7d>0 ? '#e07b10' : '#1faa55' },
+    { icon:'🎯', value: c.taxa_conversao_pct+'%',    label:'Conversão trial',   sub:'trial → pago', cor:'#d4a017' },
+    { icon:'👥', value: c.total_usuarios,            label:'Total cadastros',   sub:'na base', cor:'rgba(255,255,255,.4)' },
+  ];
+  document.getElementById('dashCards').innerHTML = cards.map(c => `
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 18px">
+      <div style="font-size:18px;margin-bottom:6px">${c.icon}</div>
+      <div style="font-size:26px;font-weight:700;font-family:'Rajdhani',sans-serif;color:${c.cor};line-height:1">${c.value}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:4px">${c.label}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.28);margin-top:2px">${c.sub}</div>
+    </div>`).join('');
+}
+
+function renderFunilBar(elId, funil, cores) {
+  const max = Math.max(...funil.map(f=>f.valor), 1);
+  document.getElementById(elId).innerHTML = funil.map((f,i) => {
+    const pct  = Math.round(f.valor / max * 100);
+    const pctLabel = f.pct !== undefined ? f.pct + '%' : pct + '%';
+    return `
+      <div style="margin-bottom:13px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
+          <span style="color:rgba(255,255,255,.65)">${f.label}</span>
+          <span style="font-weight:700;color:white">${f.valor} <span style="color:rgba(255,255,255,.3);font-size:11px">${pctLabel}</span></span>
+        </div>
+        <div style="height:9px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${cores[i%cores.length]};border-radius:5px"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderChartDonut(canvasId, labels, data, cores) {
+  _destroyChart(canvasId);
+  if (!data.length) return;
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx) return;
+  _charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: cores, borderWidth: 2, borderColor: '#060f25' }] },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,.55)', font: {size:11}, padding:8 } } }
+    }
+  });
+}
+
+function toggleSerie(serie) {
+  _series[serie] = !_series[serie];
+  const b = document.getElementById('cBtn-'+serie);
+  b.className = 'btn btn-sm ' + (_series[serie] ? 'btn-blue' : 'btn-ghost');
+  if (_dashData) renderChartCrescimento(_dashData.crescimento);
+}
+
+function renderChartCrescimento(d) {
+  _destroyChart('chartCrescimento');
+  const ctx = document.getElementById('chartCrescimento')?.getContext('2d');
+  if (!ctx) return;
+  const datasets = [];
+  if (_series.cadastros) datasets.push({ label:'Cadastros', data:d.cadastros,
+    borderColor:'#1e6fd9', backgroundColor:'rgba(30,111,217,.1)', tension:.3, fill:true, pointRadius:2 });
+  if (_series.vendas) datasets.push({ label:'Vendas', data:d.vendas,
+    borderColor:'#1faa55', backgroundColor:'rgba(31,170,85,.1)', tension:.3, fill:true, pointRadius:2 });
+  if (_series.receita) datasets.push({ label:'Receita (R$)', data:d.receita,
+    borderColor:'#d4a017', backgroundColor:'rgba(212,160,23,.1)', tension:.3, fill:true, pointRadius:2, yAxisID:'yR' });
+
+  _charts.chartCrescimento = new Chart(ctx, {
+    type: 'line',
+    data: { labels: d.labels, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode:'index', intersect:false },
+      plugins: { legend: { labels: { color:'rgba(255,255,255,.5)', font:{size:11} } } },
+      scales: {
+        x: { ticks:{ color:'rgba(255,255,255,.3)', font:{size:9}, maxTicksLimit:12 }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y: { ticks:{ color:'rgba(255,255,255,.3)', font:{size:10} }, grid:{ color:'rgba(255,255,255,.05)' } },
+        ...(_series.receita ? { yR: { position:'right', ticks:{ color:'#d4a017', font:{size:10} }, grid:{ drawOnChartArea:false } } } : {})
+      }
+    }
+  });
+}
+
+function renderChurn(churn) {
+  const lista = churn.expirando_30d.slice(0,10).map(u => {
+    const cor = u.dias_restantes <= 3 ? '#ff6060' : u.dias_restantes <= 7 ? '#e07b10' : '#d4a017';
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">
+      <div>
+        <div style="color:rgba(255,255,255,.8)">${esc(u.nome)}</div>
+        <div style="color:rgba(255,255,255,.3);font-size:10px">${PLANO_LABEL[u.plano]||u.plano||'—'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="color:${cor};font-weight:700">${u.dias_restantes}d</div>
+        <div style="color:rgba(255,255,255,.25);font-size:10px">${new Date(u.expira_em).toLocaleDateString('pt-BR')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('dashChurn').innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1;background:rgba(224,123,16,.1);border:1px solid rgba(224,123,16,.3);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:#e07b10;font-family:'Rajdhani',sans-serif">${churn.expirando_30d.length}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35)">Expirando em 30d</div>
+      </div>
+      <div style="flex:1;background:rgba(204,51,51,.1);border:1px solid rgba(204,51,51,.3);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:#cc3333;font-family:'Rajdhani',sans-serif">${churn.perdidos_30d}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35)">Perdidos (+30d)</div>
+      </div>
+    </div>
+    ${lista||'<div style="color:rgba(255,255,255,.2);text-align:center;padding:16px;font-size:12px">Nenhum expirando</div>'}`;
+}
+
+function renderCrm(crm) {
+  // Donut stages
+  const stagesF = crm.stages.filter(s=>s.total>0);
+  renderChartDonut('chartStages', stagesF.map(s=>STAGE_LABEL[s.stage]||s.stage), stagesF.map(s=>s.total), stagesF.map(s=>STAGE_COR[s.stage]||'#888'));
+
+  // Info IA
+  document.getElementById('dashCrmInfo').innerHTML = `
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <div style="flex:1;text-align:center;background:rgba(31,170,85,.08);border:1px solid rgba(31,170,85,.2);border-radius:7px;padding:7px 4px">
+        <div style="font-size:16px;font-weight:700;color:#1faa55">${crm.ia_ativa}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35)">IA ativa</div>
+      </div>
+      <div style="flex:1;text-align:center;background:rgba(224,123,16,.08);border:1px solid rgba(224,123,16,.2);border-radius:7px;padding:7px 4px">
+        <div style="font-size:16px;font-weight:700;color:#e07b10">${crm.transferidas}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35)">Transferidas</div>
+      </div>
+    </div>`;
+
+  // Bar leads por dia
+  _destroyChart('chartLeads');
+  const ctx = document.getElementById('chartLeads')?.getContext('2d');
+  if (!ctx) return;
+  _charts.chartLeads = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: crm.labels_30d, datasets: [{
+      label:'Leads', data:crm.leads_dia,
+      backgroundColor:'rgba(30,111,217,.45)', borderColor:'#1e6fd9', borderWidth:1
+    }]},
+    options: {
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'rgba(255,255,255,.3)', font:{size:9}, maxTicksLimit:10 }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y:{ ticks:{ color:'rgba(255,255,255,.3)', font:{size:10} }, grid:{ color:'rgba(255,255,255,.05)' } }
+      }
+    }
+  });
+}
+
+function renderAfiliados(afiliados) {
+  const el = document.getElementById('dashAfiliados');
+  if (!afiliados.length) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,.2);text-align:center;padding:20px;font-size:13px">Nenhum afiliado cadastrado</div>';
+    return;
+  }
+  el.innerHTML = `<div class="tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="color:rgba(255,255,255,.3);font-size:11px;border-bottom:1px solid rgba(255,255,255,.08)">
+      <th style="text-align:left;padding:8px 10px">Afiliado</th>
+      <th style="text-align:center;padding:8px 10px">Total vendas</th>
+      <th style="text-align:center;padding:8px 10px">Vendas mês</th>
+      <th style="text-align:right;padding:8px 10px">Receita mês</th>
+      <th style="text-align:right;padding:8px 10px">Comissão mês</th>
+    </tr></thead>
+    <tbody>${afiliados.map(a=>`
+      <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+        <td style="padding:9px 10px">
+          <div style="font-weight:600;color:white">${esc(a.nome)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3)">${esc(a.slug)}</div>
+        </td>
+        <td style="text-align:center;padding:9px 10px;color:rgba(255,255,255,.55)">${a.total_vendas}</td>
+        <td style="text-align:center;padding:9px 10px;font-weight:600;color:white">${a.vendas_mes}</td>
+        <td style="text-align:right;padding:9px 10px;color:#1faa55;font-weight:600">R$ ${a.receita_mes.toFixed(2).replace('.',',')}</td>
+        <td style="text-align:right;padding:9px 10px;color:#d4a017;font-weight:600">R$ ${a.comissao_mes.toFixed(2).replace('.',',')}</td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
+}
 </script>
 </body>
 </html>

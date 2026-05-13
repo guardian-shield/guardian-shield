@@ -543,3 +543,202 @@ async def recovery_enqueue(request: Request, db: Session = Depends(get_db), admi
         criar_fila_abandono(phone=phone, email=email, nome=nome, db=db)
 
     return {"ok": True, "phone": phone, "tipo": tipo}
+
+
+# =============================================================
+# GET /admin/dashboard  →  dados do painel analítico
+# =============================================================
+@router.get("/admin/dashboard")
+def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depends(verificar_admin)):
+    from models import CrmConversation, AffiliateConversion, Affiliate
+    from collections import Counter
+
+    now = datetime.utcnow()
+    hoje_inicio = datetime(now.year, now.month, now.day)
+    mes_inicio  = datetime(now.year, now.month, 1)
+
+    PLANO_VALOR = {
+        "anual":    29900,
+        "anual79":   7990,
+        "anual199": 19900,
+        "teste":     4990,
+        "mensal":    4990,
+    }
+    PLANOS_PAGOS = set(PLANO_VALOR.keys())
+
+    all_users = db.query(User).all()
+
+    # ── BLOCO 1: Cards ────────────────────────────────────────
+    ativos         = [u for u in all_users if u.expires_at and u.expires_at > now]
+    trials_ativos  = [u for u in ativos if u.plan_type == "trial_gratis"]
+    pagos_ativos   = [u for u in ativos if u.plan_type in PLANOS_PAGOS]
+    expirando_7d   = [u for u in ativos if (u.expires_at - now).days <= 7]
+
+    cadastros_hoje = sum(1 for u in all_users if u.created_at and u.created_at >= hoje_inicio)
+    cadastros_mes  = sum(1 for u in all_users if u.created_at and u.created_at >= mes_inicio)
+
+    # Receita: AffiliateConversion (exato) + estimativa para não-afiliados
+    conv_mes = db.query(AffiliateConversion).filter(AffiliateConversion.created_at >= mes_inicio).all()
+    receita_afiliados = sum(c.valor for c in conv_mes)
+    emails_aff_mes    = {c.email_cliente for c in conv_mes}
+    nao_afilados_mes  = [
+        u for u in all_users
+        if u.created_at and u.created_at >= mes_inicio
+        and u.plan_type in PLANOS_PAGOS
+        and u.email not in emails_aff_mes
+    ]
+    receita_estimada   = sum(PLANO_VALOR.get(u.plan_type, 0) for u in nao_afilados_mes)
+    receita_total_mes  = receita_afiliados + receita_estimada
+
+    total_trials   = sum(1 for u in all_users if u.trial_usado)
+    convertidos    = sum(1 for u in all_users if u.trial_usado and u.plan_type in PLANOS_PAGOS)
+    taxa_conversao = round(convertidos / max(total_trials, 1) * 100, 1)
+
+    cards = {
+        "receita_mes_cents":  receita_total_mes,
+        "cadastros_hoje":     cadastros_hoje,
+        "cadastros_mes":      cadastros_mes,
+        "ativos_total":       len(ativos),
+        "trials_ativos":      len(trials_ativos),
+        "pagos_ativos":       len(pagos_ativos),
+        "expirando_7d":       len(expirando_7d),
+        "taxa_conversao_pct": taxa_conversao,
+        "total_usuarios":     len(all_users),
+    }
+
+    # ── BLOCO 2: Funil de aquisição ───────────────────────────
+    total_leads     = db.query(CrmConversation).count()
+    total_cadastros = len(all_users)
+    com_hwid        = sum(1 for u in all_users if u.hwid_1)
+    total_pagos     = sum(1 for u in all_users if u.plan_type in PLANOS_PAGOS)
+
+    funil_aquisicao = [
+        {"label": "Leads CRM",          "valor": total_leads},
+        {"label": "Cadastros",           "valor": total_cadastros},
+        {"label": "App ativado (HWID)",  "valor": com_hwid},
+        {"label": "Cliente pago",        "valor": total_pagos},
+    ]
+
+    # ── BLOCO 3: Crescimento por dia ──────────────────────────
+    all_convs_aff = db.query(AffiliateConversion).filter(
+        AffiliateConversion.created_at >= (now - timedelta(days=periodo))
+    ).all()
+
+    dias_labels, dias_cadastros, dias_vendas, dias_receita = [], [], [], []
+    for i in range(periodo - 1, -1, -1):
+        d        = now - timedelta(days=i)
+        d_inicio = datetime(d.year, d.month, d.day)
+        d_fim    = d_inicio + timedelta(days=1)
+        dias_labels.append(d.strftime("%d/%m"))
+
+        cad = sum(1 for u in all_users if u.created_at and d_inicio <= u.created_at < d_fim)
+        dias_cadastros.append(cad)
+
+        aff_dia    = [c for c in all_convs_aff if c.created_at and d_inicio <= c.created_at < d_fim]
+        emails_aff = {c.email_cliente for c in aff_dia}
+        naff_dia   = [
+            u for u in all_users
+            if u.created_at and d_inicio <= u.created_at < d_fim
+            and u.plan_type in PLANOS_PAGOS
+            and u.email not in emails_aff
+        ]
+        dias_vendas.append(len(aff_dia) + len(naff_dia))
+        dias_receita.append(round(
+            (sum(c.valor for c in aff_dia) + sum(PLANO_VALOR.get(u.plan_type, 0) for u in naff_dia)) / 100, 2
+        ))
+
+    crescimento = {
+        "labels":    dias_labels,
+        "cadastros": dias_cadastros,
+        "vendas":    dias_vendas,
+        "receita":   dias_receita,
+    }
+
+    # ── BLOCO 4: Distribuição de planos ───────────────────────
+    planos_count = Counter(u.plan_type or "sem_plano" for u in ativos)
+    planos_dist  = [{"plano": k, "total": v} for k, v in sorted(planos_count.items(), key=lambda x: -x[1])]
+
+    # ── BLOCO 5: Funil do trial ───────────────────────────────
+    todos_trials      = [u for u in all_users if u.trial_usado or u.plan_type == "trial_gratis"]
+    trial_wa          = sum(1 for u in todos_trials if u.whatsapp_verified)
+    trial_hwid        = sum(1 for u in todos_trials if u.hwid_1)
+    trial_conv        = sum(1 for u in todos_trials if u.plan_type in PLANOS_PAGOS)
+    trial_exp_sem     = sum(1 for u in todos_trials if u.plan_type == "trial_gratis" and u.expires_at and u.expires_at < now)
+    n_trial           = max(len(todos_trials), 1)
+
+    funil_trial = [
+        {"label": "Trial cadastrado",       "valor": len(todos_trials), "pct": 100},
+        {"label": "WhatsApp verificado",    "valor": trial_wa,          "pct": round(trial_wa   / n_trial * 100, 1)},
+        {"label": "App baixado (HWID)",     "valor": trial_hwid,        "pct": round(trial_hwid / n_trial * 100, 1)},
+        {"label": "Converteu para pago",    "valor": trial_conv,        "pct": round(trial_conv / n_trial * 100, 1)},
+        {"label": "Expirou sem converter",  "valor": trial_exp_sem,     "pct": round(trial_exp_sem / n_trial * 100, 1)},
+    ]
+
+    # ── BLOCO 6: Churn ────────────────────────────────────────
+    expirando_30d = sorted([
+        {
+            "nome":           u.nome or u.email,
+            "email":          u.email,
+            "plano":          u.plan_type,
+            "expira_em":      u.expires_at.isoformat(),
+            "dias_restantes": (u.expires_at - now).days,
+        }
+        for u in ativos if (u.expires_at - now).days <= 30
+    ], key=lambda x: x["dias_restantes"])
+
+    perdidos_30d = sum(
+        1 for u in all_users
+        if u.expires_at and u.expires_at < (now - timedelta(days=30))
+        and u.plan_type in PLANOS_PAGOS
+    )
+
+    # ── BLOCO 7: CRM ──────────────────────────────────────────
+    all_convs   = db.query(CrmConversation).all()
+    stages_cnt  = Counter(c.stage or "lead" for c in all_convs)
+    ia_ativa    = sum(1 for c in all_convs if c.ai_active)
+    transferidas= sum(1 for c in all_convs if not c.ai_active)
+
+    leads_dia = []
+    labels_30d = []
+    for i in range(29, -1, -1):
+        d        = now - timedelta(days=i)
+        d_inicio = datetime(d.year, d.month, d.day)
+        d_fim    = d_inicio + timedelta(days=1)
+        labels_30d.append(d.strftime("%d/%m"))
+        leads_dia.append(sum(1 for c in all_convs if c.created_at and d_inicio <= c.created_at < d_fim))
+
+    crm = {
+        "total_leads":  len(all_convs),
+        "ia_ativa":     ia_ativa,
+        "transferidas": transferidas,
+        "stages":       [{"stage": k, "total": v} for k, v in stages_cnt.items()],
+        "leads_dia":    leads_dia,
+        "labels_30d":   labels_30d,
+    }
+
+    # ── BLOCO 8: Afiliados ────────────────────────────────────
+    afiliados_list = []
+    for aff in db.query(Affiliate).filter(Affiliate.ativo == True).all():
+        all_aff_conv = db.query(AffiliateConversion).filter(AffiliateConversion.affiliate_slug == aff.slug).all()
+        mes_aff_conv = [c for c in all_aff_conv if c.created_at and c.created_at >= mes_inicio]
+        afiliados_list.append({
+            "slug":          aff.slug,
+            "nome":          aff.nome or aff.slug,
+            "total_vendas":  len(all_aff_conv),
+            "vendas_mes":    len(mes_aff_conv),
+            "receita_total": sum(c.valor for c in all_aff_conv) / 100,
+            "receita_mes":   sum(c.valor for c in mes_aff_conv) / 100,
+            "comissao_mes":  sum(c.comissao for c in mes_aff_conv) / 100,
+        })
+    afiliados_list.sort(key=lambda x: -x["receita_total"])
+
+    return {
+        "cards":           cards,
+        "funil_aquisicao": funil_aquisicao,
+        "crescimento":     crescimento,
+        "planos_dist":     planos_dist,
+        "funil_trial":     funil_trial,
+        "churn":           {"expirando_30d": expirando_30d, "perdidos_30d": perdidos_30d},
+        "crm":             crm,
+        "afiliados":       afiliados_list,
+    }
