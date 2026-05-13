@@ -44,10 +44,18 @@ body{font-family:'Inter',sans-serif;background:#060f25;color:#e0e6f0;min-height:
 .section-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
 
 /* ── TOOLBAR ── */
-.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .toolbar input[type=text]{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;color:white;font-size:13px;font-family:'Inter',sans-serif;outline:none;width:240px}
 .toolbar input[type=text]::placeholder{color:rgba(255,255,255,.3)}
 .toolbar input[type=text]:focus{border-color:rgba(100,160,255,.4)}
+/* ── FILTROS ── */
+.filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px}
+.filter-bar label{font-size:11px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}
+.filter-select{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:6px 10px;color:white;font-size:12px;font-family:'Inter',sans-serif;outline:none;cursor:pointer;transition:border-color .2s}
+.filter-select:focus{border-color:rgba(100,160,255,.4)}
+.filter-select option{background:#0d1e3f}
+.filter-divider{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 4px}
+.filter-active{border-color:rgba(44,123,229,.6)!important;background:rgba(44,123,229,.12)!important}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:filter .15s,transform .1s;white-space:nowrap}
 .btn:hover{filter:brightness(1.1)}
 .btn:active{transform:scale(.97)}
@@ -140,10 +148,72 @@ tr:hover td{background:rgba(255,255,255,.025)}
   <!-- TAB USUÁRIOS -->
   <div id="tab-usuarios" class="tab-content active">
     <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Buscar por nome, email ou WhatsApp..." oninput="filtrarTabela()">
+      <input type="text" id="searchInput" placeholder="🔍 Buscar por nome, email ou WhatsApp..." oninput="filtrarTabela()">
       <button class="btn btn-blue" onclick="abrirModalCadastrar()">+ Cadastrar Usuário</button>
       <button class="btn btn-ghost" onclick="carregarUsuarios()">↻ Atualizar</button>
       <span id="totalUsers" style="font-size:12px;color:rgba(255,255,255,.35);margin-left:auto"></span>
+    </div>
+    <!-- BARRA DE FILTROS -->
+    <div class="filter-bar">
+      <label>Status</label>
+      <select class="filter-select" id="fStatus" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="ativo">✅ Ativo</option>
+        <option value="inativo">❌ Inativo</option>
+        <option value="sem_licenca">— Sem licença</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>Plano</label>
+      <select class="filter-select" id="fPlano" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="trial_gratis">Trial grátis</option>
+        <option value="teste">Teste 30 dias</option>
+        <option value="mensal">Mensal</option>
+        <option value="anual">Anual</option>
+        <option value="anual79">Anual R$79</option>
+        <option value="anual199">Anual R$199</option>
+        <option value="manual">Manual (admin)</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>WhatsApp</label>
+      <select class="filter-select" id="fWa" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="verificado">✅ Verificado</option>
+        <option value="nao_verificado">⚠️ Não verificado</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>HWID</label>
+      <select class="filter-select" id="fHwid" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="com_hwid">Com HWID (ativou)</option>
+        <option value="sem_hwid">Sem HWID (nunca ativou)</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>Expirando</label>
+      <select class="filter-select" id="fExpira" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="7dias">Expira em 7 dias</option>
+        <option value="30dias">Expira em 30 dias</option>
+        <option value="expirado">Já expirado</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>Cadastrado</label>
+      <select class="filter-select" id="fCadastro" onchange="filtrarTabela()">
+        <option value="">Todos</option>
+        <option value="hoje">Hoje</option>
+        <option value="7dias">Últimos 7 dias</option>
+        <option value="30dias">Últimos 30 dias</option>
+      </select>
+      <div class="filter-divider"></div>
+      <label>Ordenar</label>
+      <select class="filter-select" id="fOrdem" onchange="filtrarTabela()">
+        <option value="recente">Mais recente</option>
+        <option value="antigo">Mais antigo</option>
+        <option value="expira">Expira primeiro</option>
+        <option value="nome">Nome A–Z</option>
+      </select>
+      <div class="filter-divider"></div>
+      <button class="btn btn-sm btn-ghost" onclick="limparFiltros()" title="Limpar todos os filtros">✕ Limpar</button>
     </div>
     <div class="section" style="padding:0">
       <div class="tbl-wrap">
@@ -582,13 +652,106 @@ function renderTabela(data) {
 }
 
 function filtrarTabela() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const filtrado = q ? usuarios.filter(u =>
-    (u.nome||'').toLowerCase().includes(q) ||
-    (u.email||'').toLowerCase().includes(q) ||
-    (u.whatsapp||'').toLowerCase().includes(q)
-  ) : usuarios;
-  renderTabela(filtrado);
+  const q        = document.getElementById('searchInput').value.toLowerCase();
+  const fStatus  = document.getElementById('fStatus').value;
+  const fPlano   = document.getElementById('fPlano').value;
+  const fWa      = document.getElementById('fWa').value;
+  const fHwid    = document.getElementById('fHwid').value;
+  const fExpira  = document.getElementById('fExpira').value;
+  const fCadastro= document.getElementById('fCadastro').value;
+  const fOrdem   = document.getElementById('fOrdem').value;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let resultado = usuarios.filter(u => {
+    // Busca textual
+    if (q && !(
+      (u.nome||'').toLowerCase().includes(q) ||
+      (u.email||'').toLowerCase().includes(q) ||
+      (u.whatsapp||'').toLowerCase().includes(q)
+    )) return false;
+
+    // Status
+    if (fStatus === 'ativo'       && !u.ativo) return false;
+    if (fStatus === 'inativo'     && (u.ativo || !u.expira_em)) return false;
+    if (fStatus === 'sem_licenca' && u.expira_em) return false;
+
+    // Plano
+    if (fPlano) {
+      const plano = (u.plano||'').toLowerCase();
+      if (fPlano === 'anual' && !['anual','anual79','anual199'].includes(plano)) return false;
+      if (fPlano !== 'anual' && plano !== fPlano) return false;
+    }
+
+    // WhatsApp verificado
+    if (fWa === 'verificado'     && !u.whatsapp_verified) return false;
+    if (fWa === 'nao_verificado' &&  u.whatsapp_verified) return false;
+
+    // HWID
+    const temHwid = !!(u.hwid_1 || u.hwid_2);
+    if (fHwid === 'com_hwid'  && !temHwid) return false;
+    if (fHwid === 'sem_hwid'  &&  temHwid) return false;
+
+    // Expirando
+    if (fExpira && u.expira_em) {
+      const exp = new Date(u.expira_em);
+      const diasRestantes = (exp - now) / (1000 * 60 * 60 * 24);
+      if (fExpira === '7dias'   && !(diasRestantes >= 0 && diasRestantes <= 7)) return false;
+      if (fExpira === '30dias'  && !(diasRestantes >= 0 && diasRestantes <= 30)) return false;
+      if (fExpira === 'expirado'&& diasRestantes > 0) return false;
+    } else if (fExpira && !u.expira_em) return false;
+
+    // Data de cadastro
+    if (fCadastro && u.created_at) {
+      const cad = new Date(u.created_at);
+      if (fCadastro === 'hoje'  && cad < startOfToday) return false;
+      if (fCadastro === '7dias' && (now - cad) > 7  * 86400000) return false;
+      if (fCadastro === '30dias'&& (now - cad) > 30 * 86400000) return false;
+    } else if (fCadastro && !u.created_at) return false;
+
+    return true;
+  });
+
+  // Ordenação
+  resultado = resultado.slice().sort((a, b) => {
+    if (fOrdem === 'antigo') {
+      return new Date(a.created_at||0) - new Date(b.created_at||0);
+    }
+    if (fOrdem === 'expira') {
+      const ea = a.expira_em ? new Date(a.expira_em) : new Date('9999-01-01');
+      const eb = b.expira_em ? new Date(b.expira_em) : new Date('9999-01-01');
+      return ea - eb;
+    }
+    if (fOrdem === 'nome') {
+      return (a.nome||'').localeCompare(b.nome||'', 'pt-BR');
+    }
+    // padrão: mais recente
+    return new Date(b.created_at||0) - new Date(a.created_at||0);
+  });
+
+  // Destaca selects ativos
+  ['fStatus','fPlano','fWa','fHwid','fExpira','fCadastro'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.toggle('filter-active', !!el.value);
+  });
+
+  renderTabela(resultado);
+  document.getElementById('totalUsers').textContent =
+    resultado.length === usuarios.length
+      ? `${usuarios.length} usuário(s)`
+      : `${resultado.length} de ${usuarios.length} usuário(s)`;
+}
+
+function limparFiltros() {
+  ['fStatus','fPlano','fWa','fHwid','fExpira','fCadastro'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('filter-active');
+  });
+  document.getElementById('fOrdem').value = 'recente';
+  document.getElementById('searchInput').value = '';
+  renderTabela(usuarios);
+  document.getElementById('totalUsers').textContent = `${usuarios.length} usuário(s)`;
 }
 
 async function ativar(email) {
