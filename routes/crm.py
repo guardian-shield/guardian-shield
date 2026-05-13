@@ -93,12 +93,36 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
         return {"status": "ignored"}
 
     wa_msg_id = msg_data.get("key", {}).get("id", "")
+    msg = msg_data.get("message", {}) or {}
+
     content = (
-        msg_data.get("message", {}).get("conversation")
-        or msg_data.get("message", {}).get("extendedTextMessage", {}).get("text")
+        msg.get("conversation")
+        or msg.get("extendedTextMessage", {}).get("text")
+        # Mensagens vindas de anúncio (Facebook/Instagram Ads)
+        or msg.get("imageMessage", {}).get("caption")
+        or msg.get("videoMessage", {}).get("caption")
+        or msg.get("buttonsResponseMessage", {}).get("selectedDisplayText")
+        or msg.get("listResponseMessage", {}).get("title")
+        or msg.get("interactiveResponseMessage", {}).get("nativeFlowResponseMessage", {}).get("paramsJson")
         or ""
     )
+
+    # Mensagens de anúncio: o texto pode vir dentro de contextInfo
     if not content:
+        ctx = msg.get("extendedTextMessage", {}).get("contextInfo", {})
+        content = ctx.get("forwardingScore") and msg.get("extendedTextMessage", {}).get("text") or ""
+
+    # Último fallback: qualquer campo "text" dentro de message
+    if not content:
+        for v in msg.values():
+            if isinstance(v, dict):
+                t = v.get("text") or v.get("body") or v.get("caption") or ""
+                if t and isinstance(t, str) and len(t) > 1:
+                    content = t
+                    break
+
+    if not content:
+        logger.warning(f"[CRM] Mensagem sem conteúdo legível de {phone} — tipos: {list(msg.keys())}")
         return {"status": "ignored"}
 
     # ── Detecta mensagens automáticas / bots ─────────────────────────────────
