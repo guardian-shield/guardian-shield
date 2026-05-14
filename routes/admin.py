@@ -272,6 +272,45 @@ def deletar_usuario(
 
 
 # =============================================================
+# POST /admin/reset-password  →  admin redefine senha do usuário
+# =============================================================
+@router.post("/admin/reset-password")
+def admin_reset_password(
+    email: str,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    import random, string
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+
+    letras = ''.join(random.choices(string.ascii_uppercase, k=2))
+    numeros = ''.join(random.choices(string.digits, k=4))
+    nova_senha = f"Shield#{numeros}{letras}"
+
+    user.password = hash_password(nova_senha)
+    db.commit()
+
+    wa_enviado = False
+    if user.whatsapp:
+        try:
+            msg = (
+                f"🔑 *Redefinição de senha — Guardian Shield*\n\n"
+                f"Olá, {user.nome or email}!\n\n"
+                f"Sua senha foi redefinida pelo suporte.\n"
+                f"Nova senha: *{nova_senha}*\n\n"
+                f"Acesse o aplicativo e entre com essa senha."
+            )
+            send_whatsapp_message(user.whatsapp, msg, db)
+            wa_enviado = True
+        except Exception as e:
+            logger.error(f"[ADMIN RESET] Falha ao enviar WA para {user.whatsapp}: {e}")
+
+    return {"status": "ok", "nova_senha": nova_senha, "wa_enviado": wa_enviado}
+
+
+# =============================================================
 # POST /admin/cadastrar  →  admin cria usuário direto
 # =============================================================
 @router.post("/admin/cadastrar")

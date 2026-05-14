@@ -270,6 +270,47 @@ def verify_whatsapp(
 
 
 # =============================================================
+# FORGOT PASSWORD — envia nova senha via WhatsApp
+# =============================================================
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+    import string
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # Retorna sucesso mesmo sem usuário (evitar enumeração de e-mails)
+        return {"message": "Se o e-mail estiver cadastrado, uma nova senha será enviada."}
+
+    if not user.whatsapp:
+        return {"error": "Sua conta não tem WhatsApp cadastrado. Entre em contato com o suporte."}
+
+    # Gera senha aleatória: Shield# + 4 dígitos + 2 letras maiúsculas
+    letras = ''.join(random.choices(string.ascii_uppercase, k=2))
+    numeros = ''.join(random.choices(string.digits, k=4))
+    nova_senha = f"Shield#{numeros}{letras}"
+
+    user.password = hash_password(nova_senha)
+    db.commit()
+
+    try:
+        from services.whatsapp_service import send_whatsapp_message
+        msg = (
+            f"🔑 *Redefinição de senha — Guardian Shield*\n\n"
+            f"Olá, {user.nome or email}!\n\n"
+            f"Sua nova senha é: *{nova_senha}*\n\n"
+            f"Acesse o aplicativo e entre com essa senha. Você pode alterá-la depois nas configurações.\n\n"
+            f"Se não foi você que solicitou, ignore esta mensagem."
+        )
+        send_whatsapp_message(user.whatsapp, msg, db)
+        logger.warning(f"[FORGOT] Nova senha enviada para {user.whatsapp}")
+    except Exception as e:
+        logger.error(f"[FORGOT] Falha ao enviar nova senha para {user.whatsapp}: {e}")
+        return {"error": "Falha ao enviar a senha pelo WhatsApp. Tente novamente."}
+
+    return {"message": "Nova senha enviada para o seu WhatsApp!"}
+
+
+# =============================================================
 # USER PLAN — retorna plan_type do usuário (para ocultar mensal já usado)
 # =============================================================
 @router.get("/user-plan")

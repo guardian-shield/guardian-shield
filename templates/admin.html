@@ -730,6 +730,7 @@ function renderTabela(data) {
           <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')">Ativar</button>
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')">Desativar</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')">Reset HWID</button>
+          <button class="btn btn-sm" style="background:rgba(100,60,200,0.2);border:1px solid rgba(140,100,255,0.4);color:#b090ff;" onclick="resetSenha('${u.email}','${esc(u.whatsapp||'')}')">🔑 Resetar Senha</button>
           <button class="btn btn-sm" style="background:rgba(212,160,23,0.2);border:1px solid rgba(212,160,23,0.4);color:#d4a017;" onclick="liberarVerificacao('${u.email}')">✓ Liberar WA</button>
           <button class="btn btn-sm" style="background:rgba(30,160,80,0.2);border:1px solid rgba(50,220,120,0.4);color:#4cde8a;" onclick="reenviarCodigoWa('${u.email}','${esc(u.whatsapp||'')}')">📲 Reenviar código</button>
           <button class="btn btn-sm btn-blue" onclick="abrirModalMsg('${u.email}','${esc(u.nome||u.email)}','${esc(u.whatsapp||'')}')">💬</button>
@@ -861,6 +862,19 @@ async function desativar(email) {
   showLoading(false);
   toast('Usuário desativado.');
   carregarUsuarios();
+}
+
+async function resetSenha(email, whatsapp) {
+  if (!confirm(`Redefinir senha de ${email}?\n\nUma nova senha será gerada e enviada por WhatsApp${whatsapp ? ' para ' + whatsapp : ' (sem WhatsApp cadastrado)'}.`)) return;
+  showLoading(true);
+  const res = await api('POST', `/admin/reset-password?email=${encodeURIComponent(email)}`);
+  showLoading(false);
+  if (res && res.nova_senha) {
+    const waInfo = res.wa_enviado ? '✅ Enviada por WhatsApp' : '⚠️ WhatsApp não enviado';
+    alert(`Nova senha gerada:\n\n${res.nova_senha}\n\n${waInfo}`);
+  } else {
+    toast('Erro ao resetar senha.');
+  }
 }
 
 async function resetHwid(email) {
