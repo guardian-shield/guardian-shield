@@ -1,4 +1,5 @@
 import os
+import uuid
 import mercadopago
 
 ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN", "")
@@ -74,8 +75,16 @@ def criar_pix(email, valor, plano, external_reference: str = None):
             }
         }
 
-        payment = sdk.payment().create(payment_data)
-        return payment["response"]
+        request_options = mercadopago.config.RequestOptions()
+        request_options.custom_headers = {
+            "X-Idempotency-Key": str(uuid.uuid4())
+        }
+
+        payment = sdk.payment().create(payment_data, request_options)
+        resp = payment["response"]
+        if resp.get("status") not in ("pending", "approved") and resp.get("error"):
+            print("ERRO PIX API:", resp)
+        return resp
 
     except Exception as e:
         print("ERRO PIX:", e)
