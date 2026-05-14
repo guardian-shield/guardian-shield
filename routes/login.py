@@ -142,7 +142,11 @@ def resend_code(request: Request, email: str, db: Session = Depends(get_db)):
     user.email_code         = code
     user.email_code_expires = datetime.utcnow() + timedelta(minutes=15)
     db.commit()
-    _tentar_enviar_email(email, user.nome, code, db)
+    try:
+        from services.email_service import send_email
+        send_email(email, "Código de verificação", f"Seu código: {code}")
+    except Exception as e:
+        logger.error(f"[RESEND] Falha ao enviar e-mail para {email}: {e}")
     return {"message": "Novo código enviado!"}
 
 
