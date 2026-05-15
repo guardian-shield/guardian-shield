@@ -449,9 +449,22 @@ async def process_card(request: Request):
                 dias = 30 if plano == "teste" else 365
 
                 # Ativa licença
+                from datetime import datetime as _dt
                 user_db = _db2.query(User).filter(User.email == email).first()
-                if user_db:
-                    user_db.expires_at = __import__('datetime').datetime.utcnow() + timedelta(days=dias)
+                if not user_db:
+                    user_db = User(
+                        email        = email,
+                        whatsapp     = whatsapp or None,
+                        nome         = nome or None,
+                        pre_liberado = True,
+                        expires_at   = _dt.utcnow() + timedelta(days=dias),
+                        plan_type    = "anual" if plano in ("anual79", "anual199") else plano,
+                    )
+                    _db2.add(user_db)
+                    _db2.commit()
+                    _db2.refresh(user_db)
+                else:
+                    user_db.expires_at = _dt.utcnow() + timedelta(days=dias)
                     user_db.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
                     if plano == "teste":
                         user_db.trial_usado = True
