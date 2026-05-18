@@ -191,7 +191,7 @@ async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "",
         # Cria/atualiza conversa no CRM para o follow-up automático
         _registrar_lead_crm(whatsapp, email, plano, db, nome=nome)
 
-    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00 if plano == "anual" else None
+    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 199.00 if plano == "anual199" else 299.00 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
 
@@ -280,7 +280,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             if sem_licenca or expirada or upgrade_trial:
                 dias = 30 if plano == "teste" else 365
                 user.expires_at = datetime.utcnow() + timedelta(days=dias)
-                user.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
+                user.plan_type  = "anual" if plano in ("anual79", "anual99", "anual199") else plano
                 if plano == "teste":
                     user.trial_usado = True
                 if not user.password:
@@ -306,8 +306,8 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             if licenca_ativada_agora and user:
                 from services.whatsapp_service import send_whatsapp_message
                 plano_nome = "Teste 30 dias" if plano == "teste" else "Anual"
-                plano_label_pix = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
-                planoValor_pix = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00
+                plano_label_pix = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Promo (R$99)" if plano == "anual99" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
+                planoValor_pix = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 199.00 if plano == "anual199" else 299.00
                 # Mensagem para o cliente
                 if user.whatsapp:
                     try:
@@ -393,7 +393,7 @@ async def process_card(request: Request):
     finally:
         _db_check.close()
 
-    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 199.00 if plano == "anual199" else 299.00
+    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 199.00 if plano == "anual199" else 299.00
 
     # Salva WhatsApp do lead e registra no CRM antes do pagamento
     if whatsapp and email:
@@ -458,14 +458,14 @@ async def process_card(request: Request):
                         nome         = nome or None,
                         pre_liberado = True,
                         expires_at   = _dt.utcnow() + timedelta(days=dias),
-                        plan_type    = "anual" if plano in ("anual79", "anual199") else plano,
+                        plan_type    = "anual" if plano in ("anual79", "anual99", "anual199") else plano,
                     )
                     _db2.add(user_db)
                     _db2.commit()
                     _db2.refresh(user_db)
                 else:
                     user_db.expires_at = _dt.utcnow() + timedelta(days=dias)
-                    user_db.plan_type  = "anual" if plano in ("anual79", "anual199") else plano
+                    user_db.plan_type  = "anual" if plano in ("anual79", "anual99", "anual199") else plano
                     if plano == "teste":
                         user_db.trial_usado = True
                     if not user_db.password:
@@ -499,7 +499,7 @@ async def process_card(request: Request):
                     send_whatsapp_message(whatsapp, msg_cliente, _db2)
 
                 # Notificação para o dono
-                plano_label_card = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
+                plano_label_card = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Promo (R$99)" if plano == "anual99" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
                 msg_dono = (
                     f"🔔 *Nova venda Guardian Shield!*\n\n"
                     f"💳 Cartão — Plano: *{plano_label_card}*\n"

@@ -809,14 +809,17 @@ h2 .red   { color: #ff7070; }
     <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px">82% das licenças promocionais já vendidas</div>
   </div>
 
-  <div class="oferta-box">
+  <div class="oferta-box" style="border:2px solid #ff4444;position:relative;overflow:hidden">
+    <div style="background:#ff4444;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-align:center;padding:6px 0;margin:-24px -24px 16px -24px">
+      ⚡ OFERTA RELÂMPAGO — EXPIRA EM <span id="countdown-timer" style="font-size:13px">--:--:--</span>
+    </div>
     <div class="oferta-tag">⭐ LICENÇA ANUAL — ACESSO COMPLETO</div>
     <div class="oferta-preco-antigo">De R$997,00</div>
-    <div class="oferta-preco"><small>R$</small>297<small style="font-size:22px">,00</small></div>
+    <div class="oferta-preco"><small>R$</small>99<small style="font-size:22px">,00</small></div>
     <div class="oferta-periodo">Licença anual · Acesso imediato · Todos os recursos</div>
-    <div class="oferta-economize">🔥 Você economiza R$700,00</div>
-    <a href="/pagar?plano=anual" class="btn-comprar" onclick="trackCta()">
-      🛡️ QUERO O GUARDIAN SHIELD AGORA
+    <div class="oferta-economize">🔥 Você economiza R$898,00 — só por 24 horas</div>
+    <a href="/pagar?plano=anual99" class="btn-comprar" onclick="trackCta()">
+      🛡️ QUERO O GUARDIAN SHIELD POR R$99 AGORA
     </a>
     <div class="oferta-selos">
       <span>🔒 Pagamento seguro</span>
@@ -894,8 +897,8 @@ h2 .red   { color: #ff7070; }
 <div class="footer-cta fade-up">
   <h2>A diferença não é talento.<br><span class="gold">É ferramenta.</span></h2>
   <p>Você pode continuar cobrando R$20, perdendo 15 minutos, e torcendo para o cliente não voltar reclamando. Ou você pode ser o técnico da sua cidade que resolve o problema de vírus de uma vez — e ainda cobra R$200 por isso.</p>
-  <a href="/pagar?plano=anual" class="btn-hero" style="margin-bottom:10px" onclick="trackCta()">
-    <span>🛡️</span> GARANTIR MINHA LICENÇA COM DESCONTO AGORA
+  <a href="/pagar?plano=anual99" class="btn-hero" style="margin-bottom:10px" onclick="trackCta()">
+    <span>🛡️</span> GARANTIR MINHA LICENÇA POR R$99 AGORA
   </a>
   <p style="font-size:12px;color:rgba(255,255,255,0.25)">🔒 Pagamento seguro &nbsp;·&nbsp; Acesso imediato &nbsp;·&nbsp; 30 dias de garantia</p>
 </div>
@@ -931,6 +934,34 @@ function trackCta() {
   if (typeof gtag !== 'undefined') gtag('event', 'click_cta_vendas5');
 }
 document.querySelectorAll('a[href*="/pagar"]').forEach(b => b.addEventListener('click', trackCta));
+
+// ── COUNTDOWN 24H
+(function() {
+  var KEY = 'gs_promo99_deadline';
+  var deadline = localStorage.getItem(KEY);
+  if (!deadline) {
+    deadline = Date.now() + 24 * 60 * 60 * 1000;
+    localStorage.setItem(KEY, deadline);
+  }
+  deadline = parseInt(deadline);
+
+  function tick() {
+    var diff = deadline - Date.now();
+    var el = document.getElementById('countdown-timer');
+    if (!el) return;
+    if (diff <= 0) {
+      el.textContent = '00:00:00';
+      clearInterval(timer);
+      return;
+    }
+    var h = Math.floor(diff / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  tick();
+  var timer = setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
