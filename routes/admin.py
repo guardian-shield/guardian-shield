@@ -471,7 +471,7 @@ def send_message(payload: dict, db: Session = Depends(get_db), admin=Depends(ver
         ).all()
     elif email == "seg_anual":
         destinatarios = db.query(User).filter(
-            User.plan_type.in_(["anual", "anual79", "anual199"]),
+            User.plan_type.in_(["anual", "anual79", "anual99", "anual199", "manual"]),
             User.expires_at > now,
             User.whatsapp != None,
         ).all()

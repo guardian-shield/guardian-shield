@@ -172,8 +172,6 @@ tr:hover td{background:rgba(255,255,255,.025)}
         <option value="teste">Teste 30 dias</option>
         <option value="mensal">Mensal</option>
         <option value="anual">Anual</option>
-        <option value="anual79">Anual R$79</option>
-        <option value="anual199">Anual R$199</option>
         <option value="manual">Manual (admin)</option>
       </select>
       <div class="filter-divider"></div>
@@ -770,8 +768,10 @@ function filtrarTabela() {
     // Plano
     if (fPlano) {
       const plano = (u.plano||'').toLowerCase();
-      if (fPlano === 'anual' && !['anual','anual79','anual199'].includes(plano)) return false;
-      if (fPlano !== 'anual' && plano !== fPlano) return false;
+      const PLANOS_ANUAL = ['anual','anual79','anual99','anual199'];
+      if (fPlano === 'anual' && !PLANOS_ANUAL.includes(plano) && !(plano === 'manual' && u.dias_restantes >= 300)) return false;
+      if (fPlano !== 'anual' && fPlano !== 'manual' && plano !== fPlano) return false;
+      if (fPlano === 'manual' && plano !== 'manual') return false;
     }
 
     // WhatsApp verificado
@@ -1050,8 +1050,8 @@ function _contarSegmento(id) {
   if (id === 'seg_trial_ativo')    return u.filter(x => x.plano === 'trial_gratis' && x.ativo && x.whatsapp).length;
   if (id === 'seg_trial_expirado') return u.filter(x => x.plano === 'trial_gratis' && !x.ativo && x.whatsapp).length;
   if (id === 'seg_mensal')         return u.filter(x => x.plano === 'mensal' && x.ativo && x.whatsapp).length;
-  if (id === 'seg_anual')          return u.filter(x => ['anual','anual79','anual199'].includes(x.plano) && x.ativo && x.whatsapp).length;
-  if (id === 'seg_pagos')          return u.filter(x => ['anual','anual79','anual199','mensal','teste'].includes(x.plano) && x.ativo && x.whatsapp).length;
+  if (id === 'seg_anual')          return u.filter(x => ['anual','anual79','anual99','anual199','manual'].includes(x.plano) && x.ativo && x.whatsapp).length;
+  if (id === 'seg_pagos')          return u.filter(x => ['anual','anual79','anual99','anual199','mensal','teste','manual'].includes(x.plano) && x.ativo && x.whatsapp).length;
   if (id === 'seg_sem_hwid')       return u.filter(x => x.ativo && !x.hwid_1 && x.whatsapp).length;
   return 0;
 }
@@ -1188,8 +1188,8 @@ let _series      = { cadastros: true, vendas: true, receita: false };
 
 const PLANO_LABEL = {
   trial_gratis: 'Trial grátis', anual: 'Anual R$299', anual79: 'Anual R$79',
-  anual199: 'Anual R$199', teste: 'Teste 30d', mensal: 'Mensal',
-  manual: 'Manual', sem_plano: 'Sem plano',
+  anual99: 'Anual R$99', anual199: 'Anual R$199', teste: 'Teste 30d', mensal: 'Mensal',
+  manual: 'Manual (admin)', sem_plano: 'Sem plano',
 };
 const STAGE_LABEL = {
   lead:'Lead', initiated:'Iniciado', paid:'Pago', active:'Ativo',
