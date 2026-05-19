@@ -108,7 +108,7 @@ def _system_renewal(step: int, days_left: int, expired: bool) -> str:
 
 def _system_trial_nurture(step: int) -> str:
     """Mensagens para quem está no trial grátis de 7 dias — foco em uso e conversão nos últimos 2 dias."""
-    LINK_ANUAL = "https://guardian.grupomayconsantos.com.br/pagar"
+    LINK_ANUAL = "https://guardian.grupomayconsantos.com.br/vendas4"
     base = (
         "Você é a Maia, atendente do Guardian Shield. "
         "Este usuário está no período de teste gratuito de 7 dias. "
