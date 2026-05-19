@@ -418,8 +418,7 @@ async def run_followup_loop():
             # Verifica trials expirados a cada 10 minutos
             if tick % 10 == 0:
                 await process_trial_expiry_check()
-            # Resumo de trials às 12h e 20h
-            await process_trial_digest()
+            # Resumo de trials desativado
         except asyncio.CancelledError:
             break
         except Exception as e:
