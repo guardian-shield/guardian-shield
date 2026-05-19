@@ -12,7 +12,6 @@
   document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('init', '2079654962888572');
   fbq('track', 'PageView');
-  fbq('track', 'InitiateCheckout');
 </script>
 <noscript><img height="1" width="1" style="display:none"
   src="https://www.facebook.com/tr?id=2079654962888572&ev=PageView&noscript=1"/></noscript>
@@ -565,7 +564,7 @@ async function pagarCartao() {
                 ? '✓ Pagamento aprovado! Redirecionando...'
                 : '⏳ Pagamento em análise. Redirecionando...';
               if (d.status === 'approved' && typeof fbq !== 'undefined') {
-                fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
+                fbq('track', 'Purchase', { value: valor, currency: 'BRL' }, { eventID: 'purchase-' + (d.id || emailAtual) });
               }
               setTimeout(() => {
                 window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
@@ -617,7 +616,7 @@ async function verificarStatusPix() {
       const box = document.getElementById('pixStatusBox');
       box.classList.add('aprovado');
       document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
-      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: planoValor(planoAtual), currency: 'BRL' });
+      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: planoValor(planoAtual), currency: 'BRL' }, { eventID: String(pixPaymentId) });
       setTimeout(() => {
         window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
       }, 1500);

@@ -198,16 +198,6 @@
   if (email) emailEl.textContent = email;
   else emailEl.textContent = 'sua conta';
 
-  // Evento de compra — Meta Pixel + Google Analytics
-  const plano = params.get('plano') || 'mensal';
-  const valor = plano === 'anual' ? 399.00 : 99.00;
-  if (typeof fbq !== 'undefined') {
-    fbq('track', 'Purchase', { value: valor, currency: 'BRL' });
-  }
-  if (typeof gtag !== 'undefined') {
-    gtag('event', 'purchase', { currency: 'BRL', value: valor });
-  }
-
   const DOWNLOAD_URL = 'https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe';
   dlBtn.href = DOWNLOAD_URL;
 

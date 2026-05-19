@@ -933,7 +933,6 @@ function trackCta() {
   if (typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout');
   if (typeof gtag !== 'undefined') gtag('event', 'click_cta_vendas5');
 }
-document.querySelectorAll('a[href*="/pagar"]').forEach(b => b.addEventListener('click', trackCta));
 
 // ── COUNTDOWN 24H
 (function() {
