@@ -58,6 +58,41 @@ def _registrar_conversao_afiliado(db, slug: str, email_cliente: str, nome_client
             pass
 
 
+# Preços por plano em centavos — fonte única de verdade para fallback
+PLANO_PRECOS_CENTS = {
+    "mensal":    9900,   # R$99,00  (app)
+    "anual":    29900,   # R$299,00 (web PIX padrão) — app pode cobrar R$399 via checkout
+    "anual99":   9900,   # R$99,00  (promo web)
+    "anual79":   7990,   # R$79,90  (promo web)
+    "anual199": 19900,   # R$199,00 (promo web)
+    "teste":     4990,   # R$49,90  (trial pago)
+}
+
+
+def _registrar_pagamento_db(db, email: str, plano: str, valor_cents: int,
+                             payment_id: str, metodo: str = "pix",
+                             afiliado_slug: str = None):
+    """Registra transação na tabela pagamentos com deduplicação por payment_id."""
+    try:
+        from models import Pagamento
+        if not payment_id:
+            return
+        existe = db.query(Pagamento).filter(Pagamento.payment_id == str(payment_id)).first()
+        if not existe:
+            db.add(Pagamento(
+                email         = email,
+                plano         = plano,
+                valor_cents   = valor_cents,
+                payment_id    = str(payment_id),
+                metodo        = metodo,
+                afiliado_slug = afiliado_slug or None,
+            ))
+            db.commit()
+    except Exception as _e:
+        import logging
+        logging.getLogger("guardian").error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
+
+
 def _registrar_lead_crm(phone: str, email: str, plano: str, db, nome: str = ""):
     """Cria ou atualiza conversa no CRM assim que lead informa dados — garante follow-up mesmo se PIX falhar."""
     from models import CrmConversation, CrmMessage
@@ -339,6 +374,19 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                 except Exception as e:
                     logger.error(f"[VENDA] FALHA ao notificar dono — PIX {email}: {e}")
 
+                # Registra transação para dashboard de receita
+                tx_real = pagamento.get("transaction_amount") or 0
+                valor_pix_cents = int(round(float(tx_real) * 100)) if tx_real else int(planoValor_pix * 100)
+                _registrar_pagamento_db(
+                    db=db,
+                    email=email,
+                    plano=plano,
+                    valor_cents=valor_pix_cents,
+                    payment_id=str(pagamento.get("id", "")),
+                    metodo="pix",
+                    afiliado_slug=afiliado_slug,
+                )
+
                 # Conversão de afiliado
                 if afiliado_slug:
                     _registrar_conversao_afiliado(
@@ -514,6 +562,19 @@ async def process_card(request: Request):
                     logger.error(f"[VENDA] FALHA ao notificar dono — Cartão {email}: {e}")
                 # Atualiza CRM para active
                 _ativar_no_crm(whatsapp, _db2)
+
+                # Registra transação para dashboard de receita
+                tx_real_card = resultado.get("transaction_amount") or 0
+                valor_card_cents = int(round(float(tx_real_card) * 100)) if tx_real_card else int(valor * 100)
+                _registrar_pagamento_db(
+                    db=_db2,
+                    email=email,
+                    plano=plano,
+                    valor_cents=valor_card_cents,
+                    payment_id=str(resultado.get("id", "")),
+                    metodo="cartao",
+                    afiliado_slug=afiliado_slug_card or None,
+                )
 
                 # Conversão de afiliado (cartão)
                 if afiliado_slug_card:

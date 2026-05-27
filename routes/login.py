@@ -449,25 +449,21 @@ async def webhook(
 
                 # ── Registra transação de pagamento (para receita exata no dashboard) ──
                 try:
-                    from models import Pagamento
+                    from routes.pagamento import _registrar_pagamento_db, PLANO_PRECOS_CENTS
                     tx_amount   = pagamento.get("transaction_amount") or 0
                     valor_cents = int(round(float(tx_amount) * 100))
                     if valor_cents == 0:
-                        # Fallback quando MP não devolve o valor
-                        valor_cents = 9900 if plano == "mensal" else 39900
-                    pag_existe = db.query(Pagamento).filter(
-                        Pagamento.payment_id == str(payment_id)
-                    ).first()
-                    if not pag_existe:
-                        db.add(Pagamento(
-                            email         = email,
-                            plano         = plano,
-                            valor_cents   = valor_cents,
-                            payment_id    = str(payment_id),
-                            metodo        = pagamento.get("payment_method_id"),
-                            afiliado_slug = afiliado_slug,
-                        ))
-                        db.commit()
+                        # Fallback com preços reais por plano
+                        valor_cents = PLANO_PRECOS_CENTS.get(plano, PLANO_PRECOS_CENTS.get(plan_type_norm, 0))
+                    _registrar_pagamento_db(
+                        db=db,
+                        email=email,
+                        plano=plano,
+                        valor_cents=valor_cents,
+                        payment_id=str(payment_id),
+                        metodo=pagamento.get("payment_method_id", "checkout"),
+                        afiliado_slug=afiliado_slug,
+                    )
                 except Exception as _e:
                     logger.error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
 
