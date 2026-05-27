@@ -396,11 +396,13 @@ async def webhook(
 
             status    = pagamento.get("status")
             reference = pagamento.get("external_reference")
+            afiliado_slug = None
 
             if reference and "|" in reference:
                 parts = reference.split("|")  # 3 partes: email|plano|afiliado
                 email = parts[0]
                 plano = parts[1] if len(parts) > 1 else "mensal"
+                afiliado_slug = parts[2].strip() if len(parts) > 2 and parts[2].strip() else None
             elif reference and "-" in reference:
                 parts = reference.split("-", 1)
                 email = parts[0]
@@ -444,6 +446,30 @@ async def webhook(
                     )
                     db.add(user)
                 db.commit()
+
+                # ── Registra transação de pagamento (para receita exata no dashboard) ──
+                try:
+                    from models import Pagamento
+                    tx_amount   = pagamento.get("transaction_amount") or 0
+                    valor_cents = int(round(float(tx_amount) * 100))
+                    if valor_cents == 0:
+                        # Fallback quando MP não devolve o valor
+                        valor_cents = 9900 if plano == "mensal" else 39900
+                    pag_existe = db.query(Pagamento).filter(
+                        Pagamento.payment_id == str(payment_id)
+                    ).first()
+                    if not pag_existe:
+                        db.add(Pagamento(
+                            email         = email,
+                            plano         = plano,
+                            valor_cents   = valor_cents,
+                            payment_id    = str(payment_id),
+                            metodo        = pagamento.get("payment_method_id"),
+                            afiliado_slug = afiliado_slug,
+                        ))
+                        db.commit()
+                except Exception as _e:
+                    logger.error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
 
                 # Envia evento de compra para o Meta Conversions API
                 valor = 99.00 if plano == "mensal" else 399.00

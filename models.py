@@ -136,6 +136,20 @@ class AffiliateConversion(Base):
     created_at     = Column(DateTime, default=func.now())
 
 
+class Pagamento(Base):
+    """Transação de pagamento aprovada — uma linha por venda (webhook MP)."""
+    __tablename__ = "pagamentos"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    email         = Column(String, index=True)
+    plano         = Column(String)                          # original: anual, anual79, mensal…
+    valor_cents   = Column(Integer, default=0)              # valor real em centavos (ex: 39900)
+    payment_id    = Column(String, unique=True, index=True) # ID do MP — evita duplicação
+    metodo        = Column(String, nullable=True)           # pix | credit_card | debit_card
+    afiliado_slug = Column(String, nullable=True)
+    paid_at       = Column(DateTime, default=func.now())
+
+
 class Garantia(Base):
     """Garantias de blindagem — uma linha por aparelho por usuário."""
     __tablename__ = "garantias"

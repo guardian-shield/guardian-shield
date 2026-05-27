@@ -142,6 +142,19 @@ def migrar_banco():
             created_at       TIMESTAMP DEFAULT NOW()
         );""",
         "CREATE INDEX IF NOT EXISTS idx_aff_conv_slug ON affiliate_conversions(affiliate_slug);",
+        # Tabela de pagamentos (transações reais — substitui estimativa do dashboard)
+        """CREATE TABLE IF NOT EXISTS pagamentos (
+            id            SERIAL PRIMARY KEY,
+            email         VARCHAR NOT NULL,
+            plano         VARCHAR,
+            valor_cents   INTEGER NOT NULL DEFAULT 0,
+            payment_id    VARCHAR UNIQUE,
+            metodo        VARCHAR,
+            afiliado_slug VARCHAR,
+            paid_at       TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_pagamentos_email   ON pagamentos(email);",
+        "CREATE INDEX IF NOT EXISTS idx_pagamentos_paid_at ON pagamentos(paid_at);",
         # Seed do afiliado profissaosmarti (idempotente)
         """INSERT INTO affiliates (slug, nome, whatsapp, senha_hash, comissao_pct, ativo)
            VALUES ('profissaosmarti', 'Profissão Smarti', '27999806096',

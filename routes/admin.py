@@ -659,18 +659,26 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
     cadastros_hoje = sum(1 for u in all_users if u.created_at and u.created_at >= hoje_inicio)
     cadastros_mes  = sum(1 for u in all_users if u.created_at and u.created_at >= mes_inicio)
 
-    # Receita: AffiliateConversion (exato) + estimativa para não-afiliados
-    conv_mes = db.query(AffiliateConversion).filter(AffiliateConversion.created_at >= mes_inicio).all()
-    receita_afiliados = sum(c.valor for c in conv_mes)
-    emails_aff_mes    = {c.email_cliente for c in conv_mes}
-    nao_afilados_mes  = [
-        u for u in all_users
-        if u.created_at and u.created_at >= mes_inicio
-        and u.plan_type in PLANOS_PAGOS
-        and u.email not in emails_aff_mes
-    ]
-    receita_estimada   = sum(PLANO_VALOR.get(u.plan_type, 0) for u in nao_afilados_mes)
-    receita_total_mes  = receita_afiliados + receita_estimada
+    # Receita: usa tabela pagamentos (valor real do MP) quando disponível,
+    # senão fallback p/ estimativa por plano (dados históricos pré-migração)
+    from models import Pagamento
+    pagamentos_mes = db.query(Pagamento).filter(Pagamento.paid_at >= mes_inicio).all()
+    if pagamentos_mes:
+        receita_total_mes = sum(p.valor_cents for p in pagamentos_mes)
+    else:
+        # Fallback retrocompatível para dados anteriores à tabela pagamentos
+        conv_mes = db.query(AffiliateConversion).filter(AffiliateConversion.created_at >= mes_inicio).all()
+        receita_afiliados = sum(c.valor for c in conv_mes)
+        emails_aff_mes    = {c.email_cliente for c in conv_mes}
+        nao_afilados_mes  = [
+            u for u in all_users
+            if u.created_at and u.created_at >= mes_inicio
+            and u.plan_type in PLANOS_PAGOS
+            and u.email not in emails_aff_mes
+        ]
+        PLANO_VALOR_REAL = {"anual": 39900, "anual79": 7990, "anual199": 19900, "teste": 4990, "mensal": 9900}
+        receita_estimada  = sum(PLANO_VALOR_REAL.get(u.plan_type, 0) for u in nao_afilados_mes)
+        receita_total_mes = receita_afiliados + receita_estimada
 
     total_trials   = sum(1 for u in all_users if u.trial_usado)
     convertidos    = sum(1 for u in all_users if u.trial_usado and u.plan_type in PLANOS_PAGOS)
@@ -702,9 +710,16 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
     ]
 
     # ── BLOCO 3: Crescimento por dia ──────────────────────────
+    all_pagamentos_periodo = db.query(Pagamento).filter(
+        Pagamento.paid_at >= (now - timedelta(days=periodo))
+    ).all()
+    # Fallback para dados históricos pré-migração (quando tabela pagamentos está vazia)
+    usar_fallback_aff = len(all_pagamentos_periodo) == 0
     all_convs_aff = db.query(AffiliateConversion).filter(
         AffiliateConversion.created_at >= (now - timedelta(days=periodo))
-    ).all()
+    ).all() if usar_fallback_aff else []
+
+    PLANO_VALOR_REAL = {"anual": 39900, "anual79": 7990, "anual199": 19900, "teste": 4990, "mensal": 9900}
 
     dias_labels, dias_cadastros, dias_vendas, dias_receita = [], [], [], []
     for i in range(periodo - 1, -1, -1):
@@ -716,18 +731,23 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
         cad = sum(1 for u in all_users if u.created_at and d_inicio <= u.created_at < d_fim)
         dias_cadastros.append(cad)
 
-        aff_dia    = [c for c in all_convs_aff if c.created_at and d_inicio <= c.created_at < d_fim]
-        emails_aff = {c.email_cliente for c in aff_dia}
-        naff_dia   = [
-            u for u in all_users
-            if u.created_at and d_inicio <= u.created_at < d_fim
-            and u.plan_type in PLANOS_PAGOS
-            and u.email not in emails_aff
-        ]
-        dias_vendas.append(len(aff_dia) + len(naff_dia))
-        dias_receita.append(round(
-            (sum(c.valor for c in aff_dia) + sum(PLANO_VALOR.get(u.plan_type, 0) for u in naff_dia)) / 100, 2
-        ))
+        if not usar_fallback_aff:
+            pags_dia = [p for p in all_pagamentos_periodo if p.paid_at and d_inicio <= p.paid_at < d_fim]
+            dias_vendas.append(len(pags_dia))
+            dias_receita.append(round(sum(p.valor_cents for p in pags_dia) / 100, 2))
+        else:
+            aff_dia    = [c for c in all_convs_aff if c.created_at and d_inicio <= c.created_at < d_fim]
+            emails_aff = {c.email_cliente for c in aff_dia}
+            naff_dia   = [
+                u for u in all_users
+                if u.created_at and d_inicio <= u.created_at < d_fim
+                and u.plan_type in PLANOS_PAGOS
+                and u.email not in emails_aff
+            ]
+            dias_vendas.append(len(aff_dia) + len(naff_dia))
+            dias_receita.append(round(
+                (sum(c.valor for c in aff_dia) + sum(PLANO_VALOR_REAL.get(u.plan_type, 0) for u in naff_dia)) / 100, 2
+            ))
 
     crescimento = {
         "labels":    dias_labels,
