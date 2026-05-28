@@ -9,11 +9,26 @@ def get_cfg(db, key, default=None):
 
 
 def _format_number(number: str) -> str:
-    """Garante formato 55DDNÚMERO sem caracteres especiais."""
+    """
+    Normaliza para formato internacional 55DDNÚMERO (13 dígitos para celular).
+    Corrige números no formato antigo sem o 9º dígito: 55DD8DIGITOS → 55DD9+8DIGITOS.
+    """
+    if not number:
+        return ""
     digits = re.sub(r"\D", "", number)
-    if not digits.startswith("55"):
-        digits = "55" + digits
-    return digits
+    # Remove código do país para trabalhar só com DDD+número
+    if digits.startswith("55") and len(digits) > 11:
+        sem_pais = digits[2:]
+    elif digits.startswith("55") and len(digits) == 12:
+        sem_pais = digits[2:]  # 55 + DDD2 + 8digitos (antigo)
+    else:
+        sem_pais = digits
+
+    # Celular brasileiro sem o 9: DDD(2) + 8 dígitos = 10 dígitos → adiciona 9
+    if len(sem_pais) == 10 and sem_pais[2] in "6789":
+        sem_pais = sem_pais[:2] + "9" + sem_pais[2:]
+
+    return "55" + sem_pais
 
 
 def send_whatsapp_message(number: str, message: str, db) -> bool:
