@@ -659,21 +659,11 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
     cadastros_hoje = sum(1 for u in all_users if u.created_at and u.created_at >= hoje_inicio)
     cadastros_mes  = sum(1 for u in all_users if u.created_at and u.created_at >= mes_inicio)
 
-    # Receita do mês: híbrido pagamentos (valor real) + estimativa para histórico
+    # Receita do mês: somente pagamentos reais da tabela pagamentos
+    # (sem estimativa — estimativa inflava com dados históricos pré-migração)
     from models import Pagamento
-    PLANO_VALOR_REAL_MES = {"anual": 39900, "anual79": 7990, "anual199": 19900, "anual99": 9900, "teste": 4990, "mensal": 9900}
     pagamentos_mes    = db.query(Pagamento).filter(Pagamento.paid_at >= mes_inicio).all()
-    emails_pag_mes    = {p.email for p in pagamentos_mes}
-    receita_pag_mes   = sum(p.valor_cents for p in pagamentos_mes)
-    # Usuários cadastrados no mês com plano pago que ainda não têm registro em pagamentos
-    nao_rastreados_mes = [
-        u for u in all_users
-        if u.created_at and u.created_at >= mes_inicio
-        and u.plan_type in PLANOS_PAGOS
-        and u.email not in emails_pag_mes
-    ]
-    receita_est_mes   = sum(PLANO_VALOR_REAL_MES.get(u.plan_type, 0) for u in nao_rastreados_mes)
-    receita_total_mes = receita_pag_mes + receita_est_mes
+    receita_total_mes = sum(p.valor_cents for p in pagamentos_mes)
 
     total_trials   = sum(1 for u in all_users if u.trial_usado)
     convertidos    = sum(1 for u in all_users if u.trial_usado and u.plan_type in PLANOS_PAGOS)
@@ -705,15 +695,10 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
     ]
 
     # ── BLOCO 3: Crescimento por dia ──────────────────────────
-    # Abordagem híbrida: usa pagamentos (valor real) + estimativa para os que
-    # ainda não estão na tabela pagamentos (histórico pré-migração).
-    # Por dia: pagamentos_dia (exatos) + users sem registro em pagamentos (estimativa).
-    # Isso garante que dados históricos não desapareçam após a migração.
+    # Usa somente pagamentos reais — sem estimativa para não inflar histórico
     all_pagamentos_periodo = db.query(Pagamento).filter(
         Pagamento.paid_at >= (now - timedelta(days=periodo))
     ).all()
-
-    PLANO_VALOR_REAL = {"anual": 39900, "anual79": 7990, "anual199": 19900, "anual99": 9900, "teste": 4990, "mensal": 9900}
 
     dias_labels, dias_cadastros, dias_vendas, dias_receita = [], [], [], []
     for i in range(periodo - 1, -1, -1):
@@ -725,23 +710,9 @@ def get_dashboard(periodo: int = 30, db: Session = Depends(get_db), admin=Depend
         cad = sum(1 for u in all_users if u.created_at and d_inicio <= u.created_at < d_fim)
         dias_cadastros.append(cad)
 
-        # Pagamentos confirmados do dia (tabela nova)
-        pags_dia       = [p for p in all_pagamentos_periodo if p.paid_at and d_inicio <= p.paid_at < d_fim]
-        emails_pag_dia = {p.email for p in pags_dia}
-        receita_pag    = sum(p.valor_cents for p in pags_dia)
-
-        # Estimativa para usuários do dia que ainda não têm registro em pagamentos
-        # (cadastros antigos pagando no período, compras pré-migração, etc.)
-        users_dia_sem_reg = [
-            u for u in all_users
-            if u.created_at and d_inicio <= u.created_at < d_fim
-            and u.plan_type in PLANOS_PAGOS
-            and u.email not in emails_pag_dia
-        ]
-        receita_est = sum(PLANO_VALOR_REAL.get(u.plan_type, 0) for u in users_dia_sem_reg)
-
-        dias_vendas.append(len(pags_dia) + len(users_dia_sem_reg))
-        dias_receita.append(round((receita_pag + receita_est) / 100, 2))
+        pags_dia = [p for p in all_pagamentos_periodo if p.paid_at and d_inicio <= p.paid_at < d_fim]
+        dias_vendas.append(len(pags_dia))
+        dias_receita.append(round(sum(p.valor_cents for p in pags_dia) / 100, 2))
 
     crescimento = {
         "labels":    dias_labels,
