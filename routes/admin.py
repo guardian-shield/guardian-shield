@@ -115,6 +115,30 @@ def ativar_usuario(
     else:
         user.plan_type = "manual"
     db.commit()
+
+    # Notificação WhatsApp após ativação manual (falha não afeta o retorno)
+    if user.whatsapp:
+        try:
+            PLANO_LABEL = {
+                "mensal": "Mensal", "anual": "Anual", "anual99": "Anual",
+                "anual79": "Anual", "anual199": "Anual", "teste": "Teste",
+            }
+            nome_plano = PLANO_LABEL.get(user.plan_type, user.plan_type.capitalize())
+            expira_fmt = user.expires_at.strftime("%d/%m/%Y")
+            msg = (
+                f"*Guardian Shield* ✅\n\n"
+                f"Olá, {user.nome or 'cliente'}!\n\n"
+                f"Sua licença foi ativada com sucesso!\n\n"
+                f"📋 *Plano:* {nome_plano}\n"
+                f"📅 *Válido até:* {expira_fmt}\n\n"
+                f"Acesse o programa e faça login com seu e-mail para começar a usar.\n\n"
+                f"Qualquer dúvida, é só chamar! 🚀"
+            )
+            send_whatsapp_message(user.whatsapp, msg, db)
+        except Exception as _e:
+            import logging
+            logging.getLogger("guardian").error(f"[ADMIN/ATIVAR] Falha WA para {email}: {_e}")
+
     return {"status": "ativado", "expira_em": user.expires_at, "plan_type": user.plan_type}
 
 
