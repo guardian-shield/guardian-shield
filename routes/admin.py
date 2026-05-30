@@ -150,6 +150,28 @@ def ativar_usuario(
             import logging
             logging.getLogger("guardian").error(f"[ADMIN/ATIVAR] Falha WA para {email}: {_e}")
 
+    # Avisa o dono sobre nova venda ativada manualmente
+    try:
+        PLANO_LABEL = {
+            "mensal": "Mensal", "anual": "Anual", "anual99": "Anual",
+            "anual79": "Anual", "anual199": "Anual", "teste": "Teste",
+        }
+        nome_plano = PLANO_LABEL.get(user.plan_type, user.plan_type.capitalize())
+        expira_fmt = user.expires_at.strftime("%d/%m/%Y")
+        aviso_dono = (
+            f"💰 *Nova venda — R$ 99,00*\n\n"
+            f"👤 Cliente: {user.nome or email}\n"
+            f"📧 E-mail: {email}\n"
+            f"📱 WhatsApp: {user.whatsapp or '—'}\n"
+            f"📋 Plano: {nome_plano}\n"
+            f"📅 Válido até: {expira_fmt}\n\n"
+            f"✅ Ativado manualmente pelo painel admin."
+        )
+        send_whatsapp_message("45998452596", aviso_dono, db)
+    except Exception as _e:
+        import logging
+        logging.getLogger("guardian").error(f"[ADMIN/ATIVAR] Falha aviso dono: {_e}")
+
     return {"status": "ativado", "expira_em": user.expires_at, "plan_type": user.plan_type}
 
 
