@@ -116,7 +116,16 @@ def ativar_usuario(
         user.plan_type = "manual"
     db.commit()
 
-    # Notificação WhatsApp após ativação manual (falha não afeta o retorno)
+    # Remove da fila de recuperação (abandono/renovação) se estava sendo resgatado
+    try:
+        from services.recovery_service import cancelar_fila
+        if user.whatsapp:
+            cancelar_fila(user.whatsapp, db=db)
+    except Exception as _re:
+        import logging
+        logging.getLogger("guardian").error(f"[ADMIN/ATIVAR] Falha ao cancelar fila recovery: {_re}")
+
+    # Notificação WhatsApp após ativação manual — mesmo texto do site
     if user.whatsapp:
         try:
             PLANO_LABEL = {
@@ -124,15 +133,17 @@ def ativar_usuario(
                 "anual79": "Anual", "anual199": "Anual", "teste": "Teste",
             }
             nome_plano = PLANO_LABEL.get(user.plan_type, user.plan_type.capitalize())
-            expira_fmt = user.expires_at.strftime("%d/%m/%Y")
+            nome_display = user.nome or email
             msg = (
-                f"*Guardian Shield* ✅\n\n"
-                f"Olá, {user.nome or 'cliente'}!\n\n"
-                f"Sua licença foi ativada com sucesso!\n\n"
-                f"📋 *Plano:* {nome_plano}\n"
-                f"📅 *Válido até:* {expira_fmt}\n\n"
-                f"Acesse o programa e faça login com seu e-mail para começar a usar.\n\n"
-                f"Qualquer dúvida, é só chamar! 🚀"
+                f"✅ *Pagamento confirmado!*\n\n"
+                f"Olá, {nome_display}!\n\n"
+                f"Seu plano *Guardian Shield {nome_plano}* foi ativado com sucesso.\n\n"
+                f"📥 *Baixe o programa pelo link abaixo:*\n"
+                f"https://github.com/grupoempresarialmayconsantos-bot/guardian-releases/releases/latest/download/Guardian-Shield-Setup.exe\n\n"
+                f"Após instalar, abra o programa, clique em *Cadastro*, use o e-mail *{email}* e crie sua senha. Em seguida verifique seu WhatsApp para ativar o acesso.\n\n"
+                f"🎬 *Vídeo tutorial completo (passo a passo):*\n"
+                f"https://www.youtube.com/watch?v=92dTghZ8RQc\n\n"
+                f"Qualquer dúvida, é só chamar! 🛡️"
             )
             send_whatsapp_message(user.whatsapp, msg, db)
         except Exception as _e:

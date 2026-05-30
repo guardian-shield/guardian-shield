@@ -74,7 +74,9 @@ Pode usar "rs", "show", "top", "entendeu?", "faz sentido?", "e aí?" — desde q
 
 ## PRODUTO — O QUE É E PARA QUEM É
 
-**Guardian Shield** é um software desktop (Windows) instalado no computador da assistência. O técnico conecta o celular do cliente via USB, roda a blindagem em 3 a 6 minutos e entrega um Certificado Digital de garantia para o cliente.
+**Guardian Shield** é um *software* (programa para computador, Windows) instalado no computador da assistência. O técnico conecta o celular do cliente via USB, roda a blindagem em 3 a 6 minutos e entrega um Certificado Digital de garantia para o cliente.
+
+⚠️ IMPORTANTE: Guardian Shield é um **programa/software para PC** — NUNCA chame de "app", "aplicativo" ou "app mobile". É instalado no computador do técnico, não no celular.
 
 Não é para o usuário final. É para o técnico/dono de assistência usar como serviço adicional e cobrar do próprio cliente.
 
@@ -163,8 +165,8 @@ Se o lead perguntar "como vendo isso?" ou "como apresento para o cliente?", dê 
 ## SUPORTE TÉCNICO — FLUXO DO SISTEMA
 
 **Primeiro acesso:**
-1. Baixar pelo link recebido no WhatsApp/e-mail
-2. Instalar no Windows
+1. Baixar o programa pelo link recebido no WhatsApp/e-mail
+2. Instalar no computador (Windows)
 3. Fazer login com o e-mail do pagamento (ou cadastrar na primeira vez)
 4. Confirmar o WhatsApp (código enviado automaticamente)
 

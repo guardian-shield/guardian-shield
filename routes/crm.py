@@ -198,6 +198,60 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
     except Exception as _re:
         logger.error(f"[CRM] Recovery integration error: {_re}")
 
+    # ── Detecta lead em abandono que diz que já pagou ─────────────────────────
+    try:
+        from models import RecoveryQueue
+        fila_abandono = db.query(RecoveryQueue).filter(
+            RecoveryQueue.phone == phone,
+            RecoveryQueue.tipo == "abandonment",
+            RecoveryQueue.status.in_(["pending", "paused"]),
+        ).first()
+
+        JA_PAGOU_KEYWORDS = [
+            "já paguei", "ja paguei", "já fiz o pix", "ja fiz o pix",
+            "já realizei o pagamento", "ja realizei", "já efetuei", "ja efetuei",
+            "paguei sim", "fiz o pagamento", "efetuei o pagamento",
+            "comprovante", "já transferi", "ja transferi", "já pago", "ja pago",
+            "foi pago", "já foi pago", "ja foi pago", "pix confirmado",
+        ]
+        content_lower_pag = content.lower()
+        lead_diz_pagou = any(k in content_lower_pag for k in JA_PAGOU_KEYWORDS)
+
+        if fila_abandono and lead_diz_pagou:
+            # Maia pede email e comprovante
+            resp_maia = (
+                f"Oi {conv.contact_name or ''}! Que ótimo, vou verificar aqui para liberar seu acesso rapidinho! 😊\n\n"
+                f"Para confirmar, me passa por favor:\n"
+                f"1️⃣ O *e-mail* que você usou no cadastro\n"
+                f"2️⃣ O *comprovante* do pagamento (se tiver)\n\n"
+                f"Já aviso o suporte para resolver na hora! 🛡️"
+            )
+            try:
+                send_whatsapp_message(phone, resp_maia, db)
+                db.add(CrmMessage(conversation_id=conv.id, direction="out", content=resp_maia, sent_by="ai"))
+            except Exception:
+                pass
+
+            # Avisa o dono
+            try:
+                aviso_dono = (
+                    f"🚨 *Atenção — Pagamento pendente de ativação!*\n\n"
+                    f"👤 Cliente: {conv.contact_name or phone}\n"
+                    f"📱 WhatsApp: {phone}\n\n"
+                    f"O cliente informa que *já realizou o pagamento* mas a licença ainda não foi ativada.\n\n"
+                    f"💬 Mensagem dele: _{content[:200]}_\n\n"
+                    f"Por favor, verifique no Mercado Pago e ative manualmente se necessário.\n"
+                    f"Acesse: https://guardian.grupomayconsantos.com.br/admin"
+                )
+                send_whatsapp_message("45998452596", aviso_dono, db)
+            except Exception:
+                pass
+
+            db.commit()
+            return {"status": "pagamento_pendente_verificado"}
+    except Exception as _pe:
+        logger.error(f"[CRM] Erro ao detectar pagamento: {_pe}")
+
     # Transferência manual: usuário digitou "humano"
     if content.strip().lower() == "humano":
         conv.ai_active = False
