@@ -194,6 +194,20 @@ Mande este link sempre que o usuário tiver dúvida sobre como usar o programa �
 ## TRANSFERIR PARA HUMANO
 Se o problema for complexo demais, a pessoa estiver muito frustrada, ou pedir explicitamente falar com alguém, inclua [TRANSFERIR_HUMANO] no final da mensagem.
 
+## REGRA ANTI-LOOP — LEIA O HISTÓRICO ANTES DE RESPONDER
+
+Antes de cada resposta, **releia o histórico** da conversa e siga estas regras:
+
+1. **Nunca mande o mesmo link duas vezes.** Se o link da página de vendas (vendas4 ou vendas5) já aparece em alguma mensagem anterior sua, NÃO mande de novo. A pessoa já tem o link.
+
+2. **Se a pessoa respondeu "Sim", "quero", "ok", "gostei" ou qualquer coisa positiva após receber o link**, isso significa que ela está interessada. Não repita o pitch. Avance a conversa: pergunte se teve alguma dúvida na página, ofereça o link direto de pagamento se ela parecer pronta, ou ajude com o próximo passo.
+
+3. **Se a pessoa disse que já baixou, está instalando ou já está usando o programa**, mude IMEDIATAMENTE para modo suporte. Ajude com a instalação. Não mande mais links de vendas.
+
+4. **Não mande áudios ou pitches de vendas completos após a pessoa já ter demonstrado interesse.** A venda está sendo feita — não quebre o ritmo com recomeços.
+
+5. **Detecte o contexto atual pelo histórico** — se você já se apresentou nesta conversa, não se apresente de novo. Se já explicou o produto, não explique de novo. Avance.
+
 ## REGRA FINAL
 Você está sempre no WhatsApp. Seja humana, direta, simpática. Nunca mande texto longo demais. Prefira continuar a conversa com uma pergunta do que despejar tudo de uma vez.
 """
@@ -260,10 +274,12 @@ def _is_new_conversation(conversation_history: list) -> bool:
     return (datetime.utcnow() - sent_at).total_seconds() > 4 * 3600
 
 
-def _build_user_context_block(user_context: dict | None) -> str:
+def _build_user_context_block(user_context: dict | None, conv_stage: str | None = None) -> str:
     """Monta bloco de contexto do usuário para injetar no system prompt."""
-    if not user_context:
+    if not user_context and not conv_stage:
         return ""
+    if not user_context:
+        user_context = {}
 
     plan = user_context.get("plan_type", "")
     nome = user_context.get("nome", "")
@@ -321,13 +337,33 @@ def _build_user_context_block(user_context: dict | None) -> str:
             lines.append(f"- Status: {days_left} dias restantes")
         lines.append("- Comportamento: suporte técnico. Pode mencionar upgrade para anual quando natural.")
     else:
-        lines.append("- Plano: lead (ainda não comprou)")
-        lines.append("- Comportamento: vendedora. Objetivo é fechar a venda.")
+        # Mesmo sem user cadastrado, usa o conv_stage para calibrar o tom
+        if conv_stage == "initiated":
+            lines.append("- Status do CRM: LEAD ENGAJADO — já recebeu o link da página de vendas e demonstrou interesse.")
+            lines.append(
+                "- Comportamento OBRIGATÓRIO: "
+                "NÃO mande o link da página novamente — ele já foi enviado. "
+                "NÃO faça pitch de vendas completo de novo. "
+                "Foque em entender o que está impedindo o fechamento, remover objeções específicas e direcionar para o checkout. "
+                "Se a pessoa disser que já está instalando ou já baixou o programa, mude para modo SUPORTE — "
+                "ajude com os passos de instalação e configuração. "
+                "Link de pagamento direto (só use se ele pedir): https://guardian.grupomayconsantos.com.br/pagar"
+            )
+        elif conv_stage in ("paid", "active"):
+            lines.append("- Status do CRM: CLIENTE ATIVO (já pagou ou em processo de ativação)")
+            lines.append(
+                "- Comportamento OBRIGATÓRIO: modo suporte. "
+                "NÃO tente vender nada. "
+                "Ajude com instalação, configuração e uso do Guardian Shield."
+            )
+        else:
+            lines.append("- Plano: lead (ainda não comprou)")
+            lines.append("- Comportamento: vendedora. Objetivo é fechar a venda.")
 
     return "\n".join(lines)
 
 
-def get_ai_response(conversation_history: list, user_message: str, user_context: dict | None = None) -> str:
+def get_ai_response(conversation_history: list, user_message: str, user_context: dict | None = None, conv_stage: str | None = None) -> str:
     """Chama o Claude (Anthropic) e retorna a resposta da IA."""
     if not ANTHROPIC_API_KEY:
         return ""
@@ -348,7 +384,7 @@ def get_ai_response(conversation_history: list, user_message: str, user_context:
             "Continue a conversa normalmente como se fosse a mesma pessoa de sempre."
         )
 
-    context_block = _build_user_context_block(user_context)
+    context_block = _build_user_context_block(user_context, conv_stage=conv_stage)
     system = SYSTEM_PROMPT + context_block + intro_instruction
 
     # Monta histórico no formato Anthropic (roles: user/assistant, alternados)

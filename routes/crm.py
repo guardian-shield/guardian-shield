@@ -324,7 +324,24 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
         except Exception as _ue:
             logger.error(f"[CRM] Falha ao buscar contexto do usuário: {_ue}")
 
-        ai_text = get_ai_response(history, content, user_context=user_context)
+        # ── Detecta resposta positiva do lead → avança stage para "initiated" ──
+        POSITIVE_SIGNALS = [
+            "sim", "quero", "quero sim", "quero saber", "quero ver", "pode mandar",
+            "manda o link", "manda ai", "manda aí", "me manda", "pode ser",
+            "tô dentro", "to dentro", "tô interessado", "to interessado",
+            "gostei", "interessante", "parece bom", "vamos lá", "vamos la",
+            "ok", "certo", "bora", "pode mandar", "quero testar",
+            "já baixei", "ja baixei", "já instalei", "ja instalei",
+            "estou instalando", "to instalando", "tô instalando",
+            "já estou", "ja estou", "acabei de baixar",
+        ]
+        content_stripped = content.strip().lower()
+        if (conv.stage or "lead") == "lead" and any(s in content_stripped for s in POSITIVE_SIGNALS):
+            conv.stage = "initiated"
+            db.commit()
+            logger.warning(f"[CRM] Lead {phone} avançou para 'initiated' por resposta positiva")
+
+        ai_text = get_ai_response(history, content, user_context=user_context, conv_stage=conv.stage)
         if not ai_text:
             # Cota esgotada ou resposta vazia — silencioso, não faz nada
             db.commit()
@@ -354,6 +371,12 @@ async def crm_webhook(request: Request, db: Session = Depends(get_db)):
             content=reply,
             sent_by="ai",
         ))
+
+        # ── Se a resposta da IA contém o link de vendas → avança stage para "initiated" ──
+        VENDAS_LINKS = ["vendas4", "vendas5", "guardian.grupomayconsantos.com.br/vendas"]
+        if (conv.stage or "lead") == "lead" and any(l in reply for l in VENDAS_LINKS):
+            conv.stage = "initiated"
+            logger.warning(f"[CRM] Lead {phone} avançou para 'initiated' após envio de link de vendas")
 
         if transfer:
             conv.ai_active = False
