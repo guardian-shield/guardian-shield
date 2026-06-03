@@ -300,6 +300,33 @@ def _build_user_context_block(user_context: dict | None, conv_stage: str | None 
     if nome:
         lines.append(f"- Nome: {nome}")
 
+    # ── Stage do CRM tem prioridade máxima ────────────────────────────────────
+    # Se o CRM indica que já é cliente ativo ou pagou, ignora qualquer lógica
+    # de plano/trial abaixo — Maia entra imediatamente em modo suporte.
+    if conv_stage in ("active", "paid"):
+        lines.append("- Status do CRM: CLIENTE ATIVO ✅")
+        lines.append(
+            "- Comportamento OBRIGATÓRIO: esta pessoa JÁ É CLIENTE. "
+            "NÃO tente vender, NÃO mande links de vendas, NÃO faça pitch. "
+            "Modo suporte 100%: ajude com instalação, configuração e uso do Guardian Shield. "
+            "Se ela tiver algum problema técnico, foque em resolver."
+        )
+        return "\n".join(lines)
+
+    if conv_stage == "initiated":
+        lines.append("- Status do CRM: LEAD ENGAJADO — já recebeu o link da página de vendas e demonstrou interesse.")
+        lines.append(
+            "- Comportamento OBRIGATÓRIO: "
+            "NÃO mande o link da página novamente — ele já foi enviado. "
+            "NÃO faça pitch de vendas completo de novo. "
+            "Foque em entender o que está impedindo o fechamento, remover objeções específicas e direcionar para o checkout. "
+            "Se a pessoa disser que já está instalando ou já baixou o programa, mude para modo SUPORTE — "
+            "ajude com os passos de instalação e configuração. "
+            "Link de pagamento direto (só use se ele pedir): https://guardian.grupomayconsantos.com.br/pagar"
+        )
+        return "\n".join(lines)
+    # ──────────────────────────────────────────────────────────────────────────
+
     if plan == "trial_gratis":
         lines.append("- Plano: TESTE GRÁTIS DE 7 DIAS")
         if days_left is not None:
@@ -337,28 +364,8 @@ def _build_user_context_block(user_context: dict | None, conv_stage: str | None 
             lines.append(f"- Status: {days_left} dias restantes")
         lines.append("- Comportamento: suporte técnico. Pode mencionar upgrade para anual quando natural.")
     else:
-        # Mesmo sem user cadastrado, usa o conv_stage para calibrar o tom
-        if conv_stage == "initiated":
-            lines.append("- Status do CRM: LEAD ENGAJADO — já recebeu o link da página de vendas e demonstrou interesse.")
-            lines.append(
-                "- Comportamento OBRIGATÓRIO: "
-                "NÃO mande o link da página novamente — ele já foi enviado. "
-                "NÃO faça pitch de vendas completo de novo. "
-                "Foque em entender o que está impedindo o fechamento, remover objeções específicas e direcionar para o checkout. "
-                "Se a pessoa disser que já está instalando ou já baixou o programa, mude para modo SUPORTE — "
-                "ajude com os passos de instalação e configuração. "
-                "Link de pagamento direto (só use se ele pedir): https://guardian.grupomayconsantos.com.br/pagar"
-            )
-        elif conv_stage in ("paid", "active"):
-            lines.append("- Status do CRM: CLIENTE ATIVO (já pagou ou em processo de ativação)")
-            lines.append(
-                "- Comportamento OBRIGATÓRIO: modo suporte. "
-                "NÃO tente vender nada. "
-                "Ajude com instalação, configuração e uso do Guardian Shield."
-            )
-        else:
-            lines.append("- Plano: lead (ainda não comprou)")
-            lines.append("- Comportamento: vendedora. Objetivo é fechar a venda.")
+        lines.append("- Plano: lead (ainda não comprou)")
+        lines.append("- Comportamento: vendedora. Objetivo é fechar a venda.")
 
     return "\n".join(lines)
 
