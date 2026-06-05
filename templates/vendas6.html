@@ -41,24 +41,6 @@
 html { scroll-behavior: smooth; }
 body { font-family: 'Inter', sans-serif; background: var(--azul); color: var(--texto); overflow-x: hidden; line-height: 1.6; }
 
-/* ── STICKY BAR ── */
-#stickyBar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
-  background: rgba(6,14,30,0.97); border-bottom: 1px solid rgba(255,255,255,0.07);
-  backdrop-filter: blur(12px);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 24px; gap: 16px;
-  transform: translateY(-100%); transition: transform 0.35s ease;
-}
-#stickyBar.visivel { transform: translateY(0); }
-.sticky-txt { font-size: 13px; color: var(--muted); }
-@media(max-width:540px){ .sticky-txt { display: none; } }
-.btn-sticky {
-  background: var(--green); color: white;
-  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
-  border: none; border-radius: 8px; padding: 9px 22px;
-  cursor: pointer; white-space: nowrap; text-decoration: none;
-}
 
 /* ── HERO ── */
 #hero {
@@ -549,12 +531,6 @@ h2 .red   { color: #ff7070; }
 </style>
 </head>
 <body>
-
-<!-- STICKY BAR -->
-<div id="stickyBar">
-  <span class="sticky-txt">🔥 Lote 2 — 120 licenças restantes com preço promocional</span>
-  <a href="/pagar?plano=anual199" class="btn-sticky" onclick="trackCta()">GARANTIR POR R$199 →</a>
-</div>
 
 <!-- ═══════════════════════════════════════════ HERO -->
 <section id="hero">
@@ -1055,13 +1031,6 @@ h2 .red   { color: #ff7070; }
 </div>
 
 <script>
-// ── STICKY BAR
-window.addEventListener('scroll', function() {
-  var bar = document.getElementById('stickyBar');
-  if (window.scrollY > 500) bar.classList.add('visivel');
-  else bar.classList.remove('visivel');
-});
-
 // ── FADE UP
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
