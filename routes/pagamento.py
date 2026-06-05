@@ -680,6 +680,15 @@ def pagina_vendas5():
         return f.read()
 
 
+# GET /vendas6  →  página de vendas por lotes — Lote 2 R$199
+# =============================================================
+@router.get("/vendas6", response_class=HTMLResponse)
+def pagina_vendas6():
+    html_path = os.path.join(os.path.dirname(__file__), "..", "templates", "vendas6.html")
+    with open(os.path.abspath(html_path), encoding="utf-8") as f:
+        return f.read()
+
+
 # POST /register-free-trial  →  cadastro gratuito 7 dias
 # =============================================================
 from pydantic import BaseModel as _BaseModel
