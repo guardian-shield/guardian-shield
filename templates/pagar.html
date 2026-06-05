@@ -10,7 +10,15 @@
   n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
   t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
   document,'script','https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '2079654962888572');
+  // Lê cookies _fbc e _fbp gravados pelo próprio pixel da Meta
+  function _getCookie(name) {
+    var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : undefined;
+  }
+  var _pixelInitData = {};
+  var _fbc = _getCookie('_fbc'); if (_fbc) _pixelInitData.fbc = _fbc;
+  var _fbp = _getCookie('_fbp'); if (_fbp) _pixelInitData.fbp = _fbp;
+  fbq('init', '2079654962888572', _pixelInitData);
   fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
@@ -375,6 +383,21 @@ async function confirmarEmail() {
   nomeAtual = nome;
   whatsappAtual = wpp;
 
+  // Correspondência avançada — reinicializa pixel com dados do usuário
+  // A Meta usa esses dados para cruzar com contas do Facebook/Instagram
+  if (typeof fbq !== 'undefined') {
+    var _advMatch = {
+      em: email.toLowerCase().trim(),
+      ph: '55' + wpp.replace(/\D/g, ''),
+      external_id: email.toLowerCase().trim(),
+    };
+    var _fbc2 = (document.cookie.match('(^|;)\\s*_fbc\\s*=\\s*([^;]+)') || [,''])[2];
+    var _fbp2 = (document.cookie.match('(^|;)\\s*_fbp\\s*=\\s*([^;]+)') || [,''])[2];
+    if (_fbc2) _advMatch.fbc = _fbc2;
+    if (_fbp2) _advMatch.fbp = _fbp2;
+    fbq('init', '2079654962888572', _advMatch);
+  }
+
   limparErro('erro1');
   mostrarLoad('load1', 'Verificando...');
 
@@ -564,7 +587,7 @@ async function pagarCartao() {
                 ? '✓ Pagamento aprovado! Redirecionando...'
                 : '⏳ Pagamento em análise. Redirecionando...';
               if (d.status === 'approved' && typeof fbq !== 'undefined') {
-                fbq('track', 'Purchase', { value: valor, currency: 'BRL' }, { eventID: 'purchase-' + (d.id || emailAtual) });
+                fbq('track', 'Purchase', { value: valor, currency: 'BRL', content_ids: [planoAtual], content_type: 'product' }, { eventID: 'purchase-' + (d.id || emailAtual) });
               }
               setTimeout(() => {
                 window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
@@ -616,7 +639,7 @@ async function verificarStatusPix() {
       const box = document.getElementById('pixStatusBox');
       box.classList.add('aprovado');
       document.getElementById('pixStatusTxt').textContent = '✓ Pagamento confirmado!';
-      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: planoValor(planoAtual), currency: 'BRL' }, { eventID: String(pixPaymentId) });
+      if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: planoValor(planoAtual), currency: 'BRL', content_ids: [planoAtual], content_type: 'product' }, { eventID: String(pixPaymentId) });
       setTimeout(() => {
         window.location.href = `/download?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}`;
       }, 1500);
