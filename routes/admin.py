@@ -82,6 +82,7 @@ def listar_usuarios(db: Session = Depends(get_db), admin=Depends(verificar_admin
             "expira_em":         u.expires_at,
             "hwid_1":            u.hwid_1,
             "hwid_2":            u.hwid_2,
+            "max_devices":       u.max_devices or 2,
             "email_verified":    u.email_verified,
             "whatsapp_verified": u.whatsapp_verified,
             "pre_liberado":      u.pre_liberado,
@@ -309,6 +310,25 @@ def reset_hwid(
     user.hwid_2 = None
     db.commit()
     return {"status": "hwid resetado"}
+
+
+# POST /admin/set-max-devices
+# =============================================================
+@router.post("/admin/set-max-devices")
+def set_max_devices(
+    email: str,
+    max_devices: int,
+    db: Session = Depends(get_db),
+    admin=Depends(verificar_admin),
+):
+    if max_devices < 1 or max_devices > 8:
+        return {"error": "max_devices deve ser entre 1 e 8"}
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+    user.max_devices = max_devices
+    db.commit()
+    return {"status": "max_devices atualizado", "max_devices": user.max_devices}
 
 
 # =============================================================

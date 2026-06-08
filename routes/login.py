@@ -189,15 +189,24 @@ def protected_route(
     if not x_hwid:
         return {"acesso": False, "motivo": "HWID não enviado"}
 
-    # Registro de HWID
-    if not user_db.hwid_1:
-        user_db.hwid_1 = x_hwid
-        db.commit()
-    elif user_db.hwid_1 != x_hwid and not user_db.hwid_2:
-        user_db.hwid_2 = x_hwid
-        db.commit()
-    elif x_hwid != user_db.hwid_1 and x_hwid != user_db.hwid_2:
-        return {"acesso": False, "motivo": "Dispositivo não autorizado"}
+    # Registro e validação de HWID com suporte a múltiplos dispositivos
+    hwid_slots = ["hwid_1","hwid_2","hwid_3","hwid_4","hwid_5","hwid_6","hwid_7","hwid_8"]
+    max_dev    = user_db.max_devices or 2
+    slots      = hwid_slots[:max_dev]
+    registered = [getattr(user_db, s) for s in slots if getattr(user_db, s)]
+
+    if x_hwid in registered:
+        pass  # dispositivo já conhecido, libera
+    else:
+        if len(registered) < max_dev:
+            # registra no próximo slot vazio
+            for s in slots:
+                if not getattr(user_db, s):
+                    setattr(user_db, s, x_hwid)
+                    db.commit()
+                    break
+        else:
+            return {"acesso": False, "motivo": "Dispositivo não autorizado"}
 
     # Verificação do WhatsApp (exigida no primeiro acesso após licença ativa)
     if not user_db.whatsapp_verified:

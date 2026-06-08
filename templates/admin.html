@@ -729,6 +729,7 @@ function renderTabela(data) {
           <button class="btn btn-sm btn-green" onclick="ativar('${u.email}')" title="Ativar">✓</button>
           <button class="btn btn-sm btn-red" onclick="desativar('${u.email}')" title="Desativar">✗</button>
           <button class="btn btn-sm btn-ghost" onclick="resetHwid('${u.email}')" title="Reset HWID">HWID</button>
+          <button class="btn btn-sm" style="background:${u.max_devices>2?'rgba(255,140,0,0.3)':'rgba(80,80,80,0.2)'};border:1px solid ${u.max_devices>2?'rgba(255,160,0,0.6)':'rgba(120,120,120,0.4)'};color:${u.max_devices>2?'#ffaa00':'#888'}" onclick="setMaxDevices('${u.email}',${u.max_devices})" title="Limite de dispositivos: ${u.max_devices}">${u.max_devices}PC</button>
           <button class="btn btn-sm" style="background:rgba(100,60,200,0.2);border:1px solid rgba(140,100,255,0.4);color:#b090ff" onclick="resetSenha('${u.email}','${esc(u.whatsapp||'')}')">🔑</button>
           <button class="btn btn-sm" style="background:rgba(212,160,23,0.2);border:1px solid rgba(212,160,23,0.4);color:#d4a017" onclick="liberarVerificacao('${u.email}')" title="Liberar WA">✓WA</button>
           <button class="btn btn-sm" style="background:rgba(30,160,80,0.2);border:1px solid rgba(50,220,120,0.4);color:#4cde8a" onclick="reenviarCodigoWa('${u.email}','${esc(u.whatsapp||'')}')">📲</button>
@@ -884,6 +885,18 @@ async function resetHwid(email) {
   await api('POST', `/admin/reset-hwid?email=${encodeURIComponent(email)}`);
   showLoading(false);
   toast('HWIDs resetados!');
+  carregarUsuarios();
+}
+
+async function setMaxDevices(email, atual) {
+  const val = prompt(`Limite de dispositivos para ${email}\n(atual: ${atual}, máx: 8):`, atual);
+  if (val === null) return;
+  const n = parseInt(val);
+  if (isNaN(n) || n < 1 || n > 8) { alert('Digite um número entre 1 e 8.'); return; }
+  showLoading(true);
+  const res = await api('POST', `/admin/set-max-devices?email=${encodeURIComponent(email)}&max_devices=${n}`);
+  showLoading(false);
+  toast(`Limite atualizado para ${res.max_devices} dispositivos!`);
   carregarUsuarios();
 }
 
