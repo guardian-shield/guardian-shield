@@ -21,6 +21,8 @@ class User(Base):
     hwid_6               = Column(String, nullable=True)
     hwid_7               = Column(String, nullable=True)
     hwid_8               = Column(String, nullable=True)
+    hwid_9               = Column(String, nullable=True)
+    hwid_10              = Column(String, nullable=True)
     max_devices          = Column(Integer, default=2)
     email_verified       = Column(Boolean, default=False)
     whatsapp_verified    = Column(Boolean, default=False)

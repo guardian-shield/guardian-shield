@@ -190,7 +190,7 @@ def protected_route(
         return {"acesso": False, "motivo": "HWID não enviado"}
 
     # Registro e validação de HWID com suporte a múltiplos dispositivos
-    hwid_slots = ["hwid_1","hwid_2","hwid_3","hwid_4","hwid_5","hwid_6","hwid_7","hwid_8"]
+    hwid_slots = ["hwid_1","hwid_2","hwid_3","hwid_4","hwid_5","hwid_6","hwid_7","hwid_8","hwid_9","hwid_10"]
     max_dev    = user_db.max_devices or 2
     slots      = hwid_slots[:max_dev]
     registered = [getattr(user_db, s) for s in slots if getattr(user_db, s)]

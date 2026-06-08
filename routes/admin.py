@@ -321,7 +321,7 @@ def set_max_devices(
     db: Session = Depends(get_db),
     admin=Depends(verificar_admin),
 ):
-    if max_devices < 1 or max_devices > 8:
+    if max_devices < 1 or max_devices > 10:
         return {"error": "max_devices deve ser entre 1 e 8"}
     user = db.query(User).filter(User.email == email).first()
     if not user:
