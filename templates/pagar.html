@@ -490,7 +490,9 @@ async function pagarPix() {
   mostrarLoad('load3', 'Gerando PIX...');
 
   try {
-    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}&whatsapp=${encodeURIComponent(whatsappAtual)}&nome=${encodeURIComponent(nomeAtual)}&afiliado=${encodeURIComponent(afiliadoAtual)}`, { method: 'POST' });
+    const _fbc = (document.cookie.match('(^|;)\\s*_fbc\\s*=\\s*([^;]+)')||[,''])[2];
+    const _fbp = (document.cookie.match('(^|;)\\s*_fbp\\s*=\\s*([^;]+)')||[,''])[2];
+    const res  = await fetch(`${API}/create-pix?email=${encodeURIComponent(emailAtual)}&plano=${planoAtual}&whatsapp=${encodeURIComponent(whatsappAtual)}&nome=${encodeURIComponent(nomeAtual)}&afiliado=${encodeURIComponent(afiliadoAtual)}&fbc=${encodeURIComponent(_fbc)}&fbp=${encodeURIComponent(_fbp)}`, { method: 'POST' });
     const data = await res.json();
     esconderLoad('load3');
 

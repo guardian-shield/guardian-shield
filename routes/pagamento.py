@@ -13,6 +13,10 @@ from payment import criar_pix, criar_pagamento, buscar_pagamento, processar_cart
 
 router = APIRouter()
 
+# Armazena contexto do browser (fbc, fbp, ip, ua) por payment_id do PIX
+# para enriquecer o CAPI no momento da confirmação (webhook assíncrono)
+_pix_meta_ctx: dict = {}
+
 
 def _registrar_conversao_afiliado(db, slug: str, email_cliente: str, nome_cliente: str,
                                    whatsapp_cliente: str, plano: str, valor_cents: int,
@@ -204,7 +208,7 @@ def get_db():
 # POST /create-pix  →  cria pagamento PIX direto
 # =============================================================
 @router.post("/create-pix")
-async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "", afiliado: str = "", db: Session = Depends(get_db)):
+async def create_pix(request: Request, email: str, plano: str, whatsapp: str = "", nome: str = "", afiliado: str = "", fbc: str = "", fbp: str = "", db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if user and plano == "teste" and user.trial_usado:
         return {"error": "O período de teste já foi utilizado nesta conta. Para continuar usando o Guardian Shield, adquira o plano anual."}
@@ -256,6 +260,16 @@ async def create_pix(email: str, plano: str, whatsapp: str = "", nome: str = "",
             logger.warning(f"[PAGAMENTO] Erro ao criar fila abandono: {_e}")
             # Fallback para o task antigo se recovery_service falhar
             asyncio.create_task(_abandono_pix(str(resultado.get("id")), whatsapp))
+
+    # Salva contexto do browser para enriquecer o CAPI na confirmação
+    _pid = str(resultado.get("id", ""))
+    if _pid:
+        _pix_meta_ctx[_pid] = {
+            "fbc": fbc or None,
+            "fbp": fbp or None,
+            "ip":  request.client.host if request.client else None,
+            "ua":  request.headers.get("user-agent"),
+        }
 
     pix = resultado.get("point_of_interaction", {}).get("transaction_data", {})
     return {
@@ -387,6 +401,26 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                     metodo="pix",
                     afiliado_slug=afiliado_slug,
                 )
+
+                # Meta Conversions API — Purchase server-side (PIX)
+                try:
+                    from services.meta_events import send_purchase
+                    _pid_pix = str(pagamento.get("id", ""))
+                    _ctx = _pix_meta_ctx.pop(_pid_pix, {})
+                    send_purchase(
+                        email=email,
+                        valor=planoValor_pix,
+                        plano=plano,
+                        event_id=f"purchase-pix-{_pid_pix}",
+                        phone=user.whatsapp,
+                        external_id=user.id,
+                        fbc=_ctx.get("fbc"),
+                        fbp=_ctx.get("fbp"),
+                        client_ip=_ctx.get("ip"),
+                        client_ua=_ctx.get("ua"),
+                    )
+                except Exception as _me:
+                    logger.warning(f"[META] Falha ao enviar Purchase PIX: {_me}")
 
                 # Conversão de afiliado
                 if afiliado_slug:
@@ -576,6 +610,26 @@ async def process_card(request: Request):
                     metodo="cartao",
                     afiliado_slug=afiliado_slug_card or None,
                 )
+
+                # Meta Conversions API — Purchase server-side (Cartão)
+                try:
+                    from services.meta_events import send_purchase
+                    _fbc_card = data.get("fbc") or None
+                    _fbp_card = data.get("fbp") or None
+                    send_purchase(
+                        email=email,
+                        valor=valor,
+                        plano=plano,
+                        event_id=f"purchase-card-{resultado.get('id', '')}",
+                        phone=whatsapp,
+                        external_id=user_db.id if user_db else None,
+                        fbc=_fbc_card,
+                        fbp=_fbp_card,
+                        client_ip=request.client.host if request.client else None,
+                        client_ua=request.headers.get("user-agent"),
+                    )
+                except Exception as _me:
+                    logger.warning(f"[META] Falha ao enviar Purchase Cartão: {_me}")
 
                 # Conversão de afiliado (cartão)
                 if afiliado_slug_card:
