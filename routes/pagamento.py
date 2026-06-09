@@ -364,7 +364,8 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
             licenca_ativada_agora = False
             if sem_licenca or expirada or upgrade_trial:
                 dias = 30 if plano == "teste" else 365
-                user.expires_at = datetime.utcnow() + timedelta(days=dias)
+                _base = max(datetime.utcnow(), user.expires_at or datetime.utcnow())
+                user.expires_at = _base + timedelta(days=dias)
                 user.plan_type  = "anual" if plano in ("anual79", "anual99", "anual147", "anual199") else plano
                 if plano == "teste":
                     user.trial_usado = True
@@ -582,7 +583,8 @@ async def process_card(request: Request):
                     _db2.commit()
                     _db2.refresh(user_db)
                 else:
-                    user_db.expires_at = _dt.utcnow() + timedelta(days=dias)
+                    _base_card = max(_dt.utcnow(), user_db.expires_at or _dt.utcnow())
+                    user_db.expires_at = _base_card + timedelta(days=dias)
                     user_db.plan_type  = "anual" if plano in ("anual79", "anual99", "anual147", "anual199") else plano
                     if plano == "teste":
                         user_db.trial_usado = True

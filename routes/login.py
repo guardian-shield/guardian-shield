@@ -460,7 +460,8 @@ async def webhook(
                         wa_payer = area + numero
 
                 if user:
-                    user.expires_at = datetime.utcnow() + timedelta(days=dias)
+                    _base_wh = max(datetime.utcnow(), user.expires_at or datetime.utcnow())
+                    user.expires_at = _base_wh + timedelta(days=dias)
                     user.plan_type  = plan_type_norm
                     # Atualiza WhatsApp se ainda não tem
                     if not user.whatsapp and wa_payer:
@@ -478,6 +479,16 @@ async def webhook(
                     )
                     db.add(user)
                 db.commit()
+
+                # ── Cancela filas da Maia — impede cobrar quem já pagou ──
+                _phone_cancelar = user.whatsapp if user else None
+                if _phone_cancelar:
+                    try:
+                        from services.recovery_service import cancelar_fila
+                        _ph = _phone_cancelar.replace("+","").replace(" ","").replace("-","")
+                        cancelar_fila(_ph, tipo=None, db=db)
+                    except Exception as _ce:
+                        logger.error(f"[WEBHOOK] Falha ao cancelar fila recovery: {_ce}")
 
                 # ── Registra transação de pagamento (para receita exata no dashboard) ──
                 try:
