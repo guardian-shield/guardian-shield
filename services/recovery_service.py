@@ -22,7 +22,7 @@ from models import RecoveryQueue, CrmConversation, CrmMessage
 logger = logging.getLogger("guardian")
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-LINK_PAGAMENTO = "https://guardian.grupomayconsantos.com.br/pagar"
+LINK_PAGAMENTO = "https://guardian.grupomayconsantos.com.br/pagar?plano=anual147"
 
 # ── Intervalos por fluxo e step ───────────────────────────────────────────────
 
@@ -93,7 +93,7 @@ def _system_renewal(step: int, days_left: int, expired: bool) -> str:
     )
     if not expired:
         instrucoes = [
-            f"A licença vence em {days_left} dias. Avise de forma natural, sem alarme. Mostre o valor do plano anual (R$299).",
+            f"A licença vence em {days_left} dias. Avise de forma natural, sem alarme. Mostre o valor do plano anual (R$147).",
             f"Faltam {days_left} dias. Um pouco mais de urgência — pergunte se vai renovar, facilite o processo.",
             "Hoje é o último dia de acesso. Tom de cuidado, não de cobrança. Dê o link direto.",
         ]
@@ -127,7 +127,7 @@ def _system_trial_nurture(step: int) -> str:
 
         # step 2 — dia 5 — início suave da conversão (2 dias antes do fim)
         "Faltam 2 dias para o teste acabar. Mencione isso de forma leve e natural. "
-        "Mostre o valor do plano anual (R$299/ano) e faça a conta rápida: "
+        "Mostre o valor do plano anual (R$147/ano) e faça a conta rápida: "
         "5 blindagens de R$100 = R$500 numa semana. A licença se paga sozinha. "
         "Não pressione — só plante a semente. "
         "Link do pagamento: " + LINK_ANUAL,
@@ -209,7 +209,7 @@ def _system_trial_activation(step: int) -> str:
 
 def _system_trial_expired(step: int) -> str:
     """Mensagens diárias para quem teve trial expirado e não converteu — sem fim definido."""
-    LINK_ANUAL  = "https://guardian.grupomayconsantos.com.br/pagar?plano=anual"
+    LINK_ANUAL  = "https://guardian.grupomayconsantos.com.br/pagar?plano=anual147"
     LINK_MENSAL = "https://guardian.grupomayconsantos.com.br/pagar"
     base = (
         "Você é a Maia, atendente do Guardian Shield. "
@@ -223,7 +223,7 @@ def _system_trial_expired(step: int) -> str:
     angulos = [
         # 0 — dia após expirar
         "O teste acabou ontem. Pergunte o que achou da experiência — gostou? Teve alguma dificuldade? "
-        "Diga que ficou a disposição e que quem quiser continuar garante o anual por R$299. "
+        "Diga que ficou a disposição e que quem quiser continuar garante o anual por R$147. "
         "Link: " + LINK_ANUAL,
 
         # 1 — prova social
