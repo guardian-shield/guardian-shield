@@ -379,7 +379,7 @@ async function confirmarEmail() {
   const email = document.getElementById('inputEmail').value.trim();
   const wpp   = document.getElementById('inputWhatsapp').value.trim().replace(/\D/g,'');
   if (!nome) { mostrarErro('erro1', 'Digite seu nome.'); return; }
-  if (!email || !email.includes('@')) { mostrarErro('erro1', 'Digite um e-mail válido.'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { mostrarErro('erro1', 'Digite um e-mail válido.'); return; }
   if (!wpp || wpp.length < 10) { mostrarErro('erro1', 'Digite seu WhatsApp com DDD.'); return; }
   nomeAtual = nome;
   whatsappAtual = wpp;

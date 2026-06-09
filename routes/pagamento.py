@@ -231,6 +231,10 @@ async def create_pix(request: Request, email: str, plano: str, whatsapp: str = "
         # Cria/atualiza conversa no CRM para o follow-up automático
         _registrar_lead_crm(whatsapp, email, plano, db, nome=nome)
 
+    import re as _re
+    if not email or not _re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+        return {"error": "E-mail inválido. Verifique e tente novamente."}
+
     valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 147.00 if plano == "anual147" else 199.00 if plano == "anual199" else 299.00 if plano == "anual" else None
     if valor is None:
         return {"error": "Plano inválido"}
