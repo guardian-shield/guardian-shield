@@ -99,7 +99,7 @@ Não é para o usuário final. É para o técnico/dono de assistência usar como
 - Anual: R$147/ano (inclui bônus da videoaula exclusiva)
 - **Página de vendas leads frios (com oferta especial):** https://guardian.grupomayconsantos.com.br/vendas5
 - **Página de vendas para quem já testou (R$147):** https://guardian.grupomayconsantos.com.br/vendas4
-- **Link direto do checkout (pagamento):** https://guardian.grupomayconsantos.com.br/pagar
+- **Link direto do checkout (pagamento):** https://guardian.grupomayconsantos.com.br/pagar?plano=anual147
 
 ## QUAL LINK USAR — REGRA OBRIGATÓRIA
 
@@ -116,7 +116,7 @@ Não é para o usuário final. É para o técnico/dono de assistência usar como
 
 **Se o lead JÁ chegou com intenção clara**, responda diretamente.
 - Pediu EXPLICITAMENTE o link do teste → mande direto: https://guardian.grupomayconsantos.com.br/vendas4
-- Pediu para comprar / pediu o link de pagamento → mande direto: https://guardian.grupomayconsantos.com.br/pagar
+- Pediu para comprar / pediu o link de pagamento → mande direto: https://guardian.grupomayconsantos.com.br/pagar?plano=anual147
 - Perguntou preço → responda o preço direto, sem rodeios
 - Demonstrou interesse no teste ("gostaria do teste", "quero saber do teste grátis") → explique brevemente (7 dias, grátis, sem cartão) e pergunte se quer o link para se cadastrar. Só mande o link após ele confirmar.
 
@@ -129,7 +129,7 @@ Não é para o usuário final. É para o técnico/dono de assistência usar como
 Nunca mande o site de vendas para quem já sabe o que quer — isso atrasa e irrita.
 
 Quando ele estiver pronto para comprar ou pedir o link de pagamento, envie o checkout:
-👉 https://guardian.grupomayconsantos.com.br/pagar
+👉 https://guardian.grupomayconsantos.com.br/pagar?plano=anual147
 
 ## TESTE GRÁTIS — QUANDO E COMO USAR
 O teste grátis de 7 dias é sua maior arma para remover objeções. Use quando:
@@ -322,7 +322,7 @@ def _build_user_context_block(user_context: dict | None, conv_stage: str | None 
             "Foque em entender o que está impedindo o fechamento, remover objeções específicas e direcionar para o checkout. "
             "Se a pessoa disser que já está instalando ou já baixou o programa, mude para modo SUPORTE — "
             "ajude com os passos de instalação e configuração. "
-            "Link de pagamento direto (só use se ele pedir): https://guardian.grupomayconsantos.com.br/pagar"
+            "Link de pagamento direto (só use se ele pedir): https://guardian.grupomayconsantos.com.br/pagar?plano=anual147"
         )
         return "\n".join(lines)
     # ──────────────────────────────────────────────────────────────────────────
@@ -343,7 +343,7 @@ def _build_user_context_block(user_context: dict | None, conv_stage: str | None 
             "Ajude com dúvidas técnicas e de uso do software. "
             "Quando natural, reforce o valor da ferramenta e incentive a compra do plano anual (R$299) antes do teste acabar. "
             "Nos últimos 2 dias, aumente a urgência — amanhã/hoje o acesso encerra. "
-            "Link para converter: https://guardian.grupomayconsantos.com.br/pagar?plano=anual"
+            "Link para converter: https://guardian.grupomayconsantos.com.br/pagar?plano=anual147?plano=anual"
         )
     elif plan in ("anual", "anual79", "anual199"):
         lines.append("- Plano: ANUAL (cliente pagante)")
