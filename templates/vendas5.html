@@ -823,11 +823,11 @@ h2 .red   { color: #ff7070; }
     </div>
     <div class="oferta-tag">⭐ LICENÇA ANUAL — ACESSO COMPLETO</div>
     <div class="oferta-preco-antigo">De R$997,00</div>
-    <div class="oferta-preco"><small>R$</small>99<small style="font-size:22px">,00</small></div>
+    <div class="oferta-preco"><small>R$</small>147<small style="font-size:22px">,00</small></div>
     <div class="oferta-periodo">Licença anual · Acesso imediato · Todos os recursos</div>
-    <div class="oferta-economize">🔥 Você economiza R$898,00 — só por 24 horas</div>
-    <a href="/pagar?plano=anual99" class="btn-comprar" onclick="trackCta()">
-      🛡️ QUERO O GUARDIAN SHIELD POR R$99 AGORA
+    <div class="oferta-economize">🔥 Você economiza R$850,00 — só por 24 horas</div>
+    <a href="/pagar?plano=anual147" class="btn-comprar" onclick="trackCta()">
+      🛡️ QUERO O GUARDIAN SHIELD POR R$147 AGORA
     </a>
     <div class="oferta-selos">
       <span>🔒 Pagamento seguro</span>
@@ -905,8 +905,8 @@ h2 .red   { color: #ff7070; }
 <div class="footer-cta fade-up">
   <h2>A diferença não é talento.<br><span class="gold">É ferramenta.</span></h2>
   <p>Você pode continuar cobrando R$20, perdendo 15 minutos, e torcendo para o cliente não voltar reclamando. Ou você pode ser o técnico da sua cidade que resolve o problema de vírus de uma vez — e ainda cobra R$200 por isso.</p>
-  <a href="/pagar?plano=anual99" class="btn-hero" style="margin-bottom:10px" onclick="trackCta()">
-    <span>🛡️</span> GARANTIR MINHA LICENÇA POR R$99 AGORA
+  <a href="/pagar?plano=anual147" class="btn-hero" style="margin-bottom:10px" onclick="trackCta()">
+    <span>🛡️</span> GARANTIR MINHA LICENÇA POR R$147 AGORA
   </a>
   <p style="font-size:12px;color:rgba(255,255,255,0.25)">🔒 Pagamento seguro &nbsp;·&nbsp; Acesso imediato &nbsp;·&nbsp; 30 dias de garantia</p>
 </div>
@@ -938,13 +938,13 @@ function calcular() {
 
 // ── TRACK CTA
 function trackCta() {
-  if (typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout', { value: 99.00, currency: 'BRL', content_ids: ['guardian-anual99'], content_type: 'product' });
+  if (typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout', { value: 147.00, currency: 'BRL', content_ids: ['guardian-anual147'], content_type: 'product' });
   if (typeof gtag !== 'undefined') gtag('event', 'click_cta_vendas5');
 }
 
 // ── COUNTDOWN 24H
 (function() {
-  var KEY = 'gs_promo99_deadline';
+  var KEY = 'gs_promo147_deadline';
   var deadline = localStorage.getItem(KEY);
   if (!deadline) {
     deadline = Date.now() + 24 * 60 * 60 * 1000;
