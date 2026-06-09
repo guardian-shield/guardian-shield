@@ -10,16 +10,49 @@
   n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
   t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
   document,'script','https://connect.facebook.net/en_US/fbevents.js');
-  // Lê cookies _fbc e _fbp gravados pelo próprio pixel da Meta
+
   function _getCookie(name) {
     var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
     return m ? m.pop() : undefined;
   }
+
+  // SHA-256 assíncrono para advanced matching
+  async function _sha256(str) {
+    if (!str) return undefined;
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str.toLowerCase().trim()));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  // Tenta ler email/phone de parâmetros de URL (campanhas de retargeting)
+  function _getParam(k) {
+    var u = new URLSearchParams(window.location.search);
+    return u.get(k) || undefined;
+  }
+
   var _pixelInitData = {};
   var _fbc = _getCookie('_fbc'); if (_fbc) _pixelInitData.fbc = _fbc;
   var _fbp = _getCookie('_fbp'); if (_fbp) _pixelInitData.fbp = _fbp;
+  var _em_raw  = _getParam('em')  || _getParam('email') || localStorage.getItem('gs_lead_email');
+  var _ph_raw  = _getParam('ph')  || _getParam('phone') || localStorage.getItem('gs_lead_phone');
+  var _extid   = _getParam('external_id') || _getParam('uid') || localStorage.getItem('gs_lead_uid');
+  if (_extid) _pixelInitData.external_id = _extid;
+
+  // Inicializa o pixel imediatamente (sem advanced matching ainda)
   fbq('init', '2079654962888572', _pixelInitData);
   fbq('track', 'PageView');
+  fbq('track', 'ViewContent', { value: 147.00, currency: 'BRL', content_ids: ['guardian-anual147'], content_type: 'product', content_name: 'Guardian Shield Anual' });
+
+  // Atualiza pixel com advanced matching assim que os hashes ficam prontos
+  Promise.all([_sha256(_em_raw), _sha256(_ph_raw)]).then(function(hashes) {
+    var em = hashes[0], ph = hashes[1];
+    if (em || ph) {
+      var adv = {};
+      if (em) adv.em = em;
+      if (ph) adv.ph = ph;
+      if (_extid) adv.external_id = _extid;
+      fbq('init', '2079654962888572', adv);
+    }
+  });
 </script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-H4JRM00ZBV"></script>
 <script>

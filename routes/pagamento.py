@@ -343,7 +343,7 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                 from services.whatsapp_service import send_whatsapp_message
                 plano_nome = "Teste 30 dias" if plano == "teste" else "Anual"
                 plano_label_pix = "Teste 30 dias (R$49,90)" if plano == "teste" else "Anual Especial (R$79,90)" if plano == "anual79" else "Anual Promo (R$99)" if plano == "anual99" else "Anual Promo (R$147)" if plano == "anual147" else "Anual Exclusiva (R$199)" if plano == "anual199" else "Anual (R$299)"
-                planoValor_pix = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 199.00 if plano == "anual199" else 299.00
+                planoValor_pix = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 147.00 if plano == "anual147" else 199.00 if plano == "anual199" else 299.00
                 # Mensagem para o cliente
                 if user.whatsapp:
                     try:
@@ -442,7 +442,7 @@ async def process_card(request: Request):
     finally:
         _db_check.close()
 
-    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 199.00 if plano == "anual199" else 299.00
+    valor = 49.90 if plano == "teste" else 79.90 if plano == "anual79" else 99.00 if plano == "anual99" else 147.00 if plano == "anual147" else 199.00 if plano == "anual199" else 299.00
 
     # Salva WhatsApp do lead e registra no CRM antes do pagamento
     if whatsapp and email:
