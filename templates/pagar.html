@@ -294,7 +294,8 @@
     <div class="etapa-titulo">Pague com PIX</div>
     <div class="pix-valor" id="pixValor">R$ --</div>
     <div class="pix-qr">
-      <img id="pixQrImg" src="" alt="QR Code PIX">
+      <img id="pixQrImg" src="" alt="QR Code PIX" onerror="document.getElementById('pixQrImg').style.display='none'; document.getElementById('pixQrErro').style.display='block';">
+      <p id="pixQrErro" style="display:none;color:#e74c3c;font-size:12px;text-align:center;margin:0">Erro ao carregar QR Code.<br>Use o código copia e cola abaixo.</p>
     </div>
     <div class="pix-copia-label">Ou copie o código:</div>
     <div class="pix-copia-wrap">
@@ -496,13 +497,25 @@ async function pagarPix() {
     const data = await res.json();
     esconderLoad('load3');
 
-    if (data.error) { mostrarErro('erro3', data.error); return; }
+    if (data.error) {
+      mostrarErro('erro3', data.error + ' — Clique em PIX novamente para tentar.');
+      return;
+    }
+
+    if (!data.qr_code_base64 || !data.qr_code) {
+      mostrarErro('erro3', 'QR Code não gerado. Clique em PIX novamente para tentar.');
+      return;
+    }
 
     // preenche etapa 4
     document.getElementById('pixValor').textContent =
       'R$ ' + planoValor(planoAtual).toFixed(2).replace('.', ',');
-    document.getElementById('pixQrImg').src =
-      `data:image/png;base64,${data.qr_code_base64}`;
+    // Normaliza: MP às vezes retorna com prefixo "data:..." já embutido
+    const qrBase64 = data.qr_code_base64;
+    const qrSrc = qrBase64.startsWith('data:') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+    document.getElementById('pixQrImg').style.display = 'block';
+    document.getElementById('pixQrErro').style.display = 'none';
+    document.getElementById('pixQrImg').src = qrSrc;
     document.getElementById('pixCopiaCola').value = data.qr_code || '';
     pixPaymentId = data.payment_id;
 
@@ -510,7 +523,7 @@ async function pagarPix() {
     iniciarPollingPix();
   } catch(e) {
     esconderLoad('load3');
-    mostrarErro('erro3', 'Erro ao gerar PIX. Tente novamente.');
+    mostrarErro('erro3', 'Erro ao gerar PIX. Clique em PIX novamente.');
   }
 }
 

@@ -247,6 +247,38 @@ async def create_pix(request: Request, email: str, plano: str, whatsapp: str = "
     if not resultado:
         return {"error": "Falha ao gerar PIX"}
 
+    # Verifica se o MP retornou erro (status diferente de pending/approved)
+    resultado_status = resultado.get("status")
+    if resultado_status not in ("pending", "approved", None):
+        err_msg = resultado.get("message") or resultado.get("error") or "Falha ao gerar PIX"
+        logger.warning(f"[PIX] MP retornou status inesperado: {resultado_status} — {err_msg} — email={email}")
+        return {"error": f"Falha ao gerar PIX: {err_msg}"}
+
+    pix = resultado.get("point_of_interaction", {}).get("transaction_data", {})
+
+    # MP às vezes cria o pagamento mas demora para gerar o QR code.
+    # Se temos payment_id mas não temos qr_code_base64, busca o pagamento já criado
+    # (sem criar um novo) — tenta até 3x com 1s de espera entre tentativas.
+    payment_id_criado = resultado.get("id")
+    if payment_id_criado and (not pix.get("qr_code_base64") or not pix.get("qr_code")):
+        logger.warning(f"[PIX] qr_code ausente na criação — payment_id={payment_id_criado} status={resultado_status} — tentando buscar... email={email}")
+        for tentativa in range(3):
+            await asyncio.sleep(1)
+            buscado = buscar_pagamento(payment_id_criado)
+            if buscado:
+                pix_buscado = buscado.get("point_of_interaction", {}).get("transaction_data", {})
+                if pix_buscado.get("qr_code_base64") and pix_buscado.get("qr_code"):
+                    logger.warning(f"[PIX] qr_code obtido na tentativa {tentativa+1} — payment_id={payment_id_criado}")
+                    pix = pix_buscado
+                    resultado = buscado
+                    break
+                logger.warning(f"[PIX] Tentativa {tentativa+1}/3 — qr_code ainda ausente — payment_id={payment_id_criado}")
+
+    if not pix.get("qr_code_base64") or not pix.get("qr_code"):
+        err_msg = resultado.get("message") or resultado.get("error") or "QR Code não gerado pelo Mercado Pago"
+        logger.warning(f"[PIX] qr_code não disponível após 3 tentativas — payment_id={payment_id_criado} — {err_msg} — email={email}")
+        return {"error": f"PIX não gerado: {err_msg}"}
+
     # Cria fila de recuperação de abandono (substitui o task antigo)
     if whatsapp:
         try:
@@ -271,7 +303,6 @@ async def create_pix(request: Request, email: str, plano: str, whatsapp: str = "
             "ua":  request.headers.get("user-agent"),
         }
 
-    pix = resultado.get("point_of_interaction", {}).get("transaction_data", {})
     return {
         "payment_id":    resultado.get("id"),
         "qr_code":       pix.get("qr_code"),
