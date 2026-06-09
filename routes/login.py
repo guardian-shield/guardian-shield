@@ -444,10 +444,34 @@ async def webhook(
                 plano = "mensal"
 
             if status == "approved" and email:
-                user = db.query(User).filter(User.email == email).first()
-                # Normaliza plano (anual79/anual199 → anual internamente)
+                # ── Porteiro de deduplicação — evita ativar o mesmo pagamento duas vezes ──
+                # Webhook e pix_status podem chegar em paralelo; a gravação atômica decide quem age.
                 plan_type_norm = "anual" if plano in ("anual79", "anual199") else plano
                 dias = 30 if plano in ("mensal", "teste") else 365
+                try:
+                    from routes.pagamento import _registrar_pagamento_db, PLANO_PRECOS_CENTS
+                    _tx_amount   = pagamento.get("transaction_amount") or 0
+                    _valor_cents = int(round(float(_tx_amount) * 100))
+                    if _valor_cents == 0:
+                        _valor_cents = PLANO_PRECOS_CENTS.get(plano, PLANO_PRECOS_CENTS.get(plan_type_norm, 0))
+                    _inseriu = _registrar_pagamento_db(
+                        db           = db,
+                        email        = email,
+                        plano        = plano,
+                        valor_cents  = _valor_cents,
+                        payment_id   = str(payment_id),
+                        metodo       = pagamento.get("payment_method_id", "checkout"),
+                        afiliado_slug= afiliado_slug,
+                    )
+                except Exception as _re:
+                    logger.error(f"[WEBHOOK] Erro ao registrar pagamento: {_re}")
+                    _inseriu = False
+
+                if not _inseriu:
+                    logger.warning(f"[WEBHOOK] payment_id {payment_id} já processado — pulando ativação")
+                    return {"status": "ok"}
+
+                user = db.query(User).filter(User.email == email).first()
 
                 # Tenta extrair WhatsApp/telefone do pagador no Mercado Pago
                 payer      = pagamento.get("payer", {})
@@ -489,26 +513,6 @@ async def webhook(
                         cancelar_fila(_ph, tipo=None, db=db)
                     except Exception as _ce:
                         logger.error(f"[WEBHOOK] Falha ao cancelar fila recovery: {_ce}")
-
-                # ── Registra transação de pagamento (para receita exata no dashboard) ──
-                try:
-                    from routes.pagamento import _registrar_pagamento_db, PLANO_PRECOS_CENTS
-                    tx_amount   = pagamento.get("transaction_amount") or 0
-                    valor_cents = int(round(float(tx_amount) * 100))
-                    if valor_cents == 0:
-                        # Fallback com preços reais por plano
-                        valor_cents = PLANO_PRECOS_CENTS.get(plano, PLANO_PRECOS_CENTS.get(plan_type_norm, 0))
-                    _registrar_pagamento_db(
-                        db=db,
-                        email=email,
-                        plano=plano,
-                        valor_cents=valor_cents,
-                        payment_id=str(payment_id),
-                        metodo=pagamento.get("payment_method_id", "checkout"),
-                        afiliado_slug=afiliado_slug,
-                    )
-                except Exception as _e:
-                    logger.error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
 
                 # Envia evento de compra para o Meta Conversions API
                 valor = 99.00 if plano == "mensal" else 399.00

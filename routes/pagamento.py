@@ -76,26 +76,32 @@ PLANO_PRECOS_CENTS = {
 
 def _registrar_pagamento_db(db, email: str, plano: str, valor_cents: int,
                              payment_id: str, metodo: str = "pix",
-                             afiliado_slug: str = None):
-    """Registra transação na tabela pagamentos com deduplicação por payment_id."""
+                             afiliado_slug: str = None) -> bool:
+    """Registra transação na tabela pagamentos com deduplicação por payment_id.
+    Retorna True se inseriu agora, False se já existia ou falhou (UNIQUE/exception).
+    O chamador usa esse retorno como porteiro: só ativa licença e notifica se True."""
     try:
         from models import Pagamento
         if not payment_id:
-            return
+            return False
         existe = db.query(Pagamento).filter(Pagamento.payment_id == str(payment_id)).first()
-        if not existe:
-            db.add(Pagamento(
-                email         = email,
-                plano         = plano,
-                valor_cents   = valor_cents,
-                payment_id    = str(payment_id),
-                metodo        = metodo,
-                afiliado_slug = afiliado_slug or None,
-            ))
-            db.commit()
+        if existe:
+            return False
+        db.add(Pagamento(
+            email         = email,
+            plano         = plano,
+            valor_cents   = valor_cents,
+            payment_id    = str(payment_id),
+            metodo        = metodo,
+            afiliado_slug = afiliado_slug or None,
+        ))
+        db.commit()
+        return True
     except Exception as _e:
+        db.rollback()
         import logging
         logging.getLogger("guardian").error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
+        return False
 
 
 def _registrar_lead_crm(phone: str, email: str, plano: str, db, nome: str = ""):
