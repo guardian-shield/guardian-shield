@@ -283,26 +283,21 @@ def verify_whatsapp(
 
 
 # =============================================================
-# FORGOT PASSWORD — envia nova senha via WhatsApp
+# FORGOT PASSWORD — envia código de redefinição via WhatsApp
 # =============================================================
 @router.post("/forgot-password")
 @limiter.limit("3/minute")
 def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
-    import string
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Retorna sucesso mesmo sem usuário (evitar enumeração de e-mails)
-        return {"message": "Se o e-mail estiver cadastrado, uma nova senha será enviada."}
+        return {"message": "Se o e-mail estiver cadastrado, um código será enviado."}
 
     if not user.whatsapp:
         return {"error": "Sua conta não tem WhatsApp cadastrado. Entre em contato com o suporte."}
 
-    # Gera senha aleatória: Shield# + 4 dígitos + 2 letras maiúsculas
-    letras = ''.join(random.choices(string.ascii_uppercase, k=2))
-    numeros = ''.join(random.choices(string.digits, k=4))
-    nova_senha = f"Shield#{numeros}{letras}"
-
-    user.password = hash_password(nova_senha)
+    code = _gerar_codigo()
+    user.whatsapp_code         = code
+    user.whatsapp_code_expires = datetime.utcnow() + timedelta(minutes=15)
     db.commit()
 
     try:
@@ -310,17 +305,45 @@ def forgot_password(request: Request, email: str, db: Session = Depends(get_db))
         msg = (
             f"🔑 *Redefinição de senha — Guardian Shield*\n\n"
             f"Olá, {user.nome or email}!\n\n"
-            f"Sua nova senha é: *{nova_senha}*\n\n"
-            f"Acesse o aplicativo e entre com essa senha. Você pode alterá-la depois nas configurações.\n\n"
+            f"Seu código de verificação é: *{code}*\n\n"
+            f"Digite este código no aplicativo para criar sua nova senha.\n"
+            f"O código expira em 15 minutos.\n\n"
             f"Se não foi você que solicitou, ignore esta mensagem."
         )
         send_whatsapp_message(user.whatsapp, msg, db)
-        logger.warning(f"[FORGOT] Nova senha enviada para {user.whatsapp}")
+        logger.warning(f"[FORGOT] Código de redefinição enviado para {user.whatsapp}")
     except Exception as e:
-        logger.error(f"[FORGOT] Falha ao enviar nova senha para {user.whatsapp}: {e}")
-        return {"error": "Falha ao enviar a senha pelo WhatsApp. Tente novamente."}
+        logger.error(f"[FORGOT] Falha ao enviar código para {user.whatsapp}: {e}")
+        return {"error": "Falha ao enviar o código pelo WhatsApp. Tente novamente."}
 
-    return {"message": "Nova senha enviada para o seu WhatsApp!"}
+    return {"message": "Código enviado para o seu WhatsApp!", "whatsapp": user.whatsapp}
+
+
+# =============================================================
+# RESET PASSWORD — valida código e salva nova senha
+# =============================================================
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+def reset_password(request: Request, email: str, code: str, nova_senha: str, db: Session = Depends(get_db)):
+    if len(nova_senha) < 6:
+        return {"error": "A senha deve ter pelo menos 6 caracteres."}
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"error": "Usuário não encontrado"}
+
+    if not user.whatsapp_code or user.whatsapp_code != code:
+        return {"error": "Código inválido"}
+    if not user.whatsapp_code_expires or datetime.utcnow() > user.whatsapp_code_expires:
+        return {"error": "Código expirado. Solicite um novo."}
+
+    user.password              = hash_password(nova_senha)
+    user.whatsapp_code         = None
+    user.whatsapp_code_expires = None
+    db.commit()
+
+    logger.warning(f"[RESET] Senha redefinida com sucesso para {email}")
+    return {"message": "Senha redefinida com sucesso!"}
 
 
 # =============================================================
