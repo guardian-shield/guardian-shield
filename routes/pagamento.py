@@ -78,15 +78,26 @@ def _registrar_pagamento_db(db, email: str, plano: str, valor_cents: int,
                              payment_id: str, metodo: str = "pix",
                              afiliado_slug: str = None) -> bool:
     """Registra transação na tabela pagamentos com deduplicação por payment_id.
-    Retorna True se inseriu agora, False se já existia ou falhou (UNIQUE/exception).
-    O chamador usa esse retorno como porteiro: só ativa licença e notifica se True."""
+
+    Retorna:
+      True  — inseriu agora (primeira vez) → pode ativar e notificar.
+      False — duplicata confirmada (IntegrityError / já existia no SELECT).
+              → não ativar nem notificar.
+
+    Regra de ouro: qualquer falha que NÃO seja duplicata confirmada retorna True,
+    porque o pior resultado é o cliente pagar e não receber nada.
+    Só bloqueamos quando temos PROVA de que é repetição."""
+    import logging
+    from sqlalchemy.exc import IntegrityError
+    from models import Pagamento
+
+    if not payment_id:
+        return True  # sem ID não conseguimos deduplicar — entrega na dúvida
+
     try:
-        from models import Pagamento
-        if not payment_id:
-            return False
         existe = db.query(Pagamento).filter(Pagamento.payment_id == str(payment_id)).first()
         if existe:
-            return False
+            return False  # duplicata confirmada via SELECT
         db.add(Pagamento(
             email         = email,
             plano         = plano,
@@ -97,11 +108,22 @@ def _registrar_pagamento_db(db, email: str, plano: str, valor_cents: int,
         ))
         db.commit()
         return True
-    except Exception as _e:
+
+    except IntegrityError as _ie:
+        # UNIQUE constraint estourou — prova de duplicata em corrida (webhook + polling)
         db.rollback()
-        import logging
-        logging.getLogger("guardian").error(f"[PAGAMENTO] Falha ao registrar transação: {_e}")
+        logging.getLogger("guardian").warning(
+            f"[PAGAMENTO] payment_id {payment_id} duplicado (IntegrityError) — bloqueando reprocessamento"
+        )
         return False
+
+    except Exception as _e:
+        # Falha genérica (timeout, conexão, etc.) — na dúvida, entrega
+        db.rollback()
+        logging.getLogger("guardian").error(
+            f"[PAGAMENTO] Falha ao registrar transação (payment_id={payment_id}): {_e} — seguindo em frente"
+        )
+        return True
 
 
 def _registrar_lead_crm(phone: str, email: str, plano: str, db, nome: str = ""):
@@ -353,6 +375,25 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
         afiliado_slug  = parts[2] if len(parts) > 2 else None
 
         if email:
+            # ── Porteiro de deduplicação — mesma proteção do webhook ──
+            # Garante que webhook + polling não ativem o mesmo payment_id duas vezes.
+            tx_real_pre      = pagamento.get("transaction_amount") or 0
+            planoValor_pre   = {"teste": 49.90, "anual79": 79.90, "anual99": 99.00,
+                                 "anual147": 147.00, "anual199": 199.00}.get(plano, 299.00)
+            valor_cents_pre  = int(round(float(tx_real_pre) * 100)) if tx_real_pre else int(planoValor_pre * 100)
+            _inseriu = _registrar_pagamento_db(
+                db            = db,
+                email         = email,
+                plano         = plano,
+                valor_cents   = valor_cents_pre,
+                payment_id    = str(payment_id),
+                metodo        = "pix",
+                afiliado_slug = afiliado_slug,
+            )
+            if not _inseriu:
+                logger.warning(f"[PIX_STATUS] payment_id {payment_id} já processado — pulando ativação")
+                return {"status": "approved", "already_processed": True}
+
             user = db.query(User).filter(User.email == email).first()
             # Cria usuário se não existir (ex: checkout não chamou /create-pix antes)
             if not user:
@@ -430,19 +471,6 @@ def pix_status(payment_id: str, db: Session = Depends(get_db)):
                     logger.warning(f"[VENDA] Notificação enviada ao dono — PIX {plano_label_pix} {email}")
                 except Exception as e:
                     logger.error(f"[VENDA] FALHA ao notificar dono — PIX {email}: {e}")
-
-                # Registra transação para dashboard de receita
-                tx_real = pagamento.get("transaction_amount") or 0
-                valor_pix_cents = int(round(float(tx_real) * 100)) if tx_real else int(planoValor_pix * 100)
-                _registrar_pagamento_db(
-                    db=db,
-                    email=email,
-                    plano=plano,
-                    valor_cents=valor_pix_cents,
-                    payment_id=str(pagamento.get("id", "")),
-                    metodo="pix",
-                    afiliado_slug=afiliado_slug,
-                )
 
                 # Meta Conversions API — Purchase server-side (PIX)
                 try:
