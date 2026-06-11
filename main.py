@@ -155,6 +155,17 @@ def migrar_banco():
         );""",
         "CREATE INDEX IF NOT EXISTS idx_pagamentos_email   ON pagamentos(email);",
         "CREATE INDEX IF NOT EXISTS idx_pagamentos_paid_at ON pagamentos(paid_at);",
+        # PIX criados mas ainda não confirmados — para reconciliação periódica
+        """CREATE TABLE IF NOT EXISTS pix_pending (
+            id            SERIAL PRIMARY KEY,
+            payment_id    VARCHAR UNIQUE,
+            email         VARCHAR,
+            plano         VARCHAR,
+            afiliado_slug VARCHAR,
+            created_at    TIMESTAMP DEFAULT NOW()
+        );""",
+        "CREATE INDEX IF NOT EXISTS idx_pix_pending_pid     ON pix_pending(payment_id);",
+        "CREATE INDEX IF NOT EXISTS idx_pix_pending_created ON pix_pending(created_at);",
         # Seed do afiliado profissaosmarti (idempotente)
         """INSERT INTO affiliates (slug, nome, whatsapp, senha_hash, comissao_pct, ativo)
            VALUES ('profissaosmarti', 'Profissão Smarti', '27999806096',

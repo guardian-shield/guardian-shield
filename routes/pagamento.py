@@ -311,6 +311,17 @@ async def create_pix(request: Request, email: str, plano: str, whatsapp: str = "
         logger.warning(f"[PIX] qr_code não disponível após 3 tentativas — payment_id={payment_id_criado} — {err_msg} — email={email}")
         return {"error": f"PIX não gerado: {err_msg}"}
 
+    # Registra PIX pendente para reconciliação periódica
+    # (garante ativação mesmo se browser fechar antes do pagamento ser aprovado)
+    try:
+        from models import PendingPix
+        _pid_str = str(payment_id_criado) if payment_id_criado else ""
+        if _pid_str:
+            db.add(PendingPix(payment_id=_pid_str, email=email, plano=plano, afiliado_slug=afiliado or None))
+            db.commit()
+    except Exception:
+        db.rollback()  # não bloqueia o PIX por falha no tracking
+
     # Cria fila de recuperação de abandono (substitui o task antigo)
     if whatsapp:
         try:

@@ -159,6 +159,18 @@ class Pagamento(Base):
     paid_at       = Column(DateTime, default=func.now())
 
 
+class PendingPix(Base):
+    """PIX criado mas ainda não confirmado — usado pela reconciliação periódica."""
+    __tablename__ = "pix_pending"
+
+    id            = Column(Integer, primary_key=True)
+    payment_id    = Column(String, unique=True, index=True)
+    email         = Column(String, index=True)
+    plano         = Column(String, nullable=True)
+    afiliado_slug = Column(String, nullable=True)
+    created_at    = Column(DateTime, default=func.now())
+
+
 class Garantia(Base):
     """Garantias de blindagem — uma linha por aparelho por usuário."""
     __tablename__ = "garantias"

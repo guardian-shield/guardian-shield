@@ -417,6 +417,10 @@ async def webhook(
     )
 
     if not _verificar_assinatura_mp(body, x_signature, x_request_id, query_data_id):
+        logger.warning(
+            f"[WEBHOOK] Assinatura inválida — x_signature={x_signature!r} "
+            f"x_request_id={x_request_id!r} data_id={query_data_id!r} body={body[:200]!r}"
+        )
         raise HTTPException(status_code=401, detail="Assinatura inválida")
 
     try:

@@ -403,6 +403,49 @@ def _salvar_cfg(db, key: str, value: str):
         db.add(AppConfig(key=key, value=value))
 
 
+async def process_pix_reconciliation():
+    """Verifica PIX criados nas últimas 24h que ainda não foram confirmados.
+    Cobre o caso de browser fechado antes da aprovação + webhook sumido."""
+    from models import PendingPix, Pagamento
+    from routes.pagamento import pix_status
+
+    db = SessionLocal()
+    try:
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+
+        # IDs já processados (confirmados com sucesso)
+        pagos = {row[0] for row in db.query(Pagamento.payment_id).all()}
+
+        pendentes = db.query(PendingPix).filter(
+            PendingPix.created_at > cutoff,
+        ).all()
+
+        nao_confirmados = [p for p in pendentes if p.payment_id not in pagos]
+
+        if nao_confirmados:
+            logger.warning(f"[RECONCILIACAO] Verificando {len(nao_confirmados)} PIX não confirmados...")
+
+        for item in nao_confirmados:
+            db_inner = SessionLocal()
+            try:
+                resultado = pix_status(payment_id=item.payment_id, db=db_inner)
+                if isinstance(resultado, dict):
+                    if resultado.get("status") == "approved" and not resultado.get("already_processed"):
+                        logger.warning(
+                            f"[RECONCILIACAO] PIX {item.payment_id} ativado via reconciliação — {item.email}"
+                        )
+            except Exception as _e:
+                logger.error(f"[RECONCILIACAO] Erro ao verificar {item.payment_id}: {_e}")
+            finally:
+                db_inner.close()
+            await asyncio.sleep(2)  # não bater demais na API do MP
+
+    except Exception as e:
+        logger.error(f"[RECONCILIACAO] Erro geral: {e}")
+    finally:
+        db.close()
+
+
 async def run_followup_loop():
     """Loop em background — verifica a cada 60 segundos."""
     logger.warning("[FOLLOWUP] Scheduler iniciado.")
@@ -415,9 +458,10 @@ async def run_followup_loop():
             await process_license_recovery()
             from services.recovery_service import process_recovery_queue
             await process_recovery_queue()
-            # Verifica trials expirados a cada 10 minutos
+            # Verifica trials expirados e reconcilia PIX a cada 10 minutos
             if tick % 10 == 0:
                 await process_trial_expiry_check()
+                await process_pix_reconciliation()
             # Resumo de trials desativado
         except asyncio.CancelledError:
             break
