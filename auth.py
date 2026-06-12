@@ -17,7 +17,7 @@ def verify_password(plain_password, hashed_password):
 # JWT config
 SECRET_KEY = os.getenv("SECRET_KEY", "guardian-secret")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 dias
 
 def create_access_token(data: dict):
     to_encode = data.copy()
